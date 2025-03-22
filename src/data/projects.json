@@ -4,7 +4,7 @@
       "id": "heart-disease",
       "title": "Sistema de Predicción de Enfermedades Cardíacas",
       "shortDescription": "Pipeline completo de machine learning para predecir riesgo cardíaco usando XGBoost, con despliegue en Docker y versionado de modelos",
-      "image": "https://ext.same-assets.com/530234544/2191290803.jpeg",
+      "image": "/project1.jpg",
       "tags": [
         "Python 3.10",
         "XGBoost",
@@ -16,29 +16,31 @@
       ],
       "links": {
         "demo": "/project/heart-disease",
-        "github": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI"
+        "github": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI",
+        "pdf": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI", 
+        "ipynb": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI" 
       },
       "fullDescription": "Implementación completa de machine learning con procesamiento robusto de datos y gestión de modelos. Características principales: - Pipeline automatizado de datos que maneja valores faltantes y escalado de características - División estratificada de datos con balanceo de clases - Seguimiento de rendimiento del modelo (Precisión, Recall, AUC-ROC) - Despliegue Dockerizado con gestión de dependencias Poetry - Versionado automático de modelos con serialización timestamp - Métricas de evaluación comprehensivas y reproductibilidad",
       "technicalSections": [
         {
           "title": "Preprocesamiento de Datos",
           "code": "def process_data(df: pd.DataFrame, columns_to_impute: list):\n    # Handle missing values and prepare features\n    df[columns_to_impute] = df[columns_to_impute].replace(0, np.nan)\n    return df.drop(columns='num'), df['num']",
-          "image": "https://ext.same-assets.com/530234544/951180049.jpeg"
+          "image": "/project1-extra1.jpg"
         },
         {
           "title": "División Estratificada de Datos",
           "code": "X_train, X_test, y_train, y_test = train_test_split(\nX, y, \ntest_size=0.2, \n    stratify=y,\n    random_state=42\n)",
-          "image": "https://ext.same-assets.com/530234544/1628334238.jpeg"
+          "image": "/project1-extra2.jpg"
         },
         {
           "title": "Entrenamiento del Modelo XGBoost",
           "code": "model = XGBClassifier(\n    objective='binary:logistic',\n    max_depth=2,\n    n_estimators=300,\n    learning_rate=0.1\n)\nmodel.fit(X_train, y_train)",
-          "image": "https://ext.same-assets.com/530234544/3985596561.jpeg"
+          "image": "/project1-extra3.jpg"
         },
         {
           "title": "Evaluación del Modelo",
           "code": "y_pred = model.predict(X_test)\ny_proba = model.predict_proba(X_test)[:, 1]\nprint(f'AUC: {roc_auc_score(y_test, y_proba):.2f}')",
-          "image": "https://ext.same-assets.com/530234544/3673918854.jpeg"
+          "image": "/project1-extra4.jpg"
         },
         {
           "title": "Versionado de Modelos",
@@ -51,7 +53,7 @@
       "id": "ande-analysis",
       "title": "Análisis de Demanda Eléctrica ANDE",
       "shortDescription": "Sistema de visualización y análisis de patrones de consumo eléctrico con comparativas históricas",
-      "image": "https://ext.same-assets.com/530234544/711707636.jpeg",
+      "image": "/project2.jpg",
       "tags": [
         "Python 3.13",
         "Pandas",
@@ -63,7 +65,9 @@
       ],
       "links": {
         "demo": "/project/ande-analysis",
-        "github": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv"
+        "github": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv",
+        "pdf": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv",
+        "ipynb": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv" 
       },
       "fullDescription": "Plataforma completa para análisis energético con:\n- Carga automatizada de datos desde Excel\n- Procesamiento estadístico de series temporales\n- Visualizaciones interactivas con marcadores estacionales\n- Sistema de pruebas automatizadas\n- Gestión de dependencias con uv\n- Generación de reportes gráficos profesionales",
       "technicalSections": [
@@ -98,7 +102,7 @@
       "id": "era5-climate",
       "title": "Análisis Climático Global con Datos ERA5",
       "shortDescription": "Visualización avanzada de datos meteorológicos 3D usando modelos ECMWF Copernicus",
-      "image": "https://ext.same-assets.com/530234544/1191867462.jpeg",
+      "image": "/project3.jpg",
       "tags": [
         "Python 3.11",
         "Xarray",
@@ -110,7 +114,9 @@
       ],
       "links": {
         "demo": "/project/era5-climate",
-        "github": "https://github.com/gillopy/Era5data3D"
+        "github": "https://github.com/gillopy/Era5data3D",
+        "pdf": "https://github.com/gillopy/Era5data3D",
+        "ipynb": "https://github.com/gillopy/Era5data3D"
       },
       "fullDescription": "Sistema completo para procesamiento y visualización de datos climáticos con:\n- Carga y procesamiento de formatos GRIB/NetCDF\n- Visualizaciones 2D/3D con proyecciones cartográficas\n- Análisis temporal de series climáticas\n- Integración con datos geoespaciales (GeoJSON)\n- Animaciones de evolución temporal\n- Modelado de temperaturas y variables atmosféricas",
       "technicalSections": [

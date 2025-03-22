@@ -16,15 +16,18 @@ interface Props {
 }
 
 const { project } = Astro.props;
+import { Image } from 'astro:assets';
 ---
 
 <div class="project-card rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full border border-slate-100 hover:border-primary/20 hover:-translate-y-2">
   <div class="project-image m-3 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
     <div class="aspect-video overflow-hidden rounded-lg">
-      <img
+      <Image
         src={project.image}
         alt={project.title}
         class="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
+        width={640}  
+        height={360} 
       />
     </div>
   </div>

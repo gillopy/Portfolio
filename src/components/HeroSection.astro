@@ -1,5 +1,6 @@
 ---
 import profile from '../data/profile.json';
+import { Image } from 'astro:assets';
 ---
 
 <section id="inicio" class="hero min-h-screen flex items-center pt-20 pb-16 bg-section-dark">
@@ -33,12 +34,13 @@ import profile from '../data/profile.json';
 
       <div class="hero-image w-full lg:w-1/2 flex justify-center opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
         <div class="relative rounded-lg overflow-hidden p-2 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white">
-          <img
+          <Image
             src={profile.brainImage}
             alt="Brain Data Science Concept"
             class="max-w-full h-auto object-contain relative z-10"
-            width="500"
-            height="400"
+            width={500}  
+            height={400} 
+            loading="eager" 
           />
         </div>
       </div>
