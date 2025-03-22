@@ -1,48 +1,146 @@
-# Astro Starter Kit: Basics
+# Portfolio Website
 
-```sh
-npm create astro@latest -- --template basics
+A modern, responsive portfolio website built with Astro and Tailwind CSS. This project showcases a developer's skills, projects, and contact information in a clean and professional layout with alternating section backgrounds and a focused project detail view.
+
+![Portfolio Screenshot](https://example.com/screenshot.jpg)
+
+## 🚀 Features
+
+- **Responsive Design**: Fully responsive layout that works on all devices
+- **Alternating Section Backgrounds**: Visual separation between content sections
+- **Modern UI**: Clean and professional design with subtle animations
+- **Project Showcase**: Detailed project pages with technical information
+- **Code Highlighting**: Syntax highlighting for code examples with copy functionality
+- **Contact Form**: Integrated contact form for easy communication
+- **Fast Performance**: Built with Astro for optimal loading speed
+
+## 🛠️ Technologies Used
+
+- [Astro](https://astro.build/) - The web framework for content-driven websites
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Bun](https://bun.sh/) - JavaScript runtime & package manager
+- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed:
+- [Node.js](https://nodejs.org/) (v16 or higher)
+- [Bun](https://bun.sh/) (recommended) or npm
+
+## 🔧 Installation & Setup
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/yourusername/portfolio-website.git
+cd portfolio-website
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+2. **Install dependencies**
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+```bash
+# Using Bun (recommended)
+bun install
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+# Or using npm
+npm install
+```
 
-## 🚀 Project Structure
+3. **Start the development server**
 
-Inside of your Astro project, you'll see the following folders and files:
+```bash
+# Using Bun
+bun run dev
 
-```text
+# Or using npm
+npm run dev
+```
+
+4. **Open your browser**
+
+Navigate to [http://localhost:4321](http://localhost:4321) to see the website.
+
+## 📚 Project Structure
+
+```
 /
-├── public/
-│   └── favicon.svg
+├── public/             # Static assets
 ├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── assets/         # Project images and other assets
+│   ├── components/     # UI components
+│   ├── data/           # JSON data files
+│   ├── layouts/        # Page layouts
+│   ├── pages/          # Page components and routes
+│   └── utils/          # Utility functions
+├── .astro/             # Astro build files
+├── astro.config.mjs    # Astro configuration
+└── tailwind.config.mjs # Tailwind CSS configuration
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## 🧩 Customization
 
-## 🧞 Commands
+### Personal Information
 
-All commands are run from the root of the project, from a terminal:
+Edit the JSON files in the `src/data/` directory to update:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+- `profile.json` - Your personal information and about section
+- `projects.json` - Your project showcase 
+- `skills.json` - Your technical and personal skills
+- `siteConfig.json` - Site-wide configuration
 
-## 👀 Want to learn more?
+### Styling
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+The color scheme and general styling can be modified in:
+
+- `tailwind.config.mjs` - Color palette and theme customization
+- Individual component `.astro` files - Component-specific styling
+
+## 🚢 Deployment
+
+### Build for Production
+
+```bash
+# Using Bun
+bun run build
+
+# Or using npm
+npm run build
+```
+
+This generates a static site in the `dist/` directory ready for deployment.
+
+### Deploy to Netlify/Vercel
+
+This project is ready to deploy on Netlify, Vercel, or any static site hosting:
+
+1. Connect your repository to your hosting provider
+2. Set the build command to `astro build` or `npm run build`
+3. Set the publish directory to `dist`
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Original design inspiration: [Guillermo Cabrera's Portfolio](https://portfolio-guillermo-cabrera.vercel.app/)
+- [Inter Font](https://fonts.google.com/specimen/Inter) by Rasmus Andersson
+- Icons from [Heroicons](https://heroicons.com/)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📬 Contact
+
+If you have any questions or feedback, please reach out through the contact form on the website or create an issue in this repository.
+
+---
+
+Made with ❤️ using [Astro](https://astro.build) and [Tailwind CSS](https://tailwindcss.com)
