@@ -1,6 +1,5 @@
 ---
 import Layout from './Layout.astro';
-import Header from '../components/Header.astro';
 
 interface Props {
 	title: string;
@@ -11,10 +10,8 @@ const { title, projectId } = Astro.props;
 ---
 
 <Layout title={title}>
-  <Header />
-
-  <main class="pt-20">
-    <div class="project-header py-5">
+  <main>
+    <div class="project-header py-5 bg-section-dark">
       <div class="container mx-auto px-6">
         <a href="/#proyectos" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,7 +22,7 @@ const { title, projectId } = Astro.props;
       </div>
     </div>
 
-    <div class="project-content py-8">
+    <div class="project-content py-8 bg-section-light">
       <div class="container mx-auto px-6">
         <slot />
       </div>
