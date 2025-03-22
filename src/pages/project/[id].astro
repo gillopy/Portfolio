@@ -1,0 +1,201 @@
+---
+import ProjectLayout from '../../layouts/ProjectLayout.astro';
+import projects from '../../data/projects.json';
+import { getEntryData } from '../../utils/getProjectData';
+
+export function getStaticPaths() {
+  return projects.projects.map(project => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+const { id } = Astro.params;
+const { project } = Astro.props;
+
+const projectData = getEntryData(project);
+---
+
+<ProjectLayout title={`${project.title} | Proyecto`} projectId={id}>
+  <div class="project-header-content">
+    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{project.title}</h1>
+    <p class="text-slate-700 mb-8 text-lg">{project.fullDescription || project.shortDescription}</p>
+  </div>
+
+  <div class="project-image-container max-w-3xl mx-auto mb-10">
+    <div class="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-white p-3">
+      <img
+        src={project.image}
+        alt={project.title}
+        class="w-full h-auto rounded-lg object-cover"
+        style="box-shadow: none;"
+      />
+    </div>
+  </div>
+
+  <div class="project-meta mb-10">
+    <div class="technologies mb-6">
+      <h3 class="text-xl font-bold text-slate-800 mb-3">Tecnologías</h3>
+      <div class="flex flex-wrap gap-2">
+        {project.tags.map((tag) => (
+          <span class="technology text-sm font-medium bg-slate-100 text-slate-700 rounded-full py-1 px-3 transition-all duration-300 hover:bg-primary hover:text-white">
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <div class="project-links flex flex-wrap gap-4 mb-8">
+      <a
+        href={project.links.demo}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-primary bg-primary text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:bg-secondary hover:shadow-lg hover:-translate-y-1 active:translate-y-0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+        Ver Proyecto
+      </a>
+
+      <a
+        href={project.links.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </svg>
+        GitHub
+      </a>
+
+      <a
+        href="#"
+        class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Descargar PDF
+      </a>
+
+      <a
+        href="#"
+        class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+        </svg>
+        Descargar IPynb
+      </a>
+    </div>
+  </div>
+
+  {project.technicalSections && project.technicalSections.length > 0 && (
+    <div class="project-content bg-white p-8 rounded-lg shadow-md mb-10">
+      <h2 class="text-2xl font-bold text-slate-900 mb-6">Detalles Técnicos</h2>
+
+      <div class="technical-sections space-y-10">
+        {project.technicalSections.map((section, index) => (
+          <div class="technical-section" id={`section-${index}`}>
+            <h3 class="text-xl font-semibold text-slate-800 mb-4 border-l-4 border-primary pl-3">
+              {section.title}
+            </h3>
+
+            {section.code && (
+              <div class="code-container relative">
+                <div class="code-example bg-slate-100 p-4 rounded-lg mb-6 overflow-x-auto">
+                  <pre class="text-sm font-mono text-slate-800 relative"><code class="code-block">{section.code}</code></pre>
+                </div>
+                <button
+                  class="copy-btn absolute top-3 right-3 bg-slate-200 hover:bg-primary hover:text-white p-2 rounded-md transition-colors duration-200"
+                  aria-label="Copy code to clipboard"
+                  data-code={section.code}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {section.image && (
+              <div class="section-image mt-6">
+                <div class="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-white">
+                  <img
+                    src={section.image}
+                    alt={`${section.title} visualization`}
+                    class="w-full h-auto object-contain rounded-lg"
+                    style="box-shadow: none;"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</ProjectLayout>
+
+<style>
+  .code-block {
+    counter-reset: line;
+  }
+
+  .code-block > span {
+    display: inline-block;
+    width: 100%;
+  }
+
+  .code-block > span:before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 1.5rem;
+    margin-right: 1rem;
+    text-align: right;
+    color: #94a3b8;
+    user-select: none;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Add line numbers to code blocks
+    document.querySelectorAll('.code-block').forEach(block => {
+      const content = block.textContent || '';
+      const lines = content.split('\n');
+      block.innerHTML = lines.map(line => `<span>${line}</span>`).join('\n');
+    });
+
+    // Handle copy button functionality
+    document.querySelectorAll('.copy-btn').forEach(button => {
+      button.addEventListener('click', async () => {
+        const code = button.getAttribute('data-code') || '';
+
+        try {
+          await navigator.clipboard.writeText(code);
+
+          // Visual feedback - temporarily change the button
+          const originalInnerHTML = button.innerHTML;
+          button.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          `;
+          button.classList.add('bg-green-500', 'text-white');
+
+          // Revert back after a short delay
+          setTimeout(() => {
+            button.innerHTML = originalInnerHTML;
+            button.classList.remove('bg-green-500', 'text-white');
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+        }
+      });
+    });
+  });
+</script>

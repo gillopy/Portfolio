@@ -1,0 +1,143 @@
+---
+import skills from '../data/skills.json';
+---
+
+<section id="habilidades" class="skills py-16 bg-slate-50">
+  <div class="container mx-auto px-6">
+    <h2 class="section-title text-3xl md:text-4xl font-bold text-slate-900 mb-12 text-center relative">
+      <span class="relative inline-block title-with-line">
+        Habilidades
+        <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-accent1 rounded title-underline"></span>
+      </span>
+    </h2>
+
+    <div class="skills-container grid grid-cols-1 md:grid-cols-2 gap-10">
+      <!-- Technical Skills -->
+      <div class="skills-column">
+        <h3 class="text-xl font-bold text-slate-800 mb-8 border-l-4 border-primary pl-3 relative group">
+          Habilidades Técnicas
+          <span class="absolute bottom-0 left-0 w-1 h-full bg-primary group-hover:bg-accent1 transition-colors duration-300"></span>
+        </h3>
+        <div class="skills-list space-y-6">
+          {skills.technical.map((skill) => (
+            <div class="skill">
+              <div class="skill-info flex justify-between items-center mb-2">
+                <span class="skill-name text-slate-700 font-medium">{skill.name}</span>
+                <span class="skill-percentage text-primary font-medium">{skill.percentage}%</span>
+              </div>
+              <div class="skill-bar h-3 w-full bg-slate-200 rounded-full overflow-hidden hover:shadow-md transition-all duration-300">
+                <div
+                  class="skill-progress h-full bg-gradient-to-r from-primary to-accent1 rounded-full"
+                  style={`width: ${skill.percentage}%;`}
+                  data-percentage={skill.percentage}
+                >
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Personal Skills -->
+      <div class="skills-column">
+        <h3 class="text-xl font-bold text-slate-800 mb-8 border-l-4 border-accent1 pl-3 relative group">
+          Habilidades Personales
+          <span class="absolute bottom-0 left-0 w-1 h-full bg-accent1 group-hover:bg-primary transition-colors duration-300"></span>
+        </h3>
+        <div class="skills-list space-y-6">
+          {skills.personal.map((skill) => (
+            <div class="skill">
+              <div class="skill-info flex justify-between items-center mb-2">
+                <span class="skill-name text-slate-700 font-medium">{skill.name}</span>
+                <span class="skill-percentage text-accent1 font-medium">{skill.percentage}%</span>
+              </div>
+              <div class="skill-bar h-3 w-full bg-slate-200 rounded-full overflow-hidden hover:shadow-md transition-all duration-300">
+                <div
+                  class="skill-progress h-full bg-gradient-to-r from-accent1 to-accent2 rounded-full"
+                  style={`width: ${skill.percentage}%;`}
+                  data-percentage={skill.percentage}
+                >
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tools & Technologies -->
+    <div class="tools-container mt-16">
+      <h3 class="text-xl font-bold text-slate-800 mb-8 text-center relative title-with-line">
+        Herramientas y Tecnologías
+        <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-0.5 bg-accent1 rounded title-underline"></span>
+      </h3>
+      <div class="tools-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-4xl mx-auto">
+        {skills.tools.map((tool) => (
+          <div class="tool-item bg-white rounded-lg border border-slate-200 py-3 px-4 text-center text-slate-700
+                      transition-all duration-300
+                      hover:bg-white hover:text-primary hover:border-primary
+                      hover:shadow-md hover:shadow-primary/10 hover:-translate-y-1
+                      hover:scale-105 cursor-pointer">
+            {tool}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .title-with-line {
+    padding-bottom: 0.75rem;
+  }
+
+  .title-underline {
+    transition: width 0.3s ease, transform 0.3s ease;
+    transform-origin: center;
+  }
+
+  .title-with-line:hover .title-underline {
+    width: 5rem;
+  }
+
+  .skill-bar {
+    position: relative;
+  }
+
+  .skill-progress {
+    transition: width 1.5s ease-in-out;
+  }
+</style>
+
+<script>
+  // Animate skill bars on scroll
+  document.addEventListener('DOMContentLoaded', () => {
+    const skillBars = document.querySelectorAll('.skill-progress');
+
+    // Initially set width to 0
+    skillBars.forEach(bar => {
+      bar.style.width = '0%';
+    });
+
+    // Create IntersectionObserver
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          // When element is visible, animate to the actual percentage
+          const percentage = entry.target.getAttribute('data-percentage');
+          setTimeout(() => {
+            entry.target.style.width = `${percentage}%`;
+          }, 200);
+
+          // Unobserve after animation
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    // Observe all skill bars
+    skillBars.forEach(bar => {
+      observer.observe(bar);
+    });
+  });
+</script>

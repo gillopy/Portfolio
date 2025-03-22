@@ -1,0 +1,68 @@
+{
+  "technical": [
+    {
+      "name": "Estadística",
+      "percentage": 95
+    },
+    {
+      "name": "Econometría",
+      "percentage": 90
+    },
+    {
+      "name": "Macroeconomia",
+      "percentage": 80
+    },
+    {
+      "name": "Machine Learning",
+      "percentage": 95
+    },
+    {
+      "name": "Deep Learning",
+      "percentage": 95
+    }
+  ],
+  "personal": [
+    {
+      "name": "Resolución de Problemas",
+      "percentage": 95
+    },
+    {
+      "name": "Pensamiento Analítico",
+      "percentage": 95
+    },
+    {
+      "name": "Comunicación",
+      "percentage": 80
+    },
+    {
+      "name": "Trabajo en Equipo",
+      "percentage": 90
+    },
+    {
+      "name": "Adaptabilidad",
+      "percentage": 90
+    }
+  ],
+  "tools": [
+    "TensorFlow",
+    "PyTorch",
+    "Scikit-learn",
+    "Statsforecast",
+    "Neuronalforecast",
+    "Keras",
+    "XGBoost",
+    "Statsmodels",
+    "Prophet",
+    "RNN",
+    "Docker",
+    "Github",
+    "Poetry",
+    "UV",
+    "Xarray",
+    "Geopandas",
+    "Matplotlib",
+    "Numpy",
+    "Pandas",
+    "Seaborn"
+  ]
+}

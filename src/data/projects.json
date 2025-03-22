@@ -1,0 +1,140 @@
+{
+  "projects": [
+    {
+      "id": "heart-disease",
+      "title": "Sistema de Predicción de Enfermedades Cardíacas",
+      "shortDescription": "Pipeline completo de machine learning para predecir riesgo cardíaco usando XGBoost, con despliegue en Docker y versionado de modelos",
+      "image": "https://ext.same-assets.com/530234544/2191290803.jpeg",
+      "tags": [
+        "Python 3.10",
+        "XGBoost",
+        "Scikit-learn",
+        "Pandas",
+        "Joblib",
+        "Docker",
+        "Poetry"
+      ],
+      "links": {
+        "demo": "/project/heart-disease",
+        "github": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI"
+      },
+      "fullDescription": "Implementación completa de machine learning con procesamiento robusto de datos y gestión de modelos. Características principales: - Pipeline automatizado de datos que maneja valores faltantes y escalado de características - División estratificada de datos con balanceo de clases - Seguimiento de rendimiento del modelo (Precisión, Recall, AUC-ROC) - Despliegue Dockerizado con gestión de dependencias Poetry - Versionado automático de modelos con serialización timestamp - Métricas de evaluación comprehensivas y reproductibilidad",
+      "technicalSections": [
+        {
+          "title": "Preprocesamiento de Datos",
+          "code": "def process_data(df: pd.DataFrame, columns_to_impute: list):\n    # Handle missing values and prepare features\n    df[columns_to_impute] = df[columns_to_impute].replace(0, np.nan)\n    return df.drop(columns='num'), df['num']",
+          "image": "https://ext.same-assets.com/530234544/951180049.jpeg"
+        },
+        {
+          "title": "División Estratificada de Datos",
+          "code": "X_train, X_test, y_train, y_test = train_test_split(\nX, y, \ntest_size=0.2, \n    stratify=y,\n    random_state=42\n)",
+          "image": "https://ext.same-assets.com/530234544/1628334238.jpeg"
+        },
+        {
+          "title": "Entrenamiento del Modelo XGBoost",
+          "code": "model = XGBClassifier(\n    objective='binary:logistic',\n    max_depth=2,\n    n_estimators=300,\n    learning_rate=0.1\n)\nmodel.fit(X_train, y_train)",
+          "image": "https://ext.same-assets.com/530234544/3985596561.jpeg"
+        },
+        {
+          "title": "Evaluación del Modelo",
+          "code": "y_pred = model.predict(X_test)\ny_proba = model.predict_proba(X_test)[:, 1]\nprint(f'AUC: {roc_auc_score(y_test, y_proba):.2f}')",
+          "image": "https://ext.same-assets.com/530234544/3673918854.jpeg"
+        },
+        {
+          "title": "Versionado de Modelos",
+          "code": "def save_model(model, path):\n    timestamp = datetime.now().strftime('%Y-%m-%d')\n    joblib.dump(model, f'{path}_{timestamp}.joblib')",
+          "image": null
+        }
+      ]
+    },
+    {
+      "id": "ande-analysis",
+      "title": "Análisis de Demanda Eléctrica ANDE",
+      "shortDescription": "Sistema de visualización y análisis de patrones de consumo eléctrico con comparativas históricas",
+      "image": "https://ext.same-assets.com/530234544/711707636.jpeg",
+      "tags": [
+        "Python 3.13",
+        "Pandas",
+        "Matplotlib",
+        "Seaborn",
+        "Openpyxl",
+        "Pytest",
+        "uv"
+      ],
+      "links": {
+        "demo": "/project/ande-analysis",
+        "github": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv"
+      },
+      "fullDescription": "Plataforma completa para análisis energético con:\n- Carga automatizada de datos desde Excel\n- Procesamiento estadístico de series temporales\n- Visualizaciones interactivas con marcadores estacionales\n- Sistema de pruebas automatizadas\n- Gestión de dependencias con uv\n- Generación de reportes gráficos profesionales",
+      "technicalSections": [
+        {
+          "title": "Carga de Datos desde Excel",
+          "code": "class DataLoader:\n    @staticmethod\n    def load_data(file_path):\n        df = pd.read_excel(file_path)\n        return df[['Año', 'Enero', 'Febrero', ..., 'Diciembre']]",
+          "image": "/project2-extra1.jpg"
+        },
+        {
+          "title": "Procesamiento de Datos",
+          "code": "def _process_data(self):\n    self.df_melted = pd.melt(self.data, id_vars='Año',\n        var_name='Mes', value_name='KWh')\n    self.annual_stats = self.df_melted.groupby('Año')['KWh'].mean().to_dict()",
+          "image": "/project2-extra2.jpg"
+        },
+        {
+          "title": "Visualización de Datos",
+          "code": "sns.relplot(data=df_melted, x='Mes', y='KWh', col='Año',\n    kind='line', palette='crest', col_wrap=3, aspect=2)",
+          "image": "/project2-extra3.jpg"
+        },
+        {
+          "title": "Pruebas Unitarias",
+          "code": "def test_load_data_success():\n    df = DataLoader.load_data('data/demanda2.xlsx')\n    assert isinstance(df, pd.DataFrame)\n    assert not df.empty",
+          "image": null
+        },
+        {
+          "title": "Configuración de Dependencias",
+          "code": "[tool.uv]\ndependencies = [\n    \"matplotlib>=3.10.1\",\n    \"pandas>=2.2.3\",\n    \"seaborn>=0.13.2\"\n]",
+          "image": null
+        }
+      ]
+    },
+    {
+      "id": "era5-climate",
+      "title": "Análisis Climático Global con Datos ERA5",
+      "shortDescription": "Visualización avanzada de datos meteorológicos 3D usando modelos ECMWF Copernicus",
+      "image": "https://ext.same-assets.com/530234544/1191867462.jpeg",
+      "tags": [
+        "Python 3.11",
+        "Xarray",
+        "Cartopy",
+        "NetCDF4",
+        "Matplotlib",
+        "GeoPandas",
+        "cfgrib"
+      ],
+      "links": {
+        "demo": "/project/era5-climate",
+        "github": "https://github.com/gillopy/Era5data3D"
+      },
+      "fullDescription": "Sistema completo para procesamiento y visualización de datos climáticos con:\n- Carga y procesamiento de formatos GRIB/NetCDF\n- Visualizaciones 2D/3D con proyecciones cartográficas\n- Análisis temporal de series climáticas\n- Integración con datos geoespaciales (GeoJSON)\n- Animaciones de evolución temporal\n- Modelado de temperaturas y variables atmosféricas",
+      "technicalSections": [
+        {
+          "title": "Instalación de Dependencias",
+          "code": "pip install cfgrib cartopy netCDF4 geopandas",
+          "image": "/project3-extra1.jpg"
+        },
+        {
+          "title": "Carga de Datos NetCDF4",
+          "code": "import netCDF4 as nc\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport cartopy.crs as ccrs\nimport cartopy.feature as cfeature\n\n# Ruta del archivo .nc (cambia esto por la ubicación de tu archivo)\nfile_path = \"/content/drive/MyDrive/3c7785ed8c7cf99c2ae80fafa694aef4.nc\"\n\n# Cargar el archivo NetCDF4\ndataset = nc.Dataset(file_path, mode=\"r\")\n\n# Obtener las variables necesarias\nt2m = dataset.variables['t2m'][0, :, :]\nlat = dataset.variables['latitude'][:]\nlon = dataset.variables['longitude'][:]\n\n# Convertir a Celsius\nt2m_celsius = t2m - 273.15\n\n# Crear la figura y el mapa\nfig, ax = plt.subplots(figsize=(10, 5), subplot_kw={'projection': ccrs.PlateCarree()})\nax.set_extent([lon.min(), lon.max(), lat.min(), lat.max()], crs=ccrs.PlateCarree())\n\n# Agregar características al mapa\nax.add_feature(cfeature.COASTLINE)\nax.add_feature(cfeature.BORDERS, linestyle=':')\nax.add_feature(cfeature.LAND, edgecolor='black')\nax.add_feature(cfeature.LAKES, edgecolor='black')\nax.add_feature(cfeature.RIVERS, edgecolor='blue')\n\n# Dibujar la temperatura\nc = ax.pcolormesh(lon, lat, t2m_celsius, cmap='coolwarm', transform=ccrs.PlateCarree())\n\n# Agregar barra de color\ncbar = plt.colorbar(c, orientation='horizontal', pad=0.05)\ncbar.set_label('2m Temperature (°C)')\n\n# Título del gráfico\nplt.title(\"2m Temperature from ECMWF\")\n\n# Mostrar el gráfico\nplt.show()\n\n# Cerrar el dataset\ndataset.close()",
+          "image": "/project3-extra2.jpg"
+        },
+        {
+          "title": "Visualización con Cartopy y GRIB",
+          "code": "import numpy as np\nimport xarray as xr\nimport cfgrib\nimport geopandas as gpd\nimport matplotlib.pyplot as plt\nimport cartopy.crs as ccrs\nimport cartopy.feature as cfeature\nimport warnings\n\n# Ignorar advertencias específicas\nwarnings.filterwarnings(\"ignore\", category=FutureWarning)\nwarnings.filterwarnings(\"ignore\", category=UserWarning)\n\n# Ruta del archivo GRIB (modifica según tu ubicación)\nfile_path = \"/content/drive/MyDrive/53ff69f95521585163052af17eefd0c1.grib\"\n\n# Ruta del archivo GeoJSON (modifica según tu ubicación)\ngeojson_path = \"/content/drive/MyDrive/DEPARTAMENTOS_PY_CNPV2022.geojson.txt\"\n\n# Cargar el dataset GRIB\ndata = xr.open_dataset(file_path, engine='cfgrib')\n\n# Extraer temperatura y coordenadas\nlons = data.longitude.values\nlats = data.latitude.values\ntemp = data.stl2.values[0] - 273.15\n\n# Cargar el archivo GeoJSON\ngdf = gpd.read_file(geojson_path)\n\n# Crear la figura con una proyección ortográfica centrada en Sudamérica\nfig = plt.figure(figsize=(12, 12))\nax = fig.add_subplot(111, projection=ccrs.Orthographic(central_longitude=-60, central_latitude=-15))\n\n# Agregar características del mapa\nax.add_feature(cfeature.LAND, edgecolor='black')\nax.add_feature(cfeature.OCEAN)\nax.add_feature(cfeature.COASTLINE)\nax.add_feature(cfeature.BORDERS, linestyle='-')\n\n# Dibujar el límite del mapa\nax.gridlines(draw_labels=False, linestyle=\"--\", color=\"gray\", alpha=0.5)\n\n# Proyectar los datos de temperatura\nvmin, vmax = -40, 40\nmesh = ax.imshow(temp, extent=[lons.min(), lons.max(), lats.min(), lats.max()], transform=ccrs.PlateCarree(), cmap='coolwarm', origin='upper', vmin=vmin, vmax=vmax)\n\n# Agregar barra de colores\ncbar = plt.colorbar(mesh, orientation='horizontal', pad=0.05, extend='both')\ncbar.set_label('Temperature (°C)')\ncbar.set_ticks(np.arange(vmin, vmax + 10, 10))\n\n# Agregar título\nplt.title('ERA5-Pressure-levels, Daily Mean Temperature at 1000 hPa\\n2025-02-07 (UTC)')\n\n# Mostrar el gráfico\nplt.show()",
+          "image": "/project3-extra3.jpg"
+        },
+        {
+          "title": "Visualización con Cartopy y GeoJSON",
+          "code": "import numpy as np\nimport xarray as xr\nimport cfgrib\nimport geopandas as gpd\nimport matplotlib.pyplot as plt\nimport cartopy.crs as ccrs\nimport cartopy.feature as cfeature\nimport warnings\n\n# Ignorar advertencias específicas\nwarnings.filterwarnings(\"ignore\", category=FutureWarning)\nwarnings.filterwarnings(\"ignore\", category=UserWarning)\n\n# Ruta del archivo GRIB (modifica según tu ubicación)\nfile_path = \"/content/drive/MyDrive/53ff69f95521585163052af17eefd0c1.grib\"\n\n# Ruta del archivo GeoJSON (modifica según tu ubicación)\ngeojson_path = \"/content/drive/MyDrive/DEPARTAMENTOS_PY_CNPV2022.geojson.txt\"\n\n# Cargar el dataset GRIB\ndata = xr.open_dataset(file_path, engine='cfgrib')\n\n# Extraer temperatura y coordenadas\nlons = data.longitude.values\nlats = data.latitude.values\ntemp = data.stl2.values[0] - 273.15\n\n# Cargar el archivo GeoJSON\ngdf = gpd.read_file(geojson_path)\n\n# Crear la figura con un zoom más adecuado\nfig = plt.figure(figsize=(15, 10))\nax = fig.add_subplot(111, projection=ccrs.PlateCarree())\n\n# Configurar la extensión del mapa para Sudamérica\nax.set_extent([-85, -30, -60, 15], crs=ccrs.PlateCarree())\n\n# Agregar características del mapa\nax.add_feature(cfeature.LAND, edgecolor='black')\nax.add_feature(cfeature.OCEAN)\nax.add_feature(cfeature.COASTLINE)\nax.add_feature(cfeature.BORDERS, linestyle='-')\n\n# Agregar límites de los departamentos desde el GeoJSON\ngdf.boundary.plot(ax=ax, edgecolor=\"black\", linewidth=1.2, transform=ccrs.PlateCarree())\n\n# Proyectar los datos con un rango de temperatura adecuado\nvmin, vmax = -40, 40\nmesh = ax.imshow(temp, extent=[lons.min(), lons.max(), lats.min(), lats.max()], transform=ccrs.PlateCarree(), cmap='coolwarm', origin='upper', vmin=vmin, vmax=vmax)\n\n# Agregar barra de colores\ncbar = plt.colorbar(mesh, orientation='horizontal', pad=0.05, extend='both')\ncbar.set_label('Temperature (°C)')\ncbar.set_ticks(np.arange(vmin, vmax + 10, 10))\n\n# Agregar título\nplt.title('ERA5-Pressure-levels, Daily Mean Temperature at 1000 hPa\\n2025-02-07 (UTC)')\n\n# Mostrar el gráfico\nplt.show()",
+          "image": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+---
+import siteConfig from '../data/siteConfig.json';
+---
+
+<header class="header fixed w-full top-0 left-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+  <div class="container mx-auto px-6">
+    <div class="header-content flex justify-between items-center py-4">
+      <div class="logo">
+        <a href="/" class="no-underline">
+          <span class="logo-text text-2xl font-bold text-primary transition-colors duration-300 hover:text-secondary">{siteConfig.logoText}</span>
+        </a>
+      </div>
+      <nav class="nav hidden md:block">
+        <ul class="nav-list flex space-x-6">
+          {siteConfig.navItems.map((item) => (
+            <li class="nav-item">
+              <a href={item.url} class="nav-link text-slate-700 hover:text-primary transition-colors duration-300 relative group py-1">
+                {item.text}
+                <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="mobile-toggle md:hidden flex flex-col justify-between w-6 h-5 cursor-pointer" id="mobile-toggle">
+        <span class="block w-full h-0.5 bg-primary rounded-full transition-all duration-300"></span>
+        <span class="block w-full h-0.5 bg-primary rounded-full transition-all duration-300"></span>
+        <span class="block w-full h-0.5 bg-primary rounded-full transition-all duration-300"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu">
+    <ul class="nav-list absolute top-16 left-0 w-full bg-white shadow-md py-4 px-6 hidden flex-col space-y-4 md:hidden">
+      {siteConfig.navItems.map((item) => (
+        <li class="nav-item">
+          <a href={item.url} class="nav-link block py-2 text-slate-700 hover:text-primary transition-colors duration-300">
+            {item.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</header>
+
+<style>
+  /* Mobile menu toggle styles */
+  .mobile-toggle.open span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+
+  .mobile-toggle.open span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-toggle.open span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  /* Mobile menu expanded */
+  .nav-list.open {
+    display: flex;
+  }
+</style>
+
+<script>
+  // Ensure this script runs client-side in Astro
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const navList = document.querySelector('.mobile-menu .nav-list');
+
+    if (mobileToggle && navList) {
+      mobileToggle.addEventListener('click', () => {
+        mobileToggle.classList.toggle('open');
+        navList.classList.toggle('open');
+      });
+
+      // Close mobile menu when clicking on nav links
+      const navLinks = document.querySelectorAll('.mobile-menu .nav-link');
+      navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          mobileToggle.classList.remove('open');
+          navList.classList.remove('open');
+        });
+      });
+    }
+  });
+</script>

@@ -1,0 +1,61 @@
+---
+import profile from '../data/profile.json';
+---
+
+<section id="inicio" class="hero min-h-screen flex items-center pt-20 pb-16">
+  <div class="container mx-auto px-6">
+    <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-16">
+      <div class="hero-text w-full lg:w-1/2 delay-children">
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4 opacity-0 animate-fade-in">
+          {profile.name}
+        </h1>
+        <h2 class="text-xl md:text-2xl font-medium text-primary mb-6 opacity-0 animate-fade-in">
+          {profile.title}
+        </h2>
+        <p class="text-slate-700 mb-10 leading-relaxed text-base md:text-lg opacity-0 animate-fade-in">
+          {profile.summary}
+        </p>
+        <div class="hero-btns flex flex-wrap gap-4 opacity-0 animate-fade-in">
+          <a href="#proyectos" class="btn btn-primary bg-primary text-white py-3 px-8 rounded-md transition-all duration-300 inline-flex items-center hover:bg-secondary hover:shadow-lg hover:-translate-y-1 active:translate-y-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+            Ver Proyectos
+          </a>
+          <a href="#contacto" class="btn btn-outline border-2 border-primary text-primary hover:bg-primary hover:text-white py-3 px-8 rounded-md transition-all duration-300 inline-flex items-center hover:-translate-y-1 active:translate-y-0 hover:shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Contacto
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-image w-full lg:w-1/2 flex justify-center opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="relative rounded-lg overflow-hidden p-2 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white">
+          <img
+            src={profile.brainImage}
+            alt="Brain Data Science Concept"
+            class="max-w-full h-auto object-contain relative z-10"
+            width="500"
+            height="400"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(circle at 20% 90%, rgba(14, 165, 233, 0.08) 0%, transparent 30%),
+      radial-gradient(circle at 80% 20%, rgba(3, 105, 161, 0.08) 0%, transparent 30%);
+  }
+
+  .btn-primary:hover svg,
+  .btn-outline:hover svg {
+    transform: translateX(3px);
+  }
+</style>

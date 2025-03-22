@@ -1,0 +1,29 @@
+{
+  "title": "Portfolio | Data Scientist",
+  "description": "Portfolio profesional de ciencia de datos, economía y estadística",
+  "logoText": "GC",
+  "navItems": [
+    {
+      "text": "Inicio",
+      "url": "#inicio"
+    },
+    {
+      "text": "Sobre Mí",
+      "url": "#sobre-mi"
+    },
+    {
+      "text": "Proyectos",
+      "url": "#proyectos"
+    },
+    {
+      "text": "Habilidades",
+      "url": "#habilidades"
+    },
+    {
+      "text": "Contacto",
+      "url": "#contacto"
+    }
+  ],
+  "formEndpoint": "https://formspree.io/f/manenneo",
+  "moreProjectsLink": "https://github.com/gillopy/Coding_Dojo_DS_ML"
+}

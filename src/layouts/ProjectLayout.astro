@@ -1,0 +1,77 @@
+---
+import Layout from './Layout.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+	title: string;
+	projectId: string;
+}
+
+const { title, projectId } = Astro.props;
+---
+
+<Layout title={title}>
+  <Header />
+
+  <main class="pt-20">
+    <div class="project-header py-5">
+      <div class="container mx-auto px-6">
+        <a href="/#proyectos" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          </svg>
+          Volver a Proyectos
+        </a>
+      </div>
+    </div>
+
+    <div class="project-content py-8">
+      <div class="container mx-auto px-6">
+        <slot />
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  /* Project specific styles */
+  :global(.project-content h2) {
+    @apply text-2xl font-bold text-slate-900 mb-4 mt-8;
+  }
+
+  :global(.project-content h3) {
+    @apply text-xl font-semibold text-slate-900 mb-3 mt-6;
+  }
+
+  :global(.project-content p) {
+    @apply text-slate-700 mb-4 leading-relaxed;
+  }
+
+  :global(.project-content ul) {
+    @apply list-disc list-inside mb-4 text-slate-700;
+  }
+
+  :global(.project-content pre) {
+    @apply bg-slate-100 p-4 rounded-lg mb-6 overflow-x-auto;
+  }
+
+  :global(.project-content code) {
+    @apply font-mono text-sm;
+  }
+
+  :global(.project-content img) {
+    @apply rounded-lg shadow-md my-6 mx-auto;
+  }
+
+  :global(.project-content .btn) {
+    @apply inline-flex items-center justify-center px-6 py-2 rounded-md transition-all duration-300;
+  }
+
+  :global(.project-content .btn-primary) {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  :global(.project-content .btn-outline) {
+    @apply border border-primary text-primary hover:bg-primary/10;
+  }
+</style>

@@ -1,0 +1,70 @@
+---
+interface Project {
+  id: string;
+  title: string;
+  shortDescription: string;
+  image: string;
+  tags: string[];
+  links: {
+    demo: string;
+    github: string;
+  };
+}
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+---
+
+<div class="project-card rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full border border-slate-100 hover:border-primary/20 hover:-translate-y-2">
+  <div class="project-image m-3 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+    <div class="aspect-video overflow-hidden rounded-lg">
+      <img
+        src={project.image}
+        alt={project.title}
+        class="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
+      />
+    </div>
+  </div>
+
+  <div class="project-details p-6 flex flex-col flex-grow">
+    <h3 class="text-xl font-bold text-slate-900 mb-2 hover:text-primary transition-colors duration-300">
+      {project.title}
+    </h3>
+    <p class="text-slate-600 mb-4 line-clamp-3 flex-grow">
+      {project.shortDescription}
+    </p>
+
+    <div class="project-technologies flex flex-wrap gap-2 mb-5">
+      {project.tags.slice(0, 5).map((tag) => (
+        <span class="technology text-xs font-medium bg-slate-100 text-slate-700 rounded-full py-1 px-2 transition-all duration-300 hover:bg-primary hover:text-white">
+          {tag}
+        </span>
+      ))}
+      {project.tags.length > 5 && (
+        <span class="technology text-xs font-medium bg-slate-100 text-slate-700 rounded-full py-1 px-2 transition-all duration-300 hover:bg-primary hover:text-white">
+          +{project.tags.length - 5}
+        </span>
+      )}
+    </div>
+
+    <div class="project-links flex gap-3 mt-auto">
+      <a
+        href={project.links.demo}
+        class="btn btn-primary bg-primary text-white text-sm py-2 px-4 rounded-md transition-all duration-300 flex-1 text-center hover:bg-secondary hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+      >
+        Ver Proyecto
+      </a>
+      <a
+        href={project.links.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white text-sm py-2 px-4 rounded-md transition-all duration-300 flex-1 text-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+      >
+        GitHub
+      </a>
+    </div>
+  </div>
+</div>

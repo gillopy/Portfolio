@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import HeroSection from '../components/HeroSection.astro';
+import AboutSection from '../components/AboutSection.astro';
+import ProjectsSection from '../components/ProjectsSection.astro';
+import SkillsSection from '../components/SkillsSection.astro';
+import ContactSection from '../components/ContactSection.astro';
+import profile from '../data/profile.json';
+---
+
+<Layout title={`Portfolio | ${profile.name}`}>
+  <Header />
+
+  <main>
+    <HeroSection />
+    <AboutSection />
+    <ProjectsSection />
+    <SkillsSection />
+    <ContactSection />
+  </main>
+</Layout>

@@ -1,0 +1,98 @@
+---
+import siteConfig from '../data/siteConfig.json';
+
+interface Props {
+	title?: string;
+}
+
+const { title = siteConfig.title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content={siteConfig.description} />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+		<title>{title}</title>
+	</head>
+	<body class="bg-background text-gray-900 font-sans">
+		<slot />
+
+        <!-- Scroll to Top Button -->
+        <button id="scroll-to-top" class="fixed bottom-6 right-6 p-3 rounded-full bg-primary text-white shadow-lg opacity-0 invisible transition-all duration-300 hover:bg-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+	</body>
+</html>
+
+<style is:global>
+	/* Add global styles here */
+	html {
+		scroll-behavior: smooth;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	.animate-fade-in {
+		animation: fadeIn 0.6s ease-in-out forwards;
+	}
+
+	/* Add a delay to each child element */
+	.delay-children > *:nth-child(1) { animation-delay: 0.1s; }
+	.delay-children > *:nth-child(2) { animation-delay: 0.2s; }
+	.delay-children > *:nth-child(3) { animation-delay: 0.3s; }
+	.delay-children > *:nth-child(4) { animation-delay: 0.4s; }
+	.delay-children > *:nth-child(5) { animation-delay: 0.5s; }
+
+    /* Custom button shadow */
+    .hover\:shadow-lg:hover {
+        --tw-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+        --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -2px var(--tw-shadow-color);
+        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    }
+</style>
+
+<script>
+    // Scroll to top button functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        const scrollToTopButton = document.getElementById('scroll-to-top');
+
+        if (scrollToTopButton) {
+            // Show button when scrolled down
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    scrollToTopButton.classList.remove('opacity-0', 'invisible');
+                    scrollToTopButton.classList.add('opacity-100', 'visible');
+                } else {
+                    scrollToTopButton.classList.add('opacity-0', 'invisible');
+                    scrollToTopButton.classList.remove('opacity-100', 'visible');
+                }
+            });
+
+            // Scroll to top when clicked
+            scrollToTopButton.addEventListener('click', () => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+    });
+</script>

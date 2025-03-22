@@ -1,0 +1,15 @@
+[build]
+  command = "bun run build"
+  publish = "dist"
+
+# Handle not found errors by returning the 404 page
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# CORS headers for assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

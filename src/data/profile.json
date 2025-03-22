@@ -1,0 +1,49 @@
+{
+  "name": "Guillermo Cabrera",
+  "title": "Economista, Estadístico y Científico de Datos",
+  "summary": "Manejo de modelos de aprendizaje profundo para forecasting, analisis de series temporales y clasificacion de datos. Conocimientos avanzados en econometria, estadistica descriptiva e inferencial. Facilidad en estructurar y desplegar modelos de machine learning en entornos de producción.",
+  "about": {
+    "text": [
+      "Con una formación integral en economía y ciencia de datos, me especializo en transformar información compleja en insights estratégicos que potencian la toma de decisiones efectivas.",
+      "Mi enfoque profesional combina rigor cuantitativo y creatividad, orientado a impulsar la innovación y la transformación digital en entornos corporativos y de políticas públicas."
+    ],
+    "details": [
+      {
+        "label": "Nombre",
+        "value": "Guillermo Cabrera"
+      },
+      {
+        "label": "Email",
+        "value": "guillermocabrera9710@hotmail.com"
+      },
+      {
+        "label": "Ubicación",
+        "value": "Asunción, Paraguay"
+      },
+      {
+        "label": "Disponibilidad",
+        "value": "Tiempo completo, Remoto"
+      }
+    ],
+    "cvLink": "https://drive.google.com/file/d/1cq8z85D03Rfh30dshp7ovlro32eu4e_q/view?usp=sharing"
+  },
+  "social": [
+    {
+      "platform": "Email",
+      "url": "mailto:guillermocabrera9710@hotmail.com",
+      "handle": "guillermocabrera9710@hotmail.com"
+    },
+    {
+      "platform": "LinkedIn",
+      "url": "https://linkedin.com/in/gillo-cabrera",
+      "handle": "linkedin.com/in/gillo-cabrera"
+    },
+    {
+      "platform": "GitHub",
+      "url": "https://github.com/gillopy/",
+      "handle": "github.com/gillopy"
+    }
+  ],
+  "brainImage": "/ds.jpg",
+  "profileImage": "/profile.jpg"
+}
