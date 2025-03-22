@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website built with Astro and Tailwind CSS. This project showcases a developer's skills, projects, and contact information in a clean and professional layout with alternating section backgrounds and a focused project detail view.
 
-![Portfolio Screenshot](https://example.com/screenshot.jpg)
+![Portfolio Screenshot](public\captureweb.jpg)
 
 ## 🚀 Features
 
