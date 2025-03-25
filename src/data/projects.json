@@ -17,35 +17,45 @@
       "links": {
         "demo": "/project/heart-disease",
         "github": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI",
-        "pdf": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI", 
-        "ipynb": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI" 
+        "pdf": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI",
+        "ipynb": "https://github.com/gillopy/Deployment_XGBoost_Heart_Disease_UCI"
       },
       "fullDescription": "Implementación completa de machine learning con procesamiento robusto de datos y gestión de modelos. Características principales: - Pipeline automatizado de datos que maneja valores faltantes y escalado de características - División estratificada de datos con balanceo de clases - Seguimiento de rendimiento del modelo (Precisión, Recall, AUC-ROC) - Despliegue Dockerizado con gestión de dependencias Poetry - Versionado automático de modelos con serialización timestamp - Métricas de evaluación comprehensivas y reproductibilidad",
       "technicalSections": [
         {
-          "title": "Preprocesamiento de Datos",
-          "code": "def process_data(df: pd.DataFrame, columns_to_impute: list):\n    # Handle missing values and prepare features\n    df[columns_to_impute] = df[columns_to_impute].replace(0, np.nan)\n    return df.drop(columns='num'), df['num']",
+          "title": "/src/data/data_loader.py",
+          "code": " 1 | import pandas as pd\n 2 | \n 3 | def load_data(file_path: str) -> pd.DataFrame:\n 4 |     \"\"\"\n 5 |     Carga los datos desde un archivo CSV.\n 6 | \n 7 |     Args:\n 8 |         file_path (str): Ruta del archivo CSV.\n 9 | \n10 |     Returns:\n11 |         pd.DataFrame: DataFrame con los datos cargados.\n12 |     \"\"\"\n13 |     return pd.read_csv(file_path)\n14 | ",
           "image": "/project1-extra1.jpg"
         },
         {
-          "title": "División Estratificada de Datos",
-          "code": "X_train, X_test, y_train, y_test = train_test_split(\nX, y, \ntest_size=0.2, \n    stratify=y,\n    random_state=42\n)",
+          "title": "/src/data/data_processor.py",
+          "code": " 1 | import pandas as pd\n 2 | import numpy as np\n 3 | \n 4 | def process_data(df: pd.DataFrame, columns_to_impute: list, target_column: str = None) -> tuple[pd.DataFrame, pd.Series]:\n 5 |     \"\"\"\n 6 |     Procesa los datos:\n 7 |     - Imputa los valores faltantes\n 8 |     - Escalar las variables numéricas\n 9 | \n10 |     Args:\n11 |        df (pd.DataFrame): DataFrame con los datos a procesar.\n12 |        columns_to_impute (list): Lista de columnas a imputar los valores faltantes.\n13 |        target_column (str, optional): Nombre de la columna objetivo.\n14 | \n15 |     Returns:\n16 |        pd.DataFrame: DataFrame con los datos procesados.\n17 |        pd.Series: Serie con la variable objetivo.\n18 |     \"\"\"\n19 |     # Reemplazar valores 0 por NaN en las columnas a imputar\n20 |     df[columns_to_impute] = df[columns_to_impute].replace(0, np.nan)\n21 |     \n22 |     # Extraer la columna objetivo si es proporcionada\n23 |     target = df[target_column] if target_column else None\n24 |     \n25 |     return df, target\n26 | ",
           "image": "/project1-extra2.jpg"
         },
         {
-          "title": "Entrenamiento del Modelo XGBoost",
-          "code": "model = XGBClassifier(\n    objective='binary:logistic',\n    max_depth=2,\n    n_estimators=300,\n    learning_rate=0.1\n)\nmodel.fit(X_train, y_train)",
+          "title": "/src/data/data_splitter.py",
+          "code": " 1 | from sklearn.model_selection import train_test_split\n 2 | import pandas as pd\n 3 | \n 4 | def split_data(data: pd.DataFrame, target_column: str, test_size=0.2, random_state=42, stratify: bool = True) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:\n 5 |     \"\"\"\n 6 |     Dividir los datos en conjuntos de entrenamiento y prueba\n 7 | \n 8 |     Args:\n 9 |         data (pd.DataFrame): Dataframe que contiene los datos a dividir\n10 |         target_column (str): Nombre de la columna objetivo\n11 |         test_size (float, optional): Proporción de los datos que quedan en el test. Defaults to 0.2.\n12 |         random_state (int, optional): Semilla para la aleatoriedad. Defaults to 42.\n13 | \n14 |     Returns:\n15 |         Tupla: Una tupla que contiene los conjuntos de entrenamiento y prueba\n16 |         - X_train (pd.DataFrame): Conjunto de entrenamiento de las variables independientes\n17 |         - X_test (pd.DataFrame): Conjunto de prueba de las variables independientes\n18 |         - y_train (pd.Series): Conjunto de entrenamiento de la variable objetivo\n19 |         - y_test (pd.Series): Conjunto de prueba de la variable objetivo\n20 |     \"\"\"\n21 |     X = data.drop(columns=target_column, axis=1)\n22 |     y = data[target_column]\n23 |     \n24 |     # Dividir el conjunto de datos en entrenamiento y prueba\n25 |     if stratify:\n26 |         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)\n27 |     else:\n28 |         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)\n29 |     \n30 |     return X_train, X_test, y_train, y_test\n31 | ",
+          "image": null
+        },
+        {
+          "title": "/src/main.py",
+          "code": " 1 | import sys\n 2 | import os\n 3 | # Agregar la raíz del proyecto al PYTHONPATH\n 4 | sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), \"..\")))\n 5 | from src.data.data_loader import load_data\n 6 | from src.data.data_processor import process_data\n 7 | import pandas as pd\n 8 | from src.data.data_splitter import split_data\n 9 | from src.model.trainer import train_model\n10 | from src.model.evaluator import evaluate_model\n11 | from src.model.saver import save_model\n12 | \n13 | def main():\n14 |     \n15 |     # Cargar los datos\n16 |     heart_disease = load_data(file_path = \"data/raw/heart.csv\")\n17 |     \n18 |     # Preprocesar los datos\n19 |     processed_data, target = process_data(\n20 |                                   df=heart_disease, \n21 |                                   columns_to_impute=['trestbps', 'chol', 'thalach', 'oldpeak'],  # columnas que pueden tener NaN\n22 |                                   target_column='num'  # Cambio para coincidir con la columna objetivo del dataset\n23 |                                   )\n24 |     \n25 |     # Dividir los datos en conjuntos de entrenamiento y prueba\n26 |     X_train, X_test, y_train, y_test = split_data(processed_data, target_column='num')\n27 |     \n28 |     # Convertir 'y' en binario\n29 |     y_train_binary = (y_train > 0).astype(int)\n30 |     y_test_binary = (y_test > 0).astype(int)\n31 | \n32 |     # Entrenar el modelo\n33 |     model = train_model(X_train=X_train, y_train=y_train_binary)\n34 | \n35 | \n36 | \n37 |     # Evaluar el modelo\n38 |     accuracy, precision, recall, f1, auc = evaluate_model(model, test_data=X_test, y_test=y_test_binary)\n39 | \n40 |     # Imprimir las métricas\n41 |     print(f\"Accuracy: {accuracy:.2f}\")\n42 |     print(f\"Precision: {precision:.2f}\")\n43 |     print(f\"Recall: {recall:.2f}\")\n44 |     print(f\"F1: {f1:.2f}\")\n45 |     print(f\"AUC: {auc:.2f}\")\n46 | \n47 |     \n48 |     # Guardar el modelo\n49 |     save_model(model, model_path=\"models/trained_model\")\n50 |     \n51 | if __name__ == \"__main__\":\n52 |     main()\n53 | ",
+          "image": null
+        },
+        {
+          "title": "/src/model/evaluator.py",
+          "code": " 1 | from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score\n 2 | import xgboost\n 3 | import pandas as pd\n 4 | \n 5 | def evaluate_model(model: xgboost.sklearn.XGBClassifier, test_data: pd.DataFrame, y_test: pd.Series) -> tuple[float, float, float, float, float]:\n 6 |     \"\"\"\n 7 |     Función para evaluar el modelo\n 8 |     \n 9 |     Args:\n10 |         model (xgboost.sklearn.XGBClassifier): Modelo a evaluar\n11 |         test_data (pd.DataFrame): Datos de prueba\n12 |         y_test (pd.Series): Etiquetas de prueba\n13 | \n14 |     Returns:\n15 |         tuple[float, float, float, float, float]: Accuracy, Precision, Recall, F1, AUC\n16 |     \"\"\"\n17 |     y_pred = model.predict(test_data)\n18 |     y_prob = model.predict_proba(test_data)[:, 1]\n19 |     \n20 |     accuracy = accuracy_score(y_test, y_pred)\n21 |     precision = precision_score(y_test, y_pred)\n22 |     recall = recall_score(y_test, y_pred)\n23 |     f1 = f1_score(y_test, y_pred)\n24 |     auc = roc_auc_score(y_test, y_prob)\n25 |     \n26 |     return accuracy, precision, recall, f1, auc\n27 | ",
           "image": "/project1-extra3.jpg"
         },
         {
-          "title": "Evaluación del Modelo",
-          "code": "y_pred = model.predict(X_test)\ny_proba = model.predict_proba(X_test)[:, 1]\nprint(f'AUC: {roc_auc_score(y_test, y_proba):.2f}')",
-          "image": "/project1-extra4.jpg"
+          "title": "/src/model/saver.py",
+          "code": " 1 | from datetime import datetime\n 2 | import joblib\n 3 | import xgboost\n 4 | \n 5 | def save_model(model: xgboost.sklearn.XGBClassifier, model_path: str) -> None:\n 6 |     \"\"\"\n 7 |     Guarda el modelo en un archivo usando joblib.\n 8 | \n 9 |     Args:\n10 |         model (xgboost.sklearn.XGBClassifier): Modelo a guardar.\n11 |         model_path (str): Ruta donde guardar el modelo (sin extensión).\n12 |     \"\"\"\n13 |     current_date = datetime.now().strftime(\"%Y-%m-%d\")\n14 |     full_path = f\"{model_path}_{current_date}.joblib\"\n15 |     joblib.dump(model, full_path)\n16 |     print(f\"Modelo guardado en {full_path}\")\n17 | ",
+          "image": null
         },
         {
-          "title": "Versionado de Modelos",
-          "code": "def save_model(model, path):\n    timestamp = datetime.now().strftime('%Y-%m-%d')\n    joblib.dump(model, f'{path}_{timestamp}.joblib')",
-          "image": null
+          "title": "/src/model/trainer.py",
+          "code": " 1 | import xgboost as xgb\n 2 | import pandas as pd\n 3 | \n 4 | def train_model(X_train: pd.DataFrame, y_train: pd.Series, params: dict = None) -> xgb.sklearn.XGBClassifier:\n 5 |     \"\"\"\n 6 |     Función para entrenar el modelo\n 7 | \n 8 |     Args:\n 9 |         X_train (pd.DataFrame): Dataframe con las variables independientes\n10 |         y_train (pd.Series): Serie con la variable objetivo\n11 |         params (dict, optional): Diccionario con los parámetros del modelo. Defaults to None.\n12 | \n13 |     Returns:\n14 |         xgboost.sklearn.XGBClassifier: Modelo entrenado\n15 |     \"\"\"\n16 |     if params is None:\n17 |         params = {'objective': 'binary:logistic', \n18 |                   'eval_metric': 'logloss',\n19 |                   'n_estimators': 300, \n20 |                   'max_depth': 2, \n21 |                   'learning_rate': 0.1, \n22 |                   'random_state': 42}\n23 |     \n24 |     model = xgb.XGBClassifier(**params)\n25 |     model.fit(X_train, y_train)\n26 |     \n27 |     return model\n28 | ",
+          "image": "/project1-extra4.jpg"
         }
       ]
     },
@@ -67,7 +77,7 @@
         "demo": "/project/ande-analysis",
         "github": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv",
         "pdf": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv",
-        "ipynb": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv" 
+        "ipynb": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv"
       },
       "fullDescription": "Plataforma completa para análisis energético con:\n- Carga automatizada de datos desde Excel\n- Procesamiento estadístico de series temporales\n- Visualizaciones interactivas con marcadores estacionales\n- Sistema de pruebas automatizadas\n- Gestión de dependencias con uv\n- Generación de reportes gráficos profesionales",
       "technicalSections": [
