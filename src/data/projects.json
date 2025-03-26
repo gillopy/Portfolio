@@ -59,10 +59,11 @@
         }
       ]
     },
+
     {
       "id": "ande-analysis",
       "title": "Análisis de Demanda Eléctrica ANDE",
-      "shortDescription": "Sistema de visualización y análisis de patrones de consumo eléctrico con comparativas históricas",
+      "shortDescription": "Sistema de visualización, análisis y forecasting de la demanda eléctrica con comparativas históricas",
       "image": "/project2.jpg",
       "tags": [
         "Python 3.13",
@@ -79,35 +80,27 @@
         "pdf": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv",
         "ipynb": "https://github.com/gillopy/demanda_de_potencia_max_ande_deployment_uv"
       },
-      "fullDescription": "Plataforma completa para análisis energético con:\n- Carga automatizada de datos desde Excel\n- Procesamiento estadístico de series temporales\n- Visualizaciones interactivas con marcadores estacionales\n- Sistema de pruebas automatizadas\n- Gestión de dependencias con uv\n- Generación de reportes gráficos profesionales",
+      "fullDescription": "Plataforma completa para análisis energético con:\n- Carga automatizada de datos desde Excel\n- Procesamiento estadístico de series temporales\n- Visualizaciones interactivas con marcadores estacionales\n- Sistema de pruebas automatizadas\n- Gestión de dependencias con uv\n- Generación de reportes gráficos profesionales\n- Forecasting de demanda eléctrica usando métodos tradicionales y modelos neuronales",
       "technicalSections": [
         {
-          "title": "Carga de Datos desde Excel",
-          "code": "class DataLoader:\n    @staticmethod\n    def load_data(file_path):\n        df = pd.read_excel(file_path)\n        return df[['Año', 'Enero', 'Febrero', ..., 'Diciembre']]",
+          "title": "Ande_Demanda_de_Potencia_Mensual & Ande.ipynb",
+          "code": "# Ande_Demanda_de_Potencia_Mensual\nDatos mensuales de la demanda de potencia máxima por mes, Paraguay.\n\n# Jupyter notebook converted to Python script.\n\nimport pandas as pd\nimport seaborn as sns\nimport matplotlib.pyplot as plt\n\n# Leer el archivo Excel\ndf = pd.read_excel('demanda2.xlsx')\n\n# Seleccionar las columnas relevantes (Año y meses)\ncolumnas_meses = ['Año', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']\ndf_meses = df[columnas_meses]\n\n# Reorganizar el DataFrame para ser compatible con Seaborn\ndf_meses_melted = pd.melt(df_meses, id_vars='Año', var_name='Mes', value_name='KWh')\n\n# Ordenar los meses correctamente\norden_meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']\ndf_meses_melted['Mes'] = pd.Categorical(df_meses_melted['Mes'], categories=orden_meses, ordered=True)\n\n# Configurar tema y estilo de Seaborn\nsns.set_theme(style=\"white\")\n\n# Plot cada serie temporal de años en su propia faceta\ng = sns.relplot(\n    data=df_meses_melted,\n    x=\"Mes\", y=\"KWh\", col=\"Año\", hue=\"Año\",\n    kind=\"line\", palette=\"crest\", linewidth=4, zorder=5,\n    col_wrap=3, height=5, aspect=2, legend=False\n)\n\n# Personalizar cada subplot\nfor año, ax in g.axes_dict.items():\n    ax.text(0.9, 0.90, str(año), transform=ax.transAxes, fontweight=\"bold\", \n            bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.1'))\n    sns.lineplot(\n        data=df_meses_melted, x=\"Mes\", y=\"KWh\", units=\"Año\",\n        estimator=None, color=\".7\", linewidth=1, ax=ax\n    )\n    ax.tick_params(axis='x', rotation=90)\n    ax.set_xticks(range(len(orden_meses)))\n    ax.set_xticklabels(orden_meses)\n    ax.axvline(x=2, color='red', linestyle='--', linewidth=0.8, label='Marzo')\n    ax.axvline(x=8, color='red', linestyle='--', linewidth=0.8, label='Septiembre')\n    datos_año = df_meses_melted[df_meses_melted['Año'] == año]\n    promedio_anual = datos_año['KWh'].mean()\n    ax.plot(datos_año['Mes'], [promedio_anual] * len(datos_año), color='green', linestyle='--', linewidth=1, \n            label=f'Promedio Anual MW: {promedio_anual:.0f}')\n    for idx in range(len(orden_meses)):\n        ax.axvline(x=idx, color='black', linestyle='--', alpha=0.3, linewidth=0.2)\n    ax.legend()\n    ax.patch.set_edgecolor('black')\n    ax.patch.set_linewidth(1)\n    ax.set_xlim(-0.5, len(orden_meses) - 0.5)\n\ng.set_titles(\"\")\ng.set_axis_labels(\"\", \"MW\")\ng.tight_layout()\n\nplt.show()\ng.savefig(\"grafico_demandaactual.png\", dpi=200, bbox_inches=\"tight\")",
           "image": "/project2-extra1.jpg"
         },
         {
-          "title": "Procesamiento de Datos",
-          "code": "def _process_data(self):\n    self.df_melted = pd.melt(self.data, id_vars='Año',\n        var_name='Mes', value_name='KWh')\n    self.annual_stats = self.df_melted.groupby('Año')['KWh'].mean().to_dict()",
+          "title": "Neuronal Forecasting",
+          "code": "import logging\nimport pandas as pd\nfrom utilsforecast.plotting import plot_series\nfrom neuralforecast import NeuralForecast\nfrom neuralforecast.models import NBEATS, NHITS\nfrom neuralforecast.utils import AirPassengersDF\n\nlogging.getLogger('pytorch_lightning').setLevel(logging.ERROR)\n\n# Cargar y transformar los datos\ndf2 = pd.read_excel('demanda2.xlsx')\n\nmeses_es_en = {\n    'Enero': 'January', 'Febrero': 'February', 'Marzo': 'March', 'Abril': 'April',\n    'Mayo': 'May', 'Junio': 'June', 'Julio': 'July', 'Agosto': 'August',\n    'Septiembre': 'September', 'Octubre': 'October', 'Noviembre': 'November', 'Diciembre': 'December'\n}\n\ndf_melted = df2.melt(id_vars=['Año'], var_name='Mes', value_name='y')\ndf_melted['Mes'] = df_melted['Mes'].map(meses_es_en)\ndf_melted['ds'] = pd.to_datetime(df_melted['Año'].astype(str) + '-' + df_melted['Mes'], format='%Y-%B')\ndf_final = df_melted[['ds', 'y']].sort_values('ds').reset_index(drop=True)\n\n# Agregar columna de identificador único\ndf_final['unique_id'] = 'ts_1'\n\n# Dividir datos en entrenamiento y prueba (últimas 12 entradas para prueba)\ntrain_df = df_final.iloc[:-12]\ntest_df = df_final.iloc[-12:]\n\nhorizonte = len(test_df)\n\n# Configurar y ajustar modelos NBEATS y NHITS\nmodelos = [\n    NBEATS(input_size=2 * horizonte, h=horizonte, max_steps=100, enable_progress_bar=False),\n    NHITS(input_size=2 * horizonte, h=horizonte, max_steps=100, enable_progress_bar=False)\n]\n\nnf = NeuralForecast(models=modelos, freq='ME')\nnf.fit(df=train_df)\npronostico_df = nf.predict()\n\n# Graficar la serie de entrenamiento y los pronósticos\nplot_series(train_df, pronostico_df)",
           "image": "/project2-extra2.jpg"
         },
         {
-          "title": "Visualización de Datos",
-          "code": "sns.relplot(data=df_melted, x='Mes', y='KWh', col='Año',\n    kind='line', palette='crest', col_wrap=3, aspect=2)",
+          "title": "StatsForecast Model",
+          "code": "from statsforecast import StatsForecast\nfrom statsforecast.models import AutoARIMA\nfrom statsforecast.utils import AirPassengersDF\nimport matplotlib.pyplot as plt\n\n# Ejemplo usando AirPassengersDF\ndf = AirPassengersDF\nsf = StatsForecast(\n    models=[AutoARIMA(season_length=12)],\n    freq='ME'\n)\n\nsf.fit(df)\nforecast = sf.predict(h=12, level=[95])\n\n# Graficar resultados con datos de AirPassengersDF\nplt.figure(figsize=(10, 6))\nplt.plot(df['ds'], df['y'], label='Datos históricos')\nplt.plot(forecast['ds'], forecast['AutoARIMA'], label='Predicción', color='orange')\nplt.fill_between(forecast['ds'], forecast['AutoARIMA-lo-95'], forecast['AutoARIMA-hi-95'], color='orange', alpha=0.3, label='Intervalo de confianza 95%')\nplt.xlabel('Fecha')\nplt.ylabel('Demanda de Potencia')\nplt.title('Predicción de Demanda de Potencia Mensual')\nplt.legend()\nplt.show()\n\n# Segunda sección utilizando datos del Excel\nimport pandas as pd\nfrom statsforecast import StatsForecast\nfrom statsforecast.models import AutoARIMA\nimport matplotlib.pyplot as plt\n\n# Cargar y transformar los datos\ndf2 = pd.read_excel('demanda2.xlsx')\n\nmeses_es_en = {\n    'Enero': 'January', 'Febrero': 'February', 'Marzo': 'March', 'Abril': 'April',\n    'Mayo': 'May', 'Junio': 'June', 'Julio': 'July', 'Agosto': 'August',\n    'Septiembre': 'September', 'Octubre': 'October', 'Noviembre': 'November', 'Diciembre': 'December'\n}\n\ndf_melted = df2.melt(id_vars=['Año'], var_name='Mes', value_name='y')\ndf_melted['Mes'] = df_melted['Mes'].map(meses_es_en)\ndf_melted['ds'] = pd.to_datetime(df_melted['Año'].astype(str) + '-' + df_melted['Mes'], format='%Y-%B')\ndf_final = df_melted[['ds', 'y']].sort_values('ds').reset_index(drop=True)\n\ndf_final['unique_id'] = 1\n\nsf = StatsForecast(\n    models=[AutoARIMA(season_length=12)],\n    freq='ME'\n)\n\nsf.fit(df_final)\nforecast = sf.predict(h=12, level=[95])\n\nplt.figure(figsize=(10, 6))\nplt.plot(df_final['ds'], df_final['y'], label='Datos históricos')\nplt.plot(forecast['ds'], forecast['AutoARIMA'], label='Predicción', color='orange')\nplt.fill_between(forecast['ds'], forecast['AutoARIMA-lo-95'], forecast['AutoARIMA-hi-95'], color='orange', alpha=0.3, label='Intervalo de confianza 95%')\nplt.xlabel('Fecha')\nplt.ylabel('Demanda de Potencia')\nplt.title('Predicción de Demanda de Potencia Mensual')\nplt.legend()\nplt.show()",
           "image": "/project2-extra3.jpg"
-        },
-        {
-          "title": "Pruebas Unitarias",
-          "code": "def test_load_data_success():\n    df = DataLoader.load_data('data/demanda2.xlsx')\n    assert isinstance(df, pd.DataFrame)\n    assert not df.empty",
-          "image": null
-        },
-        {
-          "title": "Configuración de Dependencias",
-          "code": "[tool.uv]\ndependencies = [\n    \"matplotlib>=3.10.1\",\n    \"pandas>=2.2.3\",\n    \"seaborn>=0.13.2\"\n]",
-          "image": null
         }
       ]
-    },
+    }
+    
+    ,
     {
       "id": "era5-climate",
       "title": "Análisis Climático Global con Datos ERA5",
