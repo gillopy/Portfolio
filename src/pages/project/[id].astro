@@ -129,12 +129,12 @@ const projectData = getEntryData(project);
             )}
 
             {section.image && (
-              <div class="section-image mt-6">
-                <div class="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-white">
+              <div class="section-image mt-6 max-w-3xl mx-auto">
+                <div class="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-white p-3">
                   <Image
                     src={section.image}
                     alt={`${section.title} visualization`}
-                    class="w-full h-auto object-contain rounded-lg"
+                    class="w-full h-auto object-cover rounded-lg"
                     width={640} 
                     height={360} 
                     style="box-shadow: none;"
