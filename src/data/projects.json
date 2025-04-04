@@ -103,7 +103,44 @@
           "image": "/project2-extra4.jpg"
         }
       ]
+    },
+
+
+    {
+      "id": "debt-ai-query",
+      "title": "RAG LLM's - Economist",
+      "shortDescription": "Aplicación de IA con base vectorial y modelo LLM para responder consultas sobre deuda histórica",
+      "image": "/project4.jpg",
+      "tags": [
+        "Python 3.13",
+        "Pandas",
+        "LangChain",
+        "Chroma",
+        "OllamaEmbeddings",
+        "deepseek-r1:1.5b",
+        "uv"
+      ],
+      "links": {
+        "demo": "/project/debt-ai-query",
+        "github": "https://github.com/gillopy/chicago_boy_ai",
+        "pdf": "https://github.com/gillopy/chicago_boy_ai",
+        "ipynb": "https://github.com/gillopy/chicago_boy_ai"
+      },
+      "fullDescription": "Sistema de inteligencia artificial para consultas económicas:\n- Vectorización semántica de registros históricos de deuda\n- Base de datos vectorial con búsqueda por similitud\n- Interfaz CLI de preguntas económicas\n- Motor LLM para respuestas guiadas por contexto\n- Almacenamiento eficiente con Chroma DB\n- Embeddings generados por Ollama\n- Implementación robusta con LangChain y uv\n- Compatible con múltiples modelos LLM",
+      "technicalSections": [
+        {
+          "title": "Vectorización con Chroma",
+          "code": "import pandas as pd\nfrom langchain.vectorstores import Chroma\nfrom langchain.embeddings import OllamaEmbeddings\nfrom langchain_core.documents import Document\n\n# Leer archivo CSV con datos de deuda\ndf = pd.read_csv(\"deuda.csv\")\n\n# Convertir registros en documentos enriquecidos\ndocs = []\nfor _, row in df.iterrows():\n    metadata = {\"fecha\": row[\"Fecha\"]}\n    contenido = f\"En {row['Fecha']}, el saldo era {row['Saldo']}, con desembolsos de {row['Desembolsos']} y pagos de {row['Pagos']}\"\n    doc = Document(page_content=contenido, metadata=metadata)\n    docs.append(doc)\n\n# Crear embeddings y almacenar en base vectorial\nembedding = OllamaEmbeddings(model=\"mxbai-embed-large\")\nchroma_db = Chroma.from_documents(docs, embedding, persist_directory=\"chrome_langchain_db_deuda\")\n\n# Guardar base de datos\nchroma_db.persist()",
+          "image": "/project4-extra1.jpg"
+        },
+        {
+          "title": "Interfaz de Consulta con LLM",
+          "code": "from langchain_ollama.llms import OllamaLLM\nfrom langchain_core.prompts import ChatPromptTemplate\nfrom vector import retriever\n\n# Configurar modelo LLM\nmodel = OllamaLLM(model=\"deepseek-r1:1.5b\", temperature=0.3, max_tokens=512)\n\n# Plantilla de prompt con registros recuperados\ntemplate = \"\"\"\nEres un asistente útil que responde preguntas sobre economia basándote en un conjunto de datos.\nDebes utilizar el conjunto de datos para responder las preguntas, no debes\nproporcionar ninguna información que no esté en las fuentes proporcionadas.\n\nA continuación, se presentan algunos registros relevantes que pueden ayudarte a proporcionar una respuesta precisa y detallada:\n{records}\n\nPor favor, analiza la información y responde a la siguiente pregunta de manera clara y concisa:\nPregunta: {question}\n\"\"\"\nprompt = ChatPromptTemplate.from_template(template)\nchain = prompt | model\n\n# Loop de interacción CLI\nwhile True:\n    print(\"\\n\\n-------------------------------\")\n    query = input(\"Escribe tu pregunta económica (o 'q' para salir): \")\n    if query == \"q\":\n        break\n    docs = retriever.get_relevant_documents(query)\n    context = \"\\n\".join([doc.page_content for doc in docs])\n    respuesta = chain.invoke({\"question\": query, \"records\": context})\n    print(\"\\nRespuesta generada:\\n\", respuesta)",
+          "image": "/project4-extra2.jpg"
+        }
+      ]
     }
+    
     
     ,
     {
