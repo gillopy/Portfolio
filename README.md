@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website built with Astro and Tailwind CSS. This project showcases a developer's skills, projects, and contact information in a clean and professional layout with alternating section backgrounds and a focused project detail view.
 
-![Portfolio Screenshot](/public/captureweb.jpg)
+![Portfolio Screenshot](/captureweb.jpg)
 
 ## 🚀 Features
 
@@ -18,14 +18,13 @@ A modern, responsive portfolio website built with Astro and Tailwind CSS. This p
 
 - [Astro](https://astro.build/) - The web framework for content-driven websites
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [Bun](https://bun.sh/) - JavaScript runtime & package manager
+- [npm](https://www.npmjs.com/) - Package manager
 - [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (v16 or higher)
-- [Bun](https://bun.sh/) (recommended) or npm
+- [Node.js](https://nodejs.org/) (v18 or higher)
 
 ## 🔧 Installation & Setup
 
@@ -39,20 +38,12 @@ cd portfolio-website
 2. **Install dependencies**
 
 ```bash
-# Using Bun (recommended)
-bun install
-
-# Or using npm
 npm install
 ```
 
 3. **Start the development server**
 
 ```bash
-# Using Bun
-bun run dev
-
-# Or using npm
 npm run dev
 ```
 

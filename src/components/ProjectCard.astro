@@ -19,7 +19,7 @@ const { project } = Astro.props;
 import { Image } from 'astro:assets';
 ---
 
-<div class="project-card rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full border border-slate-100 hover:border-primary/20 hover:-translate-y-2">
+<article class="project-card flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-primary/30 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
   <div class="project-image m-3 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
     <div class="aspect-video overflow-hidden rounded-lg">
       <Image
@@ -33,21 +33,21 @@ import { Image } from 'astro:assets';
   </div>
 
   <div class="project-details p-6 flex flex-col flex-grow">
-    <h3 class="text-xl font-bold text-slate-900 mb-2 hover:text-primary transition-colors duration-300">
+    <h3 class="mb-2 text-xl font-bold text-slate-900 transition-colors duration-300 hover:text-primary dark:text-white">
       {project.title}
     </h3>
-    <p class="text-slate-600 mb-4 line-clamp-3 flex-grow">
+    <p class="mb-4 line-clamp-3 flex-grow text-slate-600 dark:text-slate-200">
       {project.shortDescription}
     </p>
 
     <div class="project-technologies flex flex-wrap gap-2 mb-5">
       {project.tags.slice(0, 5).map((tag) => (
-        <span class="technology text-xs font-medium bg-slate-100 text-slate-700 rounded-full py-1 px-2 transition-all duration-300 hover:bg-primary hover:text-white">
+        <span class="technology rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 transition-all duration-300 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300">
           {tag}
         </span>
       ))}
       {project.tags.length > 5 && (
-        <span class="technology text-xs font-medium bg-slate-100 text-slate-700 rounded-full py-1 px-2 transition-all duration-300 hover:bg-primary hover:text-white">
+        <span class="technology rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 transition-all duration-300 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300">
           +{project.tags.length - 5}
         </span>
       )}
@@ -70,4 +70,4 @@ import { Image } from 'astro:assets';
       </a>
     </div>
   </div>
-</div>
+</article>

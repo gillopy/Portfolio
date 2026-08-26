@@ -2,19 +2,19 @@
 import siteConfig from '../data/siteConfig.json';
 ---
 
-<header class="header fixed w-full top-0 left-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+<header class="header fixed left-0 top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 backdrop-blur-lg dark:border-slate-800/70 dark:bg-slate-950/85">
   <div class="container mx-auto px-6">
-    <div class="header-content flex justify-between items-center py-4">
+    <div class="header-content flex items-center justify-between py-4">
       <div class="logo">
-        <a href="/" class="no-underline">
+        <a href="/" class="no-underline" aria-label="Ir al inicio">
           <span class="logo-text text-2xl font-bold text-primary transition-colors duration-300 hover:text-secondary">{siteConfig.logoText}</span>
         </a>
       </div>
-      <nav class="nav hidden md:block">
+      <nav class="nav hidden md:block" aria-label="Navegación principal">
         <ul class="nav-list flex space-x-6">
           {siteConfig.navItems.map((item) => (
             <li class="nav-item">
-              <a href={item.url} class="nav-link text-slate-700 hover:text-primary transition-colors duration-300 relative group py-1">
+              <a href={item.url} class="nav-link relative py-1 text-slate-700 transition-colors duration-300 hover:text-primary group dark:text-slate-300">
                 {item.text}
                 <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300"></span>
               </a>
@@ -22,20 +22,29 @@ import siteConfig from '../data/siteConfig.json';
           ))}
         </ul>
       </nav>
-      <div class="mobile-toggle md:hidden flex flex-col justify-between w-6 h-5 cursor-pointer" id="mobile-toggle">
+      <div class="flex items-center gap-3 md:hidden">
+        <button type="button" id="theme-toggle" class="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Cambiar tema">
+          <svg data-theme-icon="sun" xmlns="http://www.w3.org/2000/svg" class="hidden h-5 w-5 dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+          <svg data-theme-icon="moon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 1012 21a9 9 0 008.354-5.646z" /></svg>
+        </button>
+        <button type="button" class="mobile-toggle flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg p-2 hover:bg-slate-100 dark:hover:bg-slate-800" id="mobile-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
         <span class="block w-full h-0.5 bg-primary rounded-full transition-all duration-300"></span>
         <span class="block w-full h-0.5 bg-primary rounded-full transition-all duration-300"></span>
         <span class="block w-full h-0.5 bg-primary rounded-full transition-all duration-300"></span>
+        </button>
       </div>
+      <button type="button" id="theme-toggle-desktop" class="hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-primary md:block dark:text-slate-300 dark:hover:bg-slate-800" aria-label="Cambiar tema">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+      </button>
     </div>
   </div>
 
   <!-- Mobile Menu -->
   <div class="mobile-menu">
-    <ul class="nav-list absolute top-16 left-0 w-full bg-white shadow-md py-4 px-6 hidden flex-col space-y-4 md:hidden">
+    <ul id="mobile-nav" class="nav-list absolute left-0 top-full hidden w-full flex-col space-y-2 border-b border-slate-200 bg-white px-6 py-4 shadow-md dark:border-slate-800 dark:bg-slate-950 md:hidden">
       {siteConfig.navItems.map((item) => (
         <li class="nav-item">
-          <a href={item.url} class="nav-link block py-2 text-slate-700 hover:text-primary transition-colors duration-300">
+          <a href={item.url} class="nav-link block rounded-lg py-2 text-slate-700 transition-colors duration-300 hover:bg-slate-50 hover:text-primary dark:text-slate-300 dark:hover:bg-slate-900">
             {item.text}
           </a>
         </li>
@@ -45,45 +54,35 @@ import siteConfig from '../data/siteConfig.json';
 </header>
 
 <style>
-  /* Mobile menu toggle styles */
-  .mobile-toggle.open span:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-  }
-
-  .mobile-toggle.open span:nth-child(2) {
-    opacity: 0;
-  }
-
-  .mobile-toggle.open span:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
-  }
-
-  /* Mobile menu expanded */
   .nav-list.open {
     display: flex;
   }
+
+  .mobile-toggle.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .mobile-toggle.open span:nth-child(2) { opacity: 0; }
+  .mobile-toggle.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 </style>
 
 <script>
-  // Ensure this script runs client-side in Astro
-  document.addEventListener('DOMContentLoaded', () => {
-    const mobileToggle = document.getElementById('mobile-toggle');
-    const navList = document.querySelector('.mobile-menu .nav-list');
-
-    if (mobileToggle && navList) {
-      mobileToggle.addEventListener('click', () => {
-        mobileToggle.classList.toggle('open');
-        navList.classList.toggle('open');
-      });
-
-      // Close mobile menu when clicking on nav links
-      const navLinks = document.querySelectorAll('.mobile-menu .nav-link');
-      navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-          mobileToggle.classList.remove('open');
-          navList.classList.remove('open');
-        });
-      });
-    }
+  const mobileToggle = document.getElementById('mobile-toggle');
+  const navList = document.getElementById('mobile-nav');
+  const closeMenu = () => {
+    mobileToggle?.classList.remove('open');
+    navList?.classList.remove('open');
+    mobileToggle?.setAttribute('aria-expanded', 'false');
+    mobileToggle?.setAttribute('aria-label', 'Abrir menú');
+  };
+  mobileToggle?.addEventListener('click', () => {
+    const isOpen = mobileToggle.classList.toggle('open');
+    navList?.classList.toggle('open', isOpen);
+    mobileToggle.setAttribute('aria-expanded', String(isOpen));
+    mobileToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
   });
+  navList?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+
+  const themeButtons = [document.getElementById('theme-toggle'), document.getElementById('theme-toggle-desktop')];
+  themeButtons.forEach((button) => button?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  }));
 </script>

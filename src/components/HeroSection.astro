@@ -3,17 +3,17 @@ import profile from '../data/profile.json';
 import { Image } from 'astro:assets';
 ---
 
-<section id="inicio" class="hero min-h-screen flex items-center pt-20 pb-16 bg-section-dark">
+<section id="inicio" class="hero flex min-h-screen items-center bg-section-dark pb-16 pt-24 dark:bg-slate-950">
   <div class="container mx-auto px-6">
     <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-16">
       <div class="hero-text w-full lg:w-1/2 delay-children">
-        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4 opacity-0 animate-fade-in">
+        <h1 class="mb-4 text-4xl font-bold text-slate-900 opacity-0 animate-fade-in md:text-6xl dark:text-white">
           {profile.name}
         </h1>
-        <h2 class="text-xl md:text-2xl font-medium text-primary mb-6 opacity-0 animate-fade-in">
+        <h2 class="mb-6 text-xl font-medium text-primary opacity-0 animate-fade-in md:text-2xl">
           {profile.title}
         </h2>
-        <p class="text-slate-700 mb-10 leading-relaxed text-base md:text-lg opacity-0 animate-fade-in">
+        <p class="mb-10 max-w-2xl text-base leading-relaxed text-slate-700 opacity-0 animate-fade-in md:text-lg dark:text-slate-300">
           {profile.summary}
         </p>
         <div class="hero-btns flex flex-wrap gap-4 opacity-0 animate-fade-in">
@@ -33,7 +33,7 @@ import { Image } from 'astro:assets';
       </div>
 
       <div class="hero-image w-full lg:w-1/2 flex justify-center opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
-        <div class="relative rounded-lg overflow-hidden p-2 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 bg-white">
+          <div class="relative overflow-hidden rounded-2xl bg-white p-2 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl dark:bg-slate-900">
           <Image
             src={profile.brainImage}
             alt="Brain Data Science Concept"

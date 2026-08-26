@@ -1,7 +1,6 @@
 ---
 import ProjectLayout from '../../layouts/ProjectLayout.astro';
 import projects from '../../data/projects.json';
-import { getEntryData } from '../../utils/getProjectData';
 import { Image } from 'astro:assets';
 
 export function getStaticPaths() {
@@ -11,20 +10,17 @@ export function getStaticPaths() {
   }));
 }
 
-const { id } = Astro.params;
 const { project } = Astro.props;
-
-const projectData = getEntryData(project);
 ---
 
-<ProjectLayout title={`${project.title} | Proyecto`} projectId={id}>
+<ProjectLayout title={`${project.title} | Proyecto`}>
   <div class="project-header-content">
-    <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">{project.title}</h1>
-    <p class="text-slate-700 mb-8 text-lg">{project.fullDescription || project.shortDescription}</p>
+    <h1 class="mb-4 text-3xl font-bold text-slate-900 md:text-5xl dark:text-white">{project.title}</h1>
+    <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-slate-700 dark:text-slate-300">{project.fullDescription || project.shortDescription}</p>
   </div>
 
   <div class="project-image-container max-w-3xl mx-auto mb-10">
-    <div class="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-white p-3">
+    <div class="overflow-hidden rounded-2xl bg-white p-3 shadow-md transition-all duration-300 hover:shadow-lg dark:bg-slate-800">
       <Image
         src={project.image}
         alt={project.title}
@@ -39,10 +35,10 @@ const projectData = getEntryData(project);
 
   <div class="project-meta mb-10">
     <div class="technologies mb-6">
-      <h3 class="text-xl font-bold text-slate-800 mb-3">Tecnologías</h3>
+      <h3 class="mb-3 text-xl font-bold text-slate-800 dark:text-white">Tecnologías</h3>
       <div class="flex flex-wrap gap-2">
         {project.tags.map((tag) => (
-          <span class="technology text-sm font-medium bg-slate-100 text-slate-700 rounded-full py-1 px-3 transition-all duration-300 hover:bg-primary hover:text-white">
+          <span class="technology rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700 transition-all duration-300 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300">
             {tag}
           </span>
         ))}
@@ -52,8 +48,6 @@ const projectData = getEntryData(project);
     <div class="project-links flex flex-wrap gap-4 mb-8">
       <a
         href={project.links.demo}
-        target="_blank"
-        rel="noopener noreferrer"
         class="btn btn-primary bg-primary text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:bg-secondary hover:shadow-lg hover:-translate-y-1 active:translate-y-0"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,8 +68,8 @@ const projectData = getEntryData(project);
         GitHub
       </a>
 
-      <a
-        href={project.links.pdf || "https://example.com/pdf-placeholder"}
+      {project.links.pdf && project.links.pdf !== project.links.github && <a
+        href={project.links.pdf}
         target="_blank"
         rel="noopener noreferrer"
         class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
@@ -84,10 +78,10 @@ const projectData = getEntryData(project);
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         Descargar PDF
-      </a>
+      </a>}
 
-      <a
-        href={project.links.ipynb || "https://example.com/ipynb-placeholder"}
+      {project.links.ipynb && project.links.ipynb !== project.links.github && <a
+        href={project.links.ipynb}
         target="_blank"
         rel="noopener noreferrer"
         class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white py-2 px-6 rounded-md transition-all duration-300 inline-flex items-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
@@ -96,29 +90,29 @@ const projectData = getEntryData(project);
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
         </svg>
         Descargar IPynb
-      </a>
+      </a>}
     </div>
   </div>
 
   {project.technicalSections && project.technicalSections.length > 0 && (
-    <div class="project-content bg-white p-8 rounded-lg shadow-md mb-10">
-      <h2 class="text-2xl font-bold text-slate-900 mb-6">Detalles Técnicos</h2>
+    <div class="project-content mb-10 rounded-2xl bg-white p-5 shadow-md sm:p-8 dark:bg-slate-950">
+      <h2 class="mb-6 text-2xl font-bold text-slate-900 dark:text-white">Detalles Técnicos</h2>
 
       <div class="technical-sections space-y-10">
         {project.technicalSections.map((section, index) => (
           <div class="technical-section" id={`section-${index}`}>
-            <h3 class="text-xl font-semibold text-slate-800 mb-4 border-l-4 border-primary pl-3">
+            <h3 class="mb-4 border-l-4 border-primary pl-3 text-xl font-semibold text-slate-800 dark:text-white">
               {section.title}
             </h3>
 
             {section.code && (
               <div class="code-container relative">
-                <div class="code-example bg-slate-100 p-4 rounded-lg mb-6 overflow-x-auto">
-                  <pre class="text-sm font-mono text-slate-800 relative"><code class="code-block">{section.code}</code></pre>
+                <div class="code-example mb-6 overflow-x-auto rounded-lg bg-slate-100 p-4 dark:bg-slate-800">
+                  <pre class="relative font-mono text-sm text-slate-800 dark:text-slate-200"><code class="code-block">{section.code}</code></pre>
                 </div>
                 <button
                   class="copy-btn absolute top-3 right-3 bg-slate-200 hover:bg-primary hover:text-white p-2 rounded-md transition-colors duration-200"
-                  aria-label="Copy code to clipboard"
+                  aria-label="Copiar código"
                   data-code={section.code}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -130,7 +124,7 @@ const projectData = getEntryData(project);
 
             {section.image && (
               <div class="section-image mt-6 max-w-3xl mx-auto">
-                <div class="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 bg-white p-3">
+                  <div class="overflow-hidden rounded-lg bg-white p-3 shadow-md transition-all duration-300 hover:shadow-lg dark:bg-slate-800">
                   <Image
                     src={section.image}
                     alt={`${section.title} visualization`}
@@ -173,16 +167,19 @@ const projectData = getEntryData(project);
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Add line numbers to code blocks
-    document.querySelectorAll('.code-block').forEach(block => {
-      const content = block.textContent || '';
-      const lines = content.split('\n');
-      block.innerHTML = lines.map(line => `<span>${line}</span>`).join('\n');
+  document.querySelectorAll('.code-block').forEach((block) => {
+    const content = block.textContent || '';
+    const fragment = document.createDocumentFragment();
+    content.split('\n').forEach((line, index, lines) => {
+      const span = document.createElement('span');
+      span.textContent = line;
+      fragment.appendChild(span);
+      if (index < lines.length - 1) fragment.appendChild(document.createTextNode('\n'));
     });
+    block.replaceChildren(fragment);
+  });
 
-    // Handle copy button functionality
-    document.querySelectorAll('.copy-btn').forEach(button => {
+  document.querySelectorAll('.copy-btn').forEach((button) => {
       button.addEventListener('click', async () => {
         const code = button.getAttribute('data-code') || '';
 
@@ -207,6 +204,5 @@ const projectData = getEntryData(project);
           console.error('Failed to copy: ', err);
         }
       });
-    });
   });
 </script>
