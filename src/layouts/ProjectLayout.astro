@@ -10,10 +10,10 @@ const { title } = Astro.props;
 
 <Layout title={title}>
   <main>
-    <div class="project-header bg-section-dark py-5 dark:bg-slate-950">
+    <div class="project-header border-b border-hairline-soft bg-canvas py-5">
       <div class="container mx-auto px-6">
-        <a href="/#proyectos" class="mb-2 inline-flex items-center text-primary transition-colors hover:text-primary/80">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="/#proyectos" class="mb-2 inline-flex items-center gap-1 font-mono text-sm text-accent transition-colors hover:text-accent-hover">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
           </svg>
           Volver a Proyectos
@@ -21,53 +21,10 @@ const { title } = Astro.props;
       </div>
     </div>
 
-    <div class="project-content bg-section-light py-10 dark:bg-slate-900">
-      <div class="container mx-auto px-6">
+    <div class="project-content bg-canvas py-12">
+      <div class="container mx-auto px-6 max-w-4xl">
         <slot />
       </div>
     </div>
   </main>
 </Layout>
-
-<style>
-  /* Project specific styles */
-  :global(.project-content h2) {
-    @apply mb-4 mt-8 text-2xl font-bold text-slate-900 dark:text-white;
-  }
-
-  :global(.project-content h3) {
-    @apply mb-3 mt-6 text-xl font-semibold text-slate-900 dark:text-white;
-  }
-
-  :global(.project-content p) {
-    @apply mb-4 leading-relaxed text-slate-700 dark:text-slate-300;
-  }
-
-  :global(.project-content ul) {
-    @apply mb-4 list-inside list-disc text-slate-700 dark:text-slate-300;
-  }
-
-  :global(.project-content pre) {
-    @apply mb-6 overflow-x-auto rounded-lg bg-slate-100 p-4 dark:bg-slate-800;
-  }
-
-  :global(.project-content code) {
-    @apply font-mono text-sm;
-  }
-
-  :global(.project-content img) {
-    @apply rounded-lg shadow-md my-6 mx-auto;
-  }
-
-  :global(.project-content .btn) {
-    @apply inline-flex items-center justify-center px-6 py-2 rounded-md transition-all duration-300;
-  }
-
-  :global(.project-content .btn-primary) {
-    @apply bg-primary text-white hover:bg-primary/90;
-  }
-
-  :global(.project-content .btn-outline) {
-    @apply border border-primary text-primary hover:bg-primary/10;
-  }
-</style>

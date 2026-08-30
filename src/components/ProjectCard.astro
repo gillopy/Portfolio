@@ -1,70 +1,61 @@
 ---
-interface Project {
-  id: string;
-  title: string;
-  shortDescription: string;
-  image: string;
-  tags: string[];
-  links: {
-    demo: string;
-    github: string;
-  };
-}
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
 
 interface Props {
-  project: Project;
+  entry: CollectionEntry<'projects'>;
 }
 
-const { project } = Astro.props;
-import { Image } from 'astro:assets';
+const { entry } = Astro.props;
+const { title, shortDescription, tags, links, cover } = entry.data;
 ---
 
-<article class="project-card flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-primary/30 hover:shadow-lg dark:border-slate-800 dark:bg-slate-900">
-  <div class="project-image m-3 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-    <div class="aspect-video overflow-hidden rounded-lg">
+<article class="project-card flex h-full flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition-all duration-300 hover:-translate-y-1 hover:ring-1 hover:ring-hairline">
+  <a href={links.demo} class="project-image block overflow-hidden" aria-label={title}>
+    <div class="aspect-video overflow-hidden">
       <Image
-        src={project.image}
-        alt={project.title}
+        src={cover}
+        alt={title}
         class="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
-        width={640}  
-        height={360} 
+        width={640}
+        height={360}
       />
     </div>
-  </div>
+  </a>
 
   <div class="project-details p-6 flex flex-col flex-grow">
-    <h3 class="mb-2 text-xl font-bold text-slate-900 transition-colors duration-300 hover:text-primary dark:text-white">
-      {project.title}
+    <h3 class="mb-2 font-display text-lg font-bold tracking-tight text-ink transition-colors duration-300 hover:text-accent">
+      {title}
     </h3>
-    <p class="mb-4 line-clamp-3 flex-grow text-slate-600 dark:text-slate-200">
-      {project.shortDescription}
+    <p class="mb-4 line-clamp-3 flex-grow text-sm leading-relaxed text-ink-muted">
+      {shortDescription}
     </p>
 
-    <div class="project-technologies flex flex-wrap gap-2 mb-5">
-      {project.tags.slice(0, 5).map((tag) => (
-        <span class="technology rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 transition-all duration-300 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300">
+    <div class="project-technologies flex flex-wrap gap-1.5 mb-5">
+      {tags.slice(0, 5).map((tag) => (
+        <span class="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-ink-muted ring-1 ring-hairline transition-colors duration-200 hover:text-accent">
           {tag}
         </span>
       ))}
-      {project.tags.length > 5 && (
-        <span class="technology rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 transition-all duration-300 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300">
-          +{project.tags.length - 5}
+      {tags.length > 5 && (
+        <span class="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-ink-muted ring-1 ring-hairline">
+          +{tags.length - 5}
         </span>
       )}
     </div>
 
     <div class="project-links flex gap-3 mt-auto">
       <a
-        href={project.links.demo}
-        class="btn btn-primary bg-primary text-white text-sm py-2 px-4 rounded-md transition-all duration-300 flex-1 text-center hover:bg-secondary hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+        href={links.demo}
+        class="btn-primary flex-1 justify-center !py-2 !px-4 text-sm"
       >
         Ver Proyecto
       </a>
       <a
-        href={project.links.github}
+        href={links.github}
         target="_blank"
         rel="noopener noreferrer"
-        class="btn btn-outline border border-primary text-primary hover:bg-primary hover:text-white text-sm py-2 px-4 rounded-md transition-all duration-300 flex-1 text-center hover:shadow-md hover:-translate-y-1 active:translate-y-0"
+        class="btn-secondary flex-1 justify-center !py-2 !px-4 text-sm"
       >
         GitHub
       </a>

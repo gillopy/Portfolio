@@ -1,0 +1,230 @@
+---
+title: "Análisis Climático Global con Datos ERA5"
+shortDescription: "Visualización avanzada de datos meteorológicos 3D usando modelos ECMWF Copernicus"
+tags:
+  - "Python 3.11"
+  - "Xarray"
+  - "Cartopy"
+  - "NetCDF4"
+  - "Matplotlib"
+  - "GeoPandas"
+  - "cfgrib"
+links:
+  demo: "/project/era5-climate"
+  github: "https://github.com/gillopy/Era5data3D"
+  pdf: "https://github.com/gillopy/Era5data3D"
+  ipynb: "https://github.com/gillopy/Era5data3D"
+cover: ./cover.jpg
+---
+import { Image } from 'astro:assets';
+import code1Img from "./project3-extra1.jpg";
+import code2Img from "./project3-extra2.jpg";
+import code3Img from "./project3-extra3.jpg";
+
+## Descripción
+
+Sistema completo para procesamiento y visualización de datos climáticos con:
+
+- Carga y procesamiento de formatos GRIB/NetCDF
+
+- Visualizaciones 2D/3D con proyecciones cartográficas
+
+- Análisis temporal de series climáticas
+
+- Integración con datos geoespaciales (GeoJSON)
+
+- Animaciones de evolución temporal
+
+- Modelado de temperaturas y variables atmosféricas
+
+## Detalles Técnicos
+
+### Instalación de Dependencias
+
+```bash
+pip install cfgrib cartopy netCDF4 geopandas
+```
+
+<Image src={code1Img} alt="Visualización de Instalación de Dependencias" loading="lazy" />
+
+### Carga de Datos NetCDF4
+
+```python
+import netCDF4 as nc
+import numpy as np
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+
+# Ruta del archivo .nc (cambia esto por la ubicación de tu archivo)
+file_path = "/content/drive/MyDrive/3c7785ed8c7cf99c2ae80fafa694aef4.nc"
+
+# Cargar el archivo NetCDF4
+dataset = nc.Dataset(file_path, mode="r")
+
+# Obtener las variables necesarias
+t2m = dataset.variables['t2m'][0, :, :]
+lat = dataset.variables['latitude'][:]
+lon = dataset.variables['longitude'][:]
+
+# Convertir a Celsius
+t2m_celsius = t2m - 273.15
+
+# Crear la figura y el mapa
+fig, ax = plt.subplots(figsize=(10, 5), subplot_kw={'projection': ccrs.PlateCarree()})
+ax.set_extent([lon.min(), lon.max(), lat.min(), lat.max()], crs=ccrs.PlateCarree())
+
+# Agregar características al mapa
+ax.add_feature(cfeature.COASTLINE)
+ax.add_feature(cfeature.BORDERS, linestyle=':')
+ax.add_feature(cfeature.LAND, edgecolor='black')
+ax.add_feature(cfeature.LAKES, edgecolor='black')
+ax.add_feature(cfeature.RIVERS, edgecolor='blue')
+
+# Dibujar la temperatura
+c = ax.pcolormesh(lon, lat, t2m_celsius, cmap='coolwarm', transform=ccrs.PlateCarree())
+
+# Agregar barra de color
+cbar = plt.colorbar(c, orientation='horizontal', pad=0.05)
+cbar.set_label('2m Temperature (°C)')
+
+# Título del gráfico
+plt.title("2m Temperature from ECMWF")
+
+# Mostrar el gráfico
+plt.show()
+
+# Cerrar el dataset
+dataset.close()
+```
+
+<Image src={code2Img} alt="Visualización de Carga de Datos NetCDF4" loading="lazy" />
+
+### Visualización con Cartopy y GRIB
+
+```python
+import numpy as np
+import xarray as xr
+import cfgrib
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import warnings
+
+# Ignorar advertencias específicas
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
+# Ruta del archivo GRIB (modifica según tu ubicación)
+file_path = "/content/drive/MyDrive/53ff69f95521585163052af17eefd0c1.grib"
+
+# Ruta del archivo GeoJSON (modifica según tu ubicación)
+geojson_path = "/content/drive/MyDrive/DEPARTAMENTOS_PY_CNPV2022.geojson.txt"
+
+# Cargar el dataset GRIB
+data = xr.open_dataset(file_path, engine='cfgrib')
+
+# Extraer temperatura y coordenadas
+lons = data.longitude.values
+lats = data.latitude.values
+temp = data.stl2.values[0] - 273.15
+
+# Cargar el archivo GeoJSON
+gdf = gpd.read_file(geojson_path)
+
+# Crear la figura con una proyección ortográfica centrada en Sudamérica
+fig = plt.figure(figsize=(12, 12))
+ax = fig.add_subplot(111, projection=ccrs.Orthographic(central_longitude=-60, central_latitude=-15))
+
+# Agregar características del mapa
+ax.add_feature(cfeature.LAND, edgecolor='black')
+ax.add_feature(cfeature.OCEAN)
+ax.add_feature(cfeature.COASTLINE)
+ax.add_feature(cfeature.BORDERS, linestyle='-')
+
+# Dibujar el límite del mapa
+ax.gridlines(draw_labels=False, linestyle="--", color="gray", alpha=0.5)
+
+# Proyectar los datos de temperatura
+vmin, vmax = -40, 40
+mesh = ax.imshow(temp, extent=[lons.min(), lons.max(), lats.min(), lats.max()], transform=ccrs.PlateCarree(), cmap='coolwarm', origin='upper', vmin=vmin, vmax=vmax)
+
+# Agregar barra de colores
+cbar = plt.colorbar(mesh, orientation='horizontal', pad=0.05, extend='both')
+cbar.set_label('Temperature (°C)')
+cbar.set_ticks(np.arange(vmin, vmax + 10, 10))
+
+# Agregar título
+plt.title('ERA5-Pressure-levels, Daily Mean Temperature at 1000 hPa\n2025-02-07 (UTC)')
+
+# Mostrar el gráfico
+plt.show()
+```
+
+<Image src={code3Img} alt="Visualización de Visualización con Cartopy y GRIB" loading="lazy" />
+
+### Visualización con Cartopy y GeoJSON
+
+```python
+import numpy as np
+import xarray as xr
+import cfgrib
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import warnings
+
+# Ignorar advertencias específicas
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
+# Ruta del archivo GRIB (modifica según tu ubicación)
+file_path = "/content/drive/MyDrive/53ff69f95521585163052af17eefd0c1.grib"
+
+# Ruta del archivo GeoJSON (modifica según tu ubicación)
+geojson_path = "/content/drive/MyDrive/DEPARTAMENTOS_PY_CNPV2022.geojson.txt"
+
+# Cargar el dataset GRIB
+data = xr.open_dataset(file_path, engine='cfgrib')
+
+# Extraer temperatura y coordenadas
+lons = data.longitude.values
+lats = data.latitude.values
+temp = data.stl2.values[0] - 273.15
+
+# Cargar el archivo GeoJSON
+gdf = gpd.read_file(geojson_path)
+
+# Crear la figura con un zoom más adecuado
+fig = plt.figure(figsize=(15, 10))
+ax = fig.add_subplot(111, projection=ccrs.PlateCarree())
+
+# Configurar la extensión del mapa para Sudamérica
+ax.set_extent([-85, -30, -60, 15], crs=ccrs.PlateCarree())
+
+# Agregar características del mapa
+ax.add_feature(cfeature.LAND, edgecolor='black')
+ax.add_feature(cfeature.OCEAN)
+ax.add_feature(cfeature.COASTLINE)
+ax.add_feature(cfeature.BORDERS, linestyle='-')
+
+# Agregar límites de los departamentos desde el GeoJSON
+gdf.boundary.plot(ax=ax, edgecolor="black", linewidth=1.2, transform=ccrs.PlateCarree())
+
+# Proyectar los datos con un rango de temperatura adecuado
+vmin, vmax = -40, 40
+mesh = ax.imshow(temp, extent=[lons.min(), lons.max(), lats.min(), lats.max()], transform=ccrs.PlateCarree(), cmap='coolwarm', origin='upper', vmin=vmin, vmax=vmax)
+
+# Agregar barra de colores
+cbar = plt.colorbar(mesh, orientation='horizontal', pad=0.05, extend='both')
+cbar.set_label('Temperature (°C)')
+cbar.set_ticks(np.arange(vmin, vmax + 10, 10))
+
+# Agregar título
+plt.title('ERA5-Pressure-levels, Daily Mean Temperature at 1000 hPa\n2025-02-07 (UTC)')
+
+# Mostrar el gráfico
+plt.show()
+```

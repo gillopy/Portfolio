@@ -3,54 +3,94 @@ import profile from '../data/profile.json';
 import { Image } from 'astro:assets';
 ---
 
-<section id="inicio" class="hero flex min-h-screen items-center bg-section-dark pb-16 pt-24 dark:bg-slate-950">
+<section id="inicio" class="hero relative flex min-h-screen items-center bg-canvas pb-16 pt-28">
   <div class="container mx-auto px-6">
-    <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-16">
-      <div class="hero-text w-full lg:w-1/2 delay-children">
-        <h1 class="mb-4 text-4xl font-bold text-slate-900 opacity-0 animate-fade-in md:text-6xl dark:text-white">
-          {profile.name}
+    <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20">
+      <div class="hero-text w-full lg:w-[55%]">
+        <div class="mb-6 opacity-0 animate-fade-in">
+          <span class="inline-block rounded-pill bg-surface px-4 py-1.5 font-mono text-xs font-medium uppercase tracking-widest text-accent ring-1 ring-hairline">
+            {profile.title}
+          </span>
+        </div>
+
+        <h1 class="mb-6 font-display text-5xl font-bold leading-[0.95] tracking-[-0.04em] text-ink opacity-0 animate-fade-in md:text-7xl lg:text-[5.5rem]">
+          {profile.name.split(' ').slice(0, -1).join(' ')}<br/>
+          <span class="text-accent">{profile.name.split(' ').slice(-1)}</span>
         </h1>
-        <h2 class="mb-6 text-xl font-medium text-primary opacity-0 animate-fade-in md:text-2xl">
-          {profile.title}
-        </h2>
-        <p class="mb-10 max-w-2xl text-base leading-relaxed text-slate-700 opacity-0 animate-fade-in md:text-lg dark:text-slate-300">
+
+        <p class="mb-10 max-w-xl text-lg leading-relaxed text-ink-muted opacity-0 animate-fade-in md:text-xl">
           {profile.summary}
         </p>
+
+        <div class="mb-10 flex gap-10 opacity-0 animate-fade-in">
+          <div class="stat pr-10">
+            <span class="block font-display text-4xl font-bold tracking-tight text-ink">ANÁLISIS</span>
+            <span class="font-mono text-xs uppercase tracking-wider text-ink-muted/70">De datos a evidencia.</span>
+          </div>
+          <div class="stat border-l border-hairline pl-10">
+            <span class="block font-display text-4xl font-bold tracking-tight text-ink">MODELADO</span>
+            <span class="font-mono text-xs uppercase tracking-wider text-ink-muted/70">De evidencia a predicción.</span>
+          </div>
+          <div class="stat border-l border-hairline pl-10">
+            <span class="block font-display text-4xl font-bold tracking-tight text-ink">DECISIÓN</span>
+            <span class="font-mono text-xs uppercase tracking-wider text-ink-muted/70">De predicción a estrategia.</span>
+          </div>
+        </div>
+
         <div class="hero-btns flex flex-wrap gap-4 opacity-0 animate-fade-in">
-          <a href="#proyectos" class="btn btn-primary bg-primary text-white py-3 px-8 rounded-md transition-all duration-300 inline-flex items-center hover:bg-secondary hover:shadow-lg hover:-translate-y-1 active:translate-y-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 transform transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <a href="#proyectos" class="btn-primary">
+            Ver Proyectos
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-            Ver Proyectos
           </a>
-          <a href="#contacto" class="btn btn-outline border-2 border-primary text-primary hover:bg-primary hover:text-white py-3 px-8 rounded-md transition-all duration-300 inline-flex items-center hover:-translate-y-1 active:translate-y-0 hover:shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
+          <a href="#contacto" class="btn-secondary">
             Contacto
           </a>
         </div>
       </div>
 
-      <div class="hero-image w-full lg:w-1/2 flex justify-center opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
-          <div class="relative overflow-hidden rounded-2xl bg-white p-2 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl dark:bg-slate-900">
-          <Image
-            src={profile.brainImage}
-            alt="Brain Data Science Concept"
-            class="max-w-full h-auto object-contain relative z-10"
-            width={500}  
-            height={400} 
-            loading="eager" 
-          />
+      <div class="hero-image w-full lg:w-[45%] flex justify-center opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="hero-image-wrapper relative">
+
+          <div class="relative overflow-hidden rounded-xl bg-surface p-1.5 ring-1 ring-hairline">
+            <Image
+              src={profile.brainImage}
+              alt="Concepto de Data Science"
+              class="h-auto w-full object-cover rounded-[15px] relative z-10"
+              width={500}
+              height={400}
+              loading="eager"
+            />
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 animate-fade-in" style="animation-delay: 0.8s;">
+    <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted/50">Scroll</span>
+    <div class="h-8 w-px bg-ink-muted/30"></div>
+  </div>
 </section>
 
 <style>
+  .hero-image-wrapper {
+    max-width: 420px;
+  }
+
   .btn-primary:hover svg,
-  .btn-outline:hover svg {
+  .btn-secondary:hover svg {
     transform: translateX(3px);
+  }
+
+  .scroll-indicator {
+    animation: fadeIn 0.6s ease-in-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-indicator {
+      opacity: 1;
+    }
   }
 </style>

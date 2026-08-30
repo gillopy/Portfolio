@@ -3,53 +3,50 @@ import profile from '../data/profile.json';
 import siteConfig from '../data/siteConfig.json';
 ---
 
-<section id="contacto" class="contact bg-section-dark py-20 dark:bg-slate-950">
+<section id="contacto" class="contact bg-canvas py-24">
   <div class="container mx-auto px-6">
-    <h2 class="section-title relative mb-12 text-center text-3xl font-bold text-slate-900 md:text-4xl dark:text-white">
-      <span class="relative inline-block title-with-line">
-        Contacto
-        <span class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-accent1 rounded title-underline"></span>
-      </span>
-    </h2>
+    <div class="scroll-reveal">
+      <h2 class="section-title mb-16 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
+        <span class="section-title-underline">Contacto</span>
+      </h2>
+    </div>
 
-    <div class="contact-container grid grid-cols-1 md:grid-cols-2 gap-12">
-      <!-- Contact Information -->
-      <div class="contact-info">
-        <h3 class="mb-4 text-xl font-bold text-slate-800 dark:text-white">¿Desea hablar?</h3>
-        <p class="mb-8 text-slate-700 dark:text-slate-300">
+    <div class="contact-container grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
+      <div class="contact-info scroll-reveal">
+        <h3 class="mb-3 font-display text-xl font-bold tracking-tight text-ink">¿Desea hablar?</h3>
+        <p class="mb-10 text-ink-muted leading-relaxed">
           Si tiene alguna consulta o desea discutir una posible colaboración,
-          por favor utilice el formulario a continuación. Estaré encantado de
+          por favor utilice el formulario. Estaré encantado de
           responder a su mensaje lo antes posible.
         </p>
 
-        <!-- Social Media Links -->
-        <div class="social-links space-y-6">
+        <div class="social-links space-y-5">
           {profile.social.map((social) => (
-            <div class="info-item flex items-start group">
-              <div class="icon-container mr-4">
+            <div class="info-item flex items-center gap-4 group">
+              <div class="icon-container flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface text-accent ring-1 ring-hairline transition-colors group-hover:ring-accent">
                 {social.platform === 'Email' && (
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary transition-transform duration-300 hover:scale-125" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 )}
                 {social.platform === 'LinkedIn' && (
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary transition-transform duration-300 hover:scale-125" fill="currentColor" viewBox="0 0 24 24">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z" />
                   </svg>
                 )}
                 {social.platform === 'GitHub' && (
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary transition-transform duration-300 hover:scale-125" fill="currentColor" viewBox="0 0 24 24">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                   </svg>
                 )}
               </div>
-              <div class="info-content group-hover:translate-x-1 transition-transform duration-300">
-                 <h4 class="font-medium text-slate-900 dark:text-white">{social.platform}</h4>
+              <div class="info-content">
+                <span class="block font-mono text-xs uppercase tracking-wider text-ink-muted/60">{social.platform}</span>
                 <a
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="text-primary hover:text-primary/80 transition-colors text-sm hover:underline"
+                  class="text-ink text-sm transition-colors hover:text-accent"
                 >
                   {social.handle}
                 </a>
@@ -59,15 +56,14 @@ import siteConfig from '../data/siteConfig.json';
         </div>
       </div>
 
-      <!-- Contact Form -->
-      <div class="contact-form rounded-2xl bg-white p-8 shadow-md transition-all duration-300 hover:shadow-lg dark:bg-slate-900">
+      <div class="contact-form scroll-reveal">
         <form
           action={siteConfig.formEndpoint}
           method="POST"
           class="space-y-6"
         >
           <div class="form-group">
-            <label for="name" class="mb-2 block font-medium text-slate-700 dark:text-slate-300">Tu Nombre:</label>
+            <label for="name" class="mb-1.5 block font-mono text-xs uppercase tracking-wider text-ink-muted/60">Nombre</label>
             <input
               type="text"
               id="name"
@@ -75,12 +71,12 @@ import siteConfig from '../data/siteConfig.json';
               required
               autocomplete="name"
               placeholder="Guillermo Cabrera"
-              class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-900 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              class="w-full rounded-md border border-hairline bg-surface px-4 py-3 text-ink placeholder:text-ink-muted/50 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
             />
           </div>
 
           <div class="form-group">
-            <label for="email" class="mb-2 block font-medium text-slate-700 dark:text-slate-300">Tu Email:</label>
+            <label for="email" class="mb-1.5 block font-mono text-xs uppercase tracking-wider text-ink-muted/60">Email</label>
             <input
               type="email"
               id="email"
@@ -88,19 +84,19 @@ import siteConfig from '../data/siteConfig.json';
               required
               autocomplete="email"
               placeholder="nombre@ejemplo.com"
-              class="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-900 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              class="w-full rounded-md border border-hairline bg-surface px-4 py-3 text-ink placeholder:text-ink-muted/50 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
             />
           </div>
 
           <div class="form-group">
-            <label for="message" class="mb-2 block font-medium text-slate-700 dark:text-slate-300">Tu Mensaje:</label>
+            <label for="message" class="mb-1.5 block font-mono text-xs uppercase tracking-wider text-ink-muted/60">Mensaje</label>
             <textarea
               id="message"
               name="message"
-              rows="5"
+              rows="4"
               required
               placeholder="Escribe tu mensaje..."
-              class="w-full resize-none rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-900 transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              class="w-full resize-none rounded-md border border-hairline bg-surface px-4 py-3 text-ink placeholder:text-ink-muted/50 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15"
             ></textarea>
           </div>
 
@@ -108,34 +104,15 @@ import siteConfig from '../data/siteConfig.json';
 
           <button
             type="submit"
-            class="btn btn-primary bg-primary text-white py-3 px-8 rounded-md transition-all duration-300 w-full md:w-auto flex items-center justify-center hover:bg-secondary hover:shadow-lg hover:-translate-y-1 active:translate-y-0"
+            class="btn-primary w-full md:w-auto justify-center"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            Enviar Mensaje
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-            Enviar Mensaje
           </button>
         </form>
       </div>
     </div>
   </div>
 </section>
-
-<style>
-  .title-with-line {
-    padding-bottom: 0.75rem;
-  }
-
-  .title-underline {
-    transition: width 0.3s ease, transform 0.3s ease;
-    transform-origin: center;
-  }
-
-  .title-with-line:hover .title-underline {
-    width: 5rem;
-  }
-
-  .btn-primary:hover svg {
-    transform: translateX(3px);
-  }
-</style>

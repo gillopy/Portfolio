@@ -1,0 +1,111 @@
+---
+title: "RAG LLM's - Economist"
+shortDescription: "Aplicación de IA con base vectorial y modelo LLM para responder consultas sobre deuda histórica"
+tags:
+  - "Python 3.13"
+  - "Pandas"
+  - "LangChain"
+  - "Chroma"
+  - "OllamaEmbeddings"
+  - "deepseek-r1:1.5b"
+  - "uv"
+links:
+  demo: "/project/debt-ai-query"
+  github: "https://github.com/gillopy/chicago_boy_ai"
+  pdf: "https://github.com/gillopy/chicago_boy_ai"
+  ipynb: "https://github.com/gillopy/chicago_boy_ai"
+cover: ./cover.jpg
+---
+import { Image } from 'astro:assets';
+import code1Img from "./project4-extra1.jpg";
+import code2Img from "./project4-extra2.jpg";
+
+## Descripción
+
+Sistema de inteligencia artificial para consultas económicas:
+
+- Vectorización semántica de registros históricos de deuda
+
+- Base de datos vectorial con búsqueda por similitud
+
+- Interfaz CLI de preguntas económicas
+
+- Motor LLM para respuestas guiadas por contexto
+
+- Almacenamiento eficiente con Chroma DB
+
+- Embeddings generados por Ollama
+
+- Implementación robusta con LangChain y uv
+
+- Compatible con múltiples modelos LLM
+
+## Detalles Técnicos
+
+### Vectorización con Chroma
+
+```python
+import pandas as pd
+from langchain.vectorstores import Chroma
+from langchain.embeddings import OllamaEmbeddings
+from langchain_core.documents import Document
+
+# Leer archivo CSV con datos de deuda
+df = pd.read_csv("deuda.csv")
+
+# Convertir registros en documentos enriquecidos
+docs = []
+for _, row in df.iterrows():
+    metadata = {"fecha": row["Fecha"]}
+    contenido = f"En {row['Fecha']}, el saldo era {row['Saldo']}, con desembolsos de {row['Desembolsos']} y pagos de {row['Pagos']}"
+    doc = Document(page_content=contenido, metadata=metadata)
+    docs.append(doc)
+
+# Crear embeddings y almacenar en base vectorial
+embedding = OllamaEmbeddings(model="mxbai-embed-large")
+chroma_db = Chroma.from_documents(docs, embedding, persist_directory="chrome_langchain_db_deuda")
+
+# Guardar base de datos
+chroma_db.persist()
+```
+
+<Image src={code1Img} alt="Visualización de Vectorización con Chroma" loading="lazy" />
+
+### Interfaz de Consulta con LLM
+
+```python
+from langchain_ollama.llms import OllamaLLM
+from langchain_core.prompts import ChatPromptTemplate
+from vector import retriever
+
+# Configurar modelo LLM
+model = OllamaLLM(model="deepseek-r1:1.5b", temperature=0.3, max_tokens=512)
+
+# Plantilla de prompt con registros recuperados
+template = """
+Eres un asistente útil que responde preguntas sobre economia basándote en un conjunto de datos.
+Debes utilizar el conjunto de datos para responder las preguntas, no debes
+proporcionar ninguna información que no esté en las fuentes proporcionadas.
+
+A continuación, se presentan algunos registros relevantes que pueden ayudarte a proporcionar una respuesta precisa y detallada:
+{records}
+
+Por favor, analiza la información y responde a la siguiente pregunta de manera clara y concisa:
+Pregunta: {question}
+"""
+prompt = ChatPromptTemplate.from_template(template)
+chain = prompt | model
+
+# Loop de interacción CLI
+while True:
+    print("\n\n-------------------------------")
+    query = input("Escribe tu pregunta económica (o 'q' para salir): ")
+    if query == "q":
+        break
+    docs = retriever.get_relevant_documents(query)
+    context = "\n".join([doc.page_content for doc in docs])
+    respuesta = chain.invoke({"question": query, "records": context})
+    print("\nRespuesta generada:\n", respuesta)
+```
+
+<Image src={code2Img} alt="Visualización de Interfaz de Consulta con LLM" loading="lazy" />

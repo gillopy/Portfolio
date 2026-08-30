@@ -24,4 +24,15 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-.vercel
+.vercel/
+.vscode/
+.claude/
+.agents/
+
+# tooling lockfiles (project uses npm)
+skills-lock.json
+bun.lock
+
+# windows-specific files
+Thumbs.db
+Desktop.ini
