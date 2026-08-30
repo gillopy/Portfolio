@@ -135,3 +135,5 @@ If you have any questions or feedback, please reach out through the contact form
 ---
 
 Made with ❤️ using [Astro](https://astro.build) and [Tailwind CSS](https://tailwindcss.com)
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/gillopy/Portfolio)
