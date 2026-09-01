@@ -29,9 +29,8 @@ pnpm-debug.log*
 .claude/
 .agents/
 
-# tooling lockfiles (project uses npm)
+# tooling lockfiles (project uses bun)
 skills-lock.json
-bun.lock
 
 # windows-specific files
 Thumbs.db

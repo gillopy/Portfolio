@@ -18,13 +18,15 @@ A modern, responsive portfolio website built with Astro and Tailwind CSS. This p
 
 - [Astro](https://astro.build/) - The web framework for content-driven websites
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [npm](https://www.npmjs.com/) - Package manager
+- [GSAP + ScrollTrigger](https://gsap.com/docs/v3/Plugins/ScrollTrigger/) - Scroll-driven animations
+- [Bun](https://bun.sh/) - Package manager & runtime (migrated from npm)
 - [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
-- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Bun](https://bun.sh/) (v1.1+) — `bun --version`
+- [Node.js](https://nodejs.org/) (v18+ requerido por Astro tooling, aunque el gestor es Bun)
 
 ## 🔧 Installation & Setup
 
@@ -38,13 +40,14 @@ cd portfolio-website
 2. **Install dependencies**
 
 ```bash
-npm install
+bun install
 ```
 
 3. **Start the development server**
 
 ```bash
-npm run dev
+bun run dev
+# abre http://localhost:4321
 ```
 
 4. **Open your browser**
@@ -91,11 +94,7 @@ The color scheme and general styling can be modified in:
 ### Build for Production
 
 ```bash
-# Using Bun
 bun run build
-
-# Or using npm
-npm run build
 ```
 
 This generates a static site in the `dist/` directory ready for deployment.
@@ -105,7 +104,7 @@ This generates a static site in the `dist/` directory ready for deployment.
 This project is ready to deploy on Netlify, Vercel, or any static site hosting:
 
 1. Connect your repository to your hosting provider
-2. Set the build command to `astro build` or `npm run build`
+2. Set the build command to `bun run build`
 3. Set the publish directory to `dist`
 
 ## 📄 License
