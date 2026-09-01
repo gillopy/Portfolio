@@ -3,19 +3,27 @@ import profile from '../data/profile.json';
 import { Image } from 'astro:assets';
 ---
 
-<section id="sobre-mi" class="about bg-canvas py-24">
+<section id="sobre-mi" class="about relative bg-canvas py-24">
+  <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-hairline to-transparent"></div>
   <div class="container mx-auto px-6">
-    <div class="scroll-reveal">
-      <h2 class="section-title mb-16 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
-        <span class="section-title-underline">Sobre Mí</span>
-      </h2>
+    <div class="gsap-reveal mb-10 flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <span class="section-eyebrow">01 — Perfil</span>
+        <h2 class="font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
+          <span class="section-title-underline">Sobre Mí</span>
+        </h2>
+      </div>
+      <p class="max-w-md font-mono text-xs leading-relaxed text-ink-faint">
+        Enfoque cuantitativo + narrativa. Del dato crudo al insight accionable, con rigor estadístico y claridad ejecutiva.
+      </p>
     </div>
 
     <div class="about-content flex flex-col md:flex-row gap-12 lg:gap-16">
-      <div class="about-image w-full md:w-2/5 lg:w-[35%] flex justify-center scroll-reveal">
-        <div class="relative">
-          
-          <div class="relative aspect-square w-44 sm:w-48 lg:w-72 overflow-hidden rounded-full bg-surface p-1 ring-1 ring-hairline">
+      <div class="about-image w-full md:w-2/5 lg:w-[35%] flex justify-start md:justify-center">
+        <div class="about-image-inner relative">
+          <div class="absolute inset-0 -z-10 rounded-full bg-black/35 blur-[22px]"></div>
+          <div class="absolute inset-0 -z-10 rounded-full shadow-[0_16px_40px_rgba(0,0,0,0.5)] ring-1 ring-hairline/30"></div>
+          <div class="relative aspect-square w-44 sm:w-52 lg:w-72 overflow-hidden rounded-full bg-surface p-1 ring-1 ring-hairline">
             <Image
               src={profile.profileImage}
               alt={profile.name}
@@ -24,26 +32,31 @@ import { Image } from 'astro:assets';
               height={400}
             />
           </div>
+          <!-- meta badge -->
+          <div class="absolute -bottom-2 -right-2 hidden rounded-xl bg-surface px-3 py-2 ring-1 ring-hairline sm:block">
+            <span class="block font-mono text-[10px] leading-none tracking-widest uppercase text-ink-faint">Ubicación</span>
+            <span class="font-mono text-xs font-medium text-ink">Asunción · PY</span>
+          </div>
         </div>
       </div>
 
-      <div class="about-text w-full md:w-3/5 lg:w-[65%] scroll-reveal">
+      <div class="about-text w-full md:w-3/5 lg:w-[65%]">
         {profile.about.text.map((paragraph) => (
-          <p class="mb-5 text-lg leading-relaxed text-ink-muted">
+          <p class="mb-5 text-[1.05rem] leading-relaxed text-ink-muted">
             {paragraph}
           </p>
         ))}
 
         <div class="about-details mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           {profile.about.details.map((detail) => (
-            <div class="detail border-t border-hairline-soft pt-3">
-              <span class="block font-mono text-xs uppercase tracking-wider text-ink-muted/60 mb-1">{detail.label}</span>
-              <span class="text-ink">{detail.value}</span>
+            <div class="detail group border-t border-hairline-soft pt-3">
+              <span class="block font-mono text-[11px] uppercase tracking-widest text-ink-faint mb-1">{detail.label}</span>
+              <span class="text-sm text-ink group-hover:text-accent transition-colors">{detail.value}</span>
             </div>
           ))}
         </div>
 
-        <div class="about-buttons mt-10 flex justify-center md:justify-start">
+        <div class="about-buttons mt-10 flex flex-wrap items-center gap-3">
           <a
             href={profile.about.cvLink}
             target="_blank"
@@ -54,6 +67,9 @@ import { Image } from 'astro:assets';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             Descargar CV
+          </a>
+          <a href="#contacto" class="btn-ghost">
+            Iniciar conversación <span aria-hidden="true">→</span>
           </a>
         </div>
       </div>

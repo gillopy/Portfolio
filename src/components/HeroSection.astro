@@ -1,96 +1,156 @@
 ---
 import profile from '../data/profile.json';
 import { Image } from 'astro:assets';
+
+const firstName = profile.name.split(' ').slice(0, -1).join(' ');
+const lastName = profile.name.split(' ').slice(-1)[0];
+const firstChars = firstName.split('');
+const lastChars = lastName.split('');
 ---
 
-<section id="inicio" class="hero relative flex min-h-screen items-center bg-canvas pb-16 pt-28">
+<section id="inicio" class="hero relative flex min-h-[96vh] items-center overflow-hidden bg-canvas pb-20 pt-28">
+  <!-- ambient glow -->
+  <div class="pointer-events-none absolute inset-0 -z-10">
+    <div class="absolute left-1/2 top-[-8%] h-[520px] w-[720px] -translate-x-1/2 rounded-full bg-accent/10 blur-[80px]"></div>
+    <div class="absolute right-[-6%] top-[18%] h-[420px] w-[420px] rounded-full bg-accent-2/10 blur-[70px]"></div>
+  </div>
+
   <div class="container mx-auto px-6">
-    <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20">
-      <div class="hero-text w-full lg:w-[55%]">
-        <div class="mb-6 opacity-0 animate-fade-in">
-          <span class="inline-block rounded-pill bg-surface px-4 py-1.5 font-mono text-xs font-medium uppercase tracking-widest text-accent ring-1 ring-hairline">
+    <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16">
+      <div class="hero-text w-full lg:w-[58%]">
+        <!-- kicker -->
+        <div class="hero-kicker mb-6 flex flex-wrap items-center gap-3">
+          <span class="kicker"><span class="kicker-dot"></span> Observatorio de datos — Asunción, PY</span>
+          <span class="hidden sm:inline-flex items-center gap-2 rounded-pill bg-surface px-3 py-1 ring-1 ring-hairline font-mono text-[11px] tracking-widest uppercase text-ink-muted">
+            <span class="h-1 w-1 rounded-full bg-accent"></span>
             {profile.title}
           </span>
         </div>
 
-        <h1 class="mb-6 font-display text-5xl font-bold leading-[0.95] tracking-[-0.04em] text-ink opacity-0 animate-fade-in md:text-7xl lg:text-[5.5rem]">
-          {profile.name.split(' ').slice(0, -1).join(' ')}<br/>
-          <span class="text-accent">{profile.name.split(' ').slice(-1)}</span>
+        <h1 class="mb-5 font-display text-[2.95rem] font-bold leading-[0.9] tracking-[-0.04em] text-ink md:text-[4.5rem] lg:text-[5.2rem]">
+          <span class="hero-word overflow-hidden inline-block">
+            <span class="hero-line inline-flex">
+              {firstChars.map((ch) => (
+                <span class="hero-char">{ch === ' ' ? '\u00A0' : ch}</span>
+              ))}
+            </span>
+          </span>
+          <br />
+          <span class="hero-word overflow-hidden inline-block">
+            <span class="hero-line inline-flex text-accent">
+              {lastChars.map((ch) => (
+                <span class="hero-char">{ch}</span>
+              ))}
+            </span>
+            <span class="ml-2 inline-block h-[0.18em] w-[0.18em] translate-y-[-0.35em] rounded-full bg-accent"></span>
+          </span>
         </h1>
 
-        <p class="mb-10 max-w-xl text-lg leading-relaxed text-ink-muted opacity-0 animate-fade-in md:text-xl">
+        <p class="hero-summary mb-8 max-w-[58ch] text-[1.06rem] leading-relaxed text-ink-muted md:text-[1.15rem]">
           {profile.summary}
+          <span class="mt-3 block font-mono text-xs tracking-wide text-ink-faint">Econometría · Forecasting · MLOps · Series temporales</span>
         </p>
 
-        <div class="mb-10 flex flex-col gap-6 sm:flex-row sm:gap-10 opacity-0 animate-fade-in">
-          <div class="stat pr-0 sm:pr-10">
-            <span class="block font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl md:text-4xl">ANÁLISIS</span>
-            <span class="font-mono text-xs uppercase tracking-wider text-ink-muted/70">De datos a evidencia.</span>
+        <div class="hero-stats mb-10 flex flex-wrap gap-6 sm:flex sm:gap-0">
+          <div class="hero-stat group sm:pr-8">
+            <span class="block font-display text-xl font-bold tracking-tight text-ink sm:text-3xl lg:text-[2.1rem]">ANÁLISIS</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-muted/70">De datos a evidencia.</span>
+            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
           </div>
-          <div class="stat sm:border-l sm:border-hairline sm:pl-10">
-            <span class="block font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl md:text-4xl">MODELADO</span>
-            <span class="font-mono text-xs uppercase tracking-wider text-ink-muted/70">De evidencia a predicción.</span>
+          <div class="hero-stat group sm:border-l sm:border-hairline sm:pl-8 sm:pr-8">
+            <span class="block font-display text-xl font-bold tracking-tight text-ink sm:text-3xl lg:text-[2.1rem]">MODELADO</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-muted/70">De evidencia a predicción.</span>
+            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
           </div>
-          <div class="stat sm:border-l sm:border-hairline sm:pl-10">
-            <span class="block font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl md:text-4xl">DECISIÓN</span>
-            <span class="font-mono text-xs uppercase tracking-wider text-ink-muted/70">De predicción a estrategia.</span>
+          <div class="hero-stat group sm:border-l sm:border-hairline sm:pl-8">
+            <span class="block font-display text-xl font-bold tracking-tight text-ink sm:text-3xl lg:text-[2.1rem]">DECISIÓN</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-muted/70">De predicción a estrategia.</span>
+            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
           </div>
         </div>
 
-        <div class="hero-btns flex flex-wrap gap-4 opacity-0 animate-fade-in">
-          <a href="#proyectos" class="btn-primary">
+        <div class="hero-btns flex flex-wrap items-center gap-3">
+          <a href="#proyectos" class="btn-primary group">
             Ver Proyectos
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
           <a href="#contacto" class="btn-secondary">
             Contacto
           </a>
+          <span class="hidden items-center gap-2 pl-2 font-mono text-xs text-ink-faint sm:inline-flex">
+            <span class="h-px w-6 bg-hairline"></span>
+            Respuesta &lt; 24h
+          </span>
+        </div>
+
+        <!-- trust row -->
+        <div class="mt-8 flex flex-wrap items-center gap-3 border-t border-hairline-soft pt-5 font-mono text-[11px] tracking-widest uppercase text-ink-faint">
+          <span>Stack:</span>
+          <span class="rounded-md bg-surface px-2 py-1 ring-1 ring-hairline text-ink-muted">Python</span>
+          <span class="rounded-md bg-surface px-2 py-1 ring-1 ring-hairline text-ink-muted">XGBoost</span>
+          <span class="rounded-md bg-surface px-2 py-1 ring-1 ring-hairline text-ink-muted">PyTorch</span>
+          <span class="rounded-md bg-surface px-2 py-1 ring-1 ring-hairline text-ink-muted">Docker</span>
         </div>
       </div>
 
-      <div class="hero-image w-full lg:w-[45%] flex justify-center opacity-0 animate-fade-in" style="animation-delay: 0.3s;">
-        <div class="hero-image-wrapper relative">
-
+      <div class="hero-visual w-full lg:w-[42%] flex justify-center">
+        <div class="hero-image-wrapper relative w-full max-w-[430px]">
+          <!-- shadow -->
+          <div class="absolute -inset-3 -z-10 rounded-[22px] bg-canvas shadow-[0_18px_48px_rgba(0,0,0,0.55),0_4px_16px_rgba(0,0,0,0.45)] ring-1 ring-hairline/50"></div>
           <div class="relative overflow-hidden rounded-xl bg-surface p-1.5 ring-1 ring-hairline">
+            <!-- top bar like editor -->
+            <div class="flex items-center justify-between px-3 py-2">
+              <div class="flex items-center gap-1.5">
+                <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-[#ffbd2e]"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
+              </div>
+              <span class="font-mono text-[10px] tracking-widest uppercase text-ink-faint">forecast_v3.py — 128 ms</span>
+            </div>
             <Image
               src={profile.brainImage}
               alt="Concepto de Data Science"
-              class="h-auto w-full object-cover rounded-[15px] relative z-10"
-              width={500}
-              height={400}
+              class="h-auto w-full object-cover rounded-[12px] relative z-10"
+              width={540}
+              height={420}
               loading="eager"
             />
+            <!-- overlay stats -->
+            <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-lg bg-canvas/80 px-3 py-2.5 backdrop-blur ring-1 ring-hairline">
+              <div>
+                <span class="block font-mono text-[10px] uppercase tracking-widest text-ink-faint">AUC · Heart Risk</span>
+                <span class="font-display text-sm font-bold tracking-tight text-ink">0.94 <span class="text-emerald-400 font-mono text-xs">↑ 3.2%</span></span>
+              </div>
+              <div class="text-right">
+                <span class="block font-mono text-[10px] uppercase tracking-widest text-ink-faint">Forecast · ANDE</span>
+                <span class="font-display text-sm font-bold tracking-tight text-ink">MAPE 2.1%</span>
+              </div>
+              <div class="hidden sm:block h-8 w-px bg-hairline"></div>
+              <div class="hidden sm:block text-right">
+                <span class="block font-mono text-[10px] uppercase tracking-widest text-ink-faint">Rows</span>
+                <span class="font-mono text-sm font-medium text-accent">1.4M+</span>
+              </div>
+            </div>
+          </div>
+          <!-- floating badge -->
+          <div class="absolute -right-2 -top-2 hidden rounded-pill bg-ink px-3 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase text-canvas shadow-lg sm:flex items-center gap-1.5">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            Model in production
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="scroll-indicator absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 animate-fade-in" style="animation-delay: 0.8s;">
+  <div class="scroll-indicator absolute bottom-6 left-1/2 -translate-x-1/2 hidden flex-col items-center gap-2 md:flex">
     <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted/50">Scroll</span>
-    <div class="h-8 w-px bg-ink-muted/30"></div>
+    <div class="h-8 w-px bg-gradient-to-b from-ink-muted/40 to-transparent"></div>
   </div>
 </section>
 
 <style>
-  .hero-image-wrapper {
-    max-width: 420px;
-  }
-
-  .btn-primary:hover svg,
-  .btn-secondary:hover svg {
-    transform: translateX(3px);
-  }
-
-  .scroll-indicator {
-    animation: fadeIn 0.6s ease-in-out forwards;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .scroll-indicator {
-      opacity: 1;
-    }
-  }
+  .hero-image-wrapper { max-width: 430px; }
+  @media (max-width: 1024px) { .hero-image-wrapper { max-width: 420px; } }
 </style>

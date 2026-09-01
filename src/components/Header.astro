@@ -2,19 +2,23 @@
 import siteConfig from '../data/siteConfig.json';
 ---
 
-<header class="header sticky top-0 z-50 w-full border-b border-hairline-soft bg-canvas/90 backdrop-blur-xl">
+<header class="site-header header sticky top-0 z-50 w-full border-b border-hairline-soft bg-canvas/60 backdrop-blur-xl">
   <div class="container mx-auto px-6">
-    <div class="header-content flex items-center justify-between py-3">
-      <div class="logo">
-        <a href="/" class="no-underline" aria-label="Ir al inicio">
-          <span class="logo-text font-display text-2xl font-bold tracking-tight text-ink transition-colors duration-300 hover:text-accent">{siteConfig.logoText}</span>
+    <div class="header-content flex items-center justify-between py-3.5 transition-all duration-300">
+      <div class="logo flex items-center gap-3">
+        <a href="/" class="no-underline group flex items-center gap-3" aria-label="Ir al inicio">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface ring-1 ring-hairline font-mono text-xs font-bold tracking-widest text-ink group-hover:ring-accent transition-colors">{siteConfig.logoText}</span>
+          <span class="hidden sm:block h-4 w-px bg-hairline"></span>
+          <span class="hidden sm:block font-mono text-[10px] leading-none tracking-[0.14em] text-ink-faint uppercase">
+            Data<br/>Observatory
+          </span>
         </a>
       </div>
       <nav class="nav hidden md:block" aria-label="Navegación principal">
-        <ul class="nav-list flex items-center gap-8">
+        <ul class="nav-list flex items-center gap-7">
           {siteConfig.navItems.map((item) => (
             <li class="nav-item">
-              <a href={item.url} class:list={['nav-link relative group py-1 font-mono text-sm transition-colors duration-300', Astro.url.pathname + Astro.url.hash === item.url ? 'text-accent' : 'text-ink-muted hover:text-ink']} aria-current={Astro.url.pathname + Astro.url.hash === item.url ? 'page' : undefined}>
+              <a href={item.url} class:list={['nav-link relative group py-1 font-mono text-xs tracking-widest uppercase transition-colors duration-300', Astro.url.pathname + Astro.url.hash === item.url ? 'text-ink' : 'text-ink-muted hover:text-ink']} aria-current={Astro.url.pathname + Astro.url.hash === item.url ? 'page' : undefined}>
                 {item.text}
                 <span class={Astro.url.pathname + Astro.url.hash === item.url ? 'absolute -bottom-1 left-0 h-px w-full bg-accent' : 'absolute -bottom-1 left-0 h-px w-0 bg-accent group-hover:w-full transition-all duration-300'}></span>
               </a>
@@ -23,7 +27,11 @@ import siteConfig from '../data/siteConfig.json';
         </ul>
       </nav>
       <div class="flex items-center gap-2">
-        <a href="#contacto" class="btn-secondary hidden !py-2 text-sm md:inline-flex">
+        <span class="hidden lg:flex items-center gap-2 rounded-pill bg-surface px-3 py-1.5 ring-1 ring-hairline">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+          <span class="font-mono text-[11px] tracking-widest uppercase text-ink-muted">Disponible</span>
+        </span>
+        <a href="#contacto" class="btn-primary hidden !py-2 text-xs tracking-wide md:inline-flex">
           Contáctame
         </a>
         <button type="button" class="mobile-toggle flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg p-2 hover:bg-surface md:hidden" id="mobile-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
@@ -35,8 +43,8 @@ import siteConfig from '../data/siteConfig.json';
     </div>
   </div>
 
-  <div class="mobile-menu">
-    <ul id="mobile-nav" class="nav-list absolute left-0 top-full hidden w-full flex-col space-y-1 border-b border-hairline bg-canvas px-6 py-4 shadow-lg md:hidden">
+  <div class="mobile-menu overflow-hidden">
+    <ul id="mobile-nav" class="nav-list absolute left-0 top-full hidden w-full flex-col space-y-1 border-b border-hairline bg-canvas px-6 py-4 shadow-xl md:hidden">
       {siteConfig.navItems.map((item) => (
         <li class="nav-item">
           <a href={item.url} class="nav-link block rounded-lg py-2.5 font-mono text-sm text-ink-muted transition-colors duration-300 hover:bg-surface hover:text-ink">
@@ -54,13 +62,12 @@ import siteConfig from '../data/siteConfig.json';
 </header>
 
 <style>
-  .nav-list.open {
-    display: flex;
-  }
-
-  .mobile-toggle.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  .nav-list.open { display: flex; }
+  .mobile-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
   .mobile-toggle.open span:nth-child(2) { opacity: 0; }
-  .mobile-toggle.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+  .mobile-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+  .site-header.is-scrolled { border-color: #262626; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .site-header.is-scrolled .header-content { padding-top: 0.6rem; padding-bottom: 0.6rem; }
 </style>
 
 <script>
@@ -71,12 +78,34 @@ import siteConfig from '../data/siteConfig.json';
     navList?.classList.remove('open');
     mobileToggle?.setAttribute('aria-expanded', 'false');
     mobileToggle?.setAttribute('aria-label', 'Abrir menú');
+    if (navList) {
+      navList.style.height = '';
+      navList.style.opacity = '';
+    }
   };
-  mobileToggle?.addEventListener('click', () => {
+  const openMenu = () => {
+    if (!navList || !mobileToggle) return;
     const isOpen = mobileToggle.classList.toggle('open');
-    navList?.classList.toggle('open', isOpen);
+    navList.classList.toggle('open', isOpen);
     mobileToggle.setAttribute('aria-expanded', String(isOpen));
     mobileToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
-  });
+    if (isOpen) {
+      navList.style.display = 'flex';
+      navList.style.overflow = 'hidden';
+      const h = navList.scrollHeight;
+      navList.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(0.16,1,0.3,1)' }).onfinish = () => {
+        navList.style.height = 'auto';
+        navList.style.opacity = '1';
+      };
+    } else {
+      const h = navList.scrollHeight;
+      navList.animate([{ height: h + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 220, easing: 'ease' }).onfinish = () => {
+        navList.classList.remove('open');
+        navList.style.height = '';
+      };
+    }
+  };
+  mobileToggle?.addEventListener('click', openMenu);
   navList?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 </script>

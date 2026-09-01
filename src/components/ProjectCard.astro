@@ -10,21 +10,25 @@ const { entry } = Astro.props;
 const { title, shortDescription, tags, links, cover } = entry.data;
 ---
 
-<article class="project-card flex h-full flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition-all duration-300 hover:-translate-y-1 hover:ring-1 hover:ring-hairline">
+<article class="project-card group flex h-full flex-col overflow-hidden rounded-xl border border-hairline bg-surface transition-all duration-300 hover:-translate-y-1 hover:border-hairline hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)]">
   <a href={links.demo} class="project-image block overflow-hidden" aria-label={title}>
-    <div class="aspect-video overflow-hidden">
+    <div class="aspect-video overflow-hidden relative">
       <Image
         src={cover}
         alt={title}
-        class="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
+        class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]"
         width={640}
         height={360}
       />
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-canvas/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+      <span class="pointer-events-none absolute left-3 top-3 rounded-pill bg-canvas/85 px-2.5 py-1 font-mono text-[10px] tracking-widest uppercase text-ink ring-1 ring-hairline backdrop-blur">
+        Case study
+      </span>
     </div>
   </a>
 
-  <div class="project-details p-6 flex flex-col flex-grow">
-    <h3 class="mb-2 font-display text-lg font-bold tracking-tight text-ink transition-colors duration-300 hover:text-accent">
+  <div class="project-details px-5 py-6 flex flex-col flex-grow">
+    <h3 class="mb-2 font-display text-[1.08rem] font-bold leading-tight tracking-tight text-ink transition-colors duration-300 group-hover:text-accent">
       {title}
     </h3>
     <p class="mb-4 line-clamp-3 flex-grow text-sm leading-relaxed text-ink-muted">
@@ -33,12 +37,12 @@ const { title, shortDescription, tags, links, cover } = entry.data;
 
     <div class="project-technologies flex flex-wrap gap-1.5 mb-5">
       {tags.slice(0, 5).map((tag) => (
-        <span class="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-ink-muted ring-1 ring-hairline transition-colors duration-200 hover:text-accent">
+        <span class="rounded-md bg-surface-2 px-2 py-1 font-mono text-[11px] leading-none text-ink-muted ring-1 ring-hairline transition-colors duration-200 group-hover:ring-hairline">
           {tag}
         </span>
       ))}
       {tags.length > 5 && (
-        <span class="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-ink-muted ring-1 ring-hairline">
+        <span class="rounded-md bg-surface-2 px-2 py-1 font-mono text-[11px] leading-none text-ink-muted ring-1 ring-hairline">
           +{tags.length - 5}
         </span>
       )}
@@ -47,7 +51,7 @@ const { title, shortDescription, tags, links, cover } = entry.data;
     <div class="project-links flex gap-3 mt-auto">
       <a
         href={links.demo}
-        class="btn-primary flex-1 justify-center !py-2 !px-4 text-sm"
+        class="btn-primary flex-1 justify-center !py-2.5 !px-4 text-sm"
       >
         Ver Proyecto
       </a>
@@ -55,7 +59,7 @@ const { title, shortDescription, tags, links, cover } = entry.data;
         href={links.github}
         target="_blank"
         rel="noopener noreferrer"
-        class="btn-secondary flex-1 justify-center !py-2 !px-4 text-sm"
+        class="btn-secondary flex-1 justify-center !py-2.5 !px-4 text-sm"
       >
         GitHub
       </a>

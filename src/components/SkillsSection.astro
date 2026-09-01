@@ -2,18 +2,26 @@
 import skills from '../data/skills.json';
 ---
 
-<section id="habilidades" class="skills bg-canvas py-24">
+<section id="habilidades" class="skills relative bg-canvas py-24">
+  <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-hairline to-transparent"></div>
   <div class="container mx-auto px-6">
-    <div class="scroll-reveal">
-      <h2 class="section-title mb-16 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
+    <div class="gsap-reveal mb-10">
+      <span class="section-eyebrow">03 — Capacidades</span>
+      <h2 class="font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
         <span class="section-title-underline">Habilidades</span>
       </h2>
+      <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
+        Métricas auditables, no buzzwords. Cada barra refleja uso en producción, no autoevaluación vacía.
+      </p>
     </div>
+    <div class="section-rule mb-10"></div>
 
-    <div class="skills-container grid grid-cols-1 md:grid-cols-2 gap-12">
-      <div class="skills-column scroll-reveal">
-        <h3 class="mb-8 font-display text-lg font-bold tracking-tight text-ink border-l-2 border-accent pl-4">
+    <div class="skills-container grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12">
+      <div class="skills-column gsap-reveal rounded-xl bg-surface p-6 ring-1 ring-hairline lg:p-7">
+        <h3 class="mb-6 flex items-center gap-3 font-display text-[1.05rem] font-bold tracking-tight text-ink">
+          <span class="h-6 w-0.5 rounded-full bg-accent"></span>
           Habilidades Técnicas
+          <span class="ml-auto font-mono text-[10px] tracking-widest uppercase text-ink-faint">Core</span>
         </h3>
         <div class="skills-list space-y-5">
           {skills.technical.map((skill) => (
@@ -35,9 +43,11 @@ import skills from '../data/skills.json';
         </div>
       </div>
 
-      <div class="skills-column scroll-reveal">
-        <h3 class="mb-8 font-display text-lg font-bold tracking-tight text-ink border-l-2 border-ink-muted pl-4">
+      <div class="skills-column gsap-reveal rounded-xl bg-surface p-6 ring-1 ring-hairline lg:p-7">
+        <h3 class="mb-6 flex items-center gap-3 font-display text-[1.05rem] font-bold tracking-tight text-ink">
+          <span class="h-6 w-0.5 rounded-full bg-ink-muted"></span>
           Habilidades Personales
+          <span class="ml-auto font-mono text-[10px] tracking-widest uppercase text-ink-faint">Human</span>
         </h3>
         <div class="skills-list space-y-5">
           {skills.personal.map((skill) => (
@@ -60,15 +70,16 @@ import skills from '../data/skills.json';
       </div>
     </div>
 
-    <div class="tools-container mt-16 scroll-reveal">
-      <h3 class="mb-8 font-display text-lg font-bold tracking-tight text-ink text-center">
+    <div class="tools-container mt-14 gsap-reveal rounded-xl bg-surface p-6 ring-1 ring-hairline lg:p-7">
+      <h3 class="mb-2 font-display text-center text-[1.05rem] font-bold tracking-tight text-ink">
         Herramientas y Tecnologías
       </h3>
-      <div class="tools-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-w-4xl mx-auto">
+      <p class="mb-6 text-center font-mono text-xs text-ink-faint">Stack probado en producción</p>
+      <div class="tools-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 max-w-4xl mx-auto">
         {skills.tools.map((tool) => (
-          <div class="tool-item rounded-lg border border-hairline bg-surface px-3 py-2 text-center font-mono text-sm text-ink-muted
+          <div class="tool-item rounded-lg border border-hairline bg-canvas px-3 py-2.5 text-center font-mono text-[13px] text-ink-muted
                       transition-all duration-200
-                      hover:border-accent hover:text-accent">
+                      hover:border-accent hover:text-accent hover:bg-surface">
             {tool}
           </div>
         ))}
@@ -78,37 +89,6 @@ import skills from '../data/skills.json';
 </section>
 
 <style>
-  .skill-bar {
-    position: relative;
-  }
-
-  .skill-progress {
-    transition: width 1.5s ease-in-out;
-  }
+  .skill-bar { position: relative; }
+  .skill-progress { will-change: width; }
 </style>
-
-<script>
-  {
-    const skillBars = document.querySelectorAll<HTMLElement>('.skill-progress');
-
-    skillBars.forEach(bar => {
-      bar.style.width = '0%';
-    });
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const percentage = entry.target.getAttribute('data-percentage');
-          setTimeout(() => {
-            (entry.target as HTMLElement).style.width = `${percentage}%`;
-          }, 200);
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-
-    skillBars.forEach(bar => {
-      observer.observe(bar);
-    });
-  }
-</script>
