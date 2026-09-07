@@ -44,6 +44,10 @@ Plataforma completa para análisis energético con:
 
 ### Multiple Series Plot
 
+Antes de modelar cualquier pronóstico, conviene ver cómo se comporta la demanda año a año. Este script toma los datos mensuales de potencia máxima desde el Excel histórico y los reorganiza con `pandas.melt()` para pasar de un formato "ancho" (una columna por mes) a uno "largo" (una fila por año-mes), que es el formato que espera Seaborn para graficar series temporales.
+
+Con `sns.relplot()` genero una grilla de subgráficos (uno por año), donde cada panel muestra la curva mensual de ese año en color, y de fondo, en gris, se superponen todas las demás curvas históricas para poder comparar visualmente la forma de la demanda entre años. Además, agrego líneas de referencia verticales en marzo y septiembre —meses de transición estacional en Paraguay— y una línea horizontal con el promedio anual, lo que permite detectar rápidamente si un año estuvo por encima o por debajo de su propia media, y si el patrón estacional se mantiene consistente en el tiempo.
+
 ```python
 # Ande_Demanda_de_Potencia_Mensual
 Datos mensuales de la demanda de potencia máxima por mes, Paraguay.
@@ -113,7 +117,11 @@ g.savefig("grafico_demandaactual.png", dpi=200, bbox_inches="tight")
 
 <Image src={code1Img} alt="Visualización de Multiple Series Plot" loading="lazy" />
 
-### Neuronal Forecasting
+### Neural Forecasting (NBEATS / NHITS)
+
+Acá pruebo modelos de forecasting basados en redes neuronales, usando la librería `neuralforecast`. Primero traduzco los nombres de los meses (de español a inglés) para poder construir correctamente las fechas con `pd.to_datetime`, y transformo el dataset al formato que exige la librería: una columna `ds` (fecha), `y` (valor) y `unique_id` (identificador de la serie, útil cuando se manejan múltiples series a la vez).
+
+Separo los datos dejando los últimos 12 meses como conjunto de prueba, y entreno dos arquitecturas distintas en paralelo: NBEATS, un modelo basado en bloques totalmente conectados diseñado específicamente para series temporales univariadas, y NHITS, una variante más eficiente que procesa la señal en múltiples resoluciones temporales (parecido a una pirámide jerárquica), lo que suele darle ventaja para capturar tanto tendencias de largo plazo como variaciones de corto plazo. Ambos se entrenan con el mismo horizonte de predicción que el tamaño del set de prueba, para poder comparar su desempeño de forma directa.
 
 ```python
 import logging
@@ -164,7 +172,11 @@ plot_series(train_df, pronostico_df)
 
 <Image src={code2Img} alt="Visualización de Neuronal Forecasting" loading="lazy" />
 
-### StatsForecast Model
+### StatsForecast Model (AutoARIMA)
+
+Como contraste a los modelos neuronales, acá aplico un enfoque estadístico clásico: AutoARIMA, que busca automáticamente los mejores parámetros (p, d, q) y su componente estacional para ajustar un modelo ARIMA a la serie, sin que yo tenga que definirlos manualmente. Le indico `season_length=12` porque la demanda eléctrica tiene una estacionalidad anual clara (picos en invierno y verano por climatización).
+
+Genero un pronóstico a 12 meses con un intervalo de confianza del 95%, y lo grafico junto a los datos históricos. La banda sombreada (`fill_between`) es clave acá: muestra el rango de incertidumbre del modelo, algo que los modelos de caja negra no siempre comunican con la misma claridad, y que es fundamental al comunicar un pronóstico a alguien que va a tomar decisiones con esa información.
 
 ```python
 import pandas as pd
@@ -210,6 +222,10 @@ plt.show()
 <Image src={code3Img} alt="Visualización de StatsForecast Model" loading="lazy" />
 
 ### Prophet Model
+
+Por último, pruebo Prophet, el modelo de Meta pensado para series con fuerte estacionalidad y datos faltantes, muy usado en entornos de negocio por lo simple que es de ajustar e interpretar. Reutilizo la misma transformación de fechas que en los modelos anteriores y genero un pronóstico a 50 meses hacia adelante.
+
+Entreno dos versiones del modelo para comparar supuestos: una con estacionalidad aditiva (el comportamiento por defecto, donde la amplitud estacional se mantiene constante en el tiempo) y otra con estacionalidad multiplicativa, donde la amplitud de las fluctuaciones estacionales crece o decrece proporcionalmente al nivel de la serie. Esto último suele ajustar mejor cuando la demanda eléctrica crece de forma sostenida, ya que las variaciones estacionales (verano/invierno) también tienden a crecer en magnitud absoluta con los años.
 
 ```python
 import pandas as pd
