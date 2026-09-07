@@ -41,6 +41,8 @@ Sistema completo para procesamiento y visualización de datos climáticos con:
 
 ### Instalación de Dependencias
 
+Trabajar con datos climáticos requiere un stack específico que no viene por defecto en Python. `cfgrib` permite leer archivos en formato GRIB (el formato nativo del ECMWF), `cartopy` se encarga de las proyecciones cartográficas para dibujar mapas geográficamente correctos, `netCDF4` lee el otro formato estándar de datos climáticos (NetCDF), y `geopandas` permite trabajar con capas geoespaciales vectoriales, como los límites departamentales, para cruzarlas con los datos raster de temperatura.
+
 ```bash
 pip install cfgrib cartopy netCDF4 geopandas
 ```
@@ -48,6 +50,10 @@ pip install cfgrib cartopy netCDF4 geopandas
 <Image src={code1Img} alt="Visualización de Instalación de Dependencias" loading="lazy" />
 
 ### Carga de Datos NetCDF4
+
+Este primer script arranca con lo más simple: leer un archivo `.nc` (NetCDF) directamente con la librería `netCDF4`, extraer la variable `t2m` (temperatura a 2 metros de altura, la estándar para reportar "temperatura del aire") junto con sus coordenadas de latitud y longitud, y graficarla sobre un mapa. Un detalle importante: los datos de ECMWF vienen en Kelvin, así que hay que restar 273.15 para pasarlos a Celsius antes de graficar.
+
+Para el mapa uso `cartopy` con una proyección PlateCarree (la clásica proyección equirectangular, donde latitud/longitud se mapean linealmente a los ejes X/Y), y agrego capas de referencia —costas, fronteras, ríos, lagos— para que el mapa sea legible sin necesitar contexto adicional. El campo de temperatura se dibuja con `pcolormesh`, que arma una grilla de color a partir de los valores punto por punto, usando una paleta divergente (`coolwarm`) que separa visualmente temperaturas frías (azul) de cálidas (rojo).
 
 ```python
 import netCDF4 as nc
@@ -101,6 +107,10 @@ dataset.close()
 <Image src={code2Img} alt="Visualización de Carga de Datos NetCDF4" loading="lazy" />
 
 ### Visualización con Cartopy y GRIB
+
+Acá subo un escalón en complejidad: en vez de NetCDF, trabajo directamente con el formato GRIB (más compacto y común en meteorología operativa), usando `xarray` con el motor `cfgrib`, que permite manipular los datos como un array multidimensional con etiquetas (mucho más cómodo que trabajar con arrays de NumPy puros). La variable acá es `stl2` (temperatura del suelo a 2 metros).
+
+El cambio más notorio es la proyección: en vez de la plana PlateCarree, uso una proyección ortográfica centrada en Sudamérica (`central_longitude=-60, central_latitude=-15`), que simula cómo se vería el planeta visto desde el espacio en ese punto —da un efecto de globo 3D aunque siga siendo una imagen 2D. Fijo también un rango de temperatura común (`vmin=-40, vmax=40`) para que la escala de colores sea comparable entre distintos mapas o fechas.
 
 ```python
 import numpy as np
@@ -165,6 +175,10 @@ plt.show()
 <Image src={code3Img} alt="Visualización de Visualización con Cartopy y GRIB" loading="lazy" />
 
 ### Visualización con Cartopy y GeoJSON
+
+Esta versión toma los mismos datos GRIB pero cambia el enfoque: en vez de la vista tipo "globo", hago zoom sobre Sudamérica con una proyección PlateCarree acotada a la región (`set_extent`), y sumo una capa vectorial (GeoJSON) con los límites departamentales de Paraguay, cargada con `geopandas`. Esto permite superponer la grilla de temperatura con divisiones administrativas reales, algo clave si el objetivo es un análisis a nivel país o departamento en lugar de una vista puramente continental.
+
+Es, en esencia, el mismo procesamiento de datos que el script anterior, pero pensado para un caso de uso distinto: mientras el mapa ortográfico sirve para comunicar un fenómeno a escala continental, este acercamiento con límites geográficos sirve para un análisis operativo o territorial más específico.
 
 ```python
 import numpy as np

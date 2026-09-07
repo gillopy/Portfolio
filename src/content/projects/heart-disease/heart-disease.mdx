@@ -40,7 +40,11 @@ Implementación completa de machine learning con procesamiento robusto de datos 
 
 ## Detalles Técnicos
 
+A diferencia de un análisis exploratorio en notebook, este proyecto está organizado como un pipeline de producción: cada etapa (carga, procesamiento, entrenamiento, evaluación, guardado) vive en su propio módulo con una única responsabilidad, siguiendo el principio de separación de responsabilidades. Esto facilita testear cada parte de forma aislada, reemplazar componentes sin romper el resto, y containerizar todo el flujo con Docker para un despliegue reproducible.
+
 ### src/data/data_loader.py
+
+El primer módulo es deliberadamente simple: una única función responsable de leer el CSV crudo. Puede parecer trivial, pero separar la carga de datos en su propia función (en vez de tener un `pd.read_csv` suelto en el script principal) es lo que permite, más adelante, cambiar la fuente de datos (por ejemplo, leer desde una base de datos en vez de un CSV) sin tocar el resto del pipeline.
 
 ```python
 import pandas as pd
@@ -61,6 +65,10 @@ def load_data(file_path: str) -> pd.DataFrame:
 <Image src={code1Img} alt="Visualización de /src/data/data_loader.py" loading="lazy" />
 
 ### src/data/data_processor.py
+
+Acá arranca la limpieza real de los datos. El dataset de UCI Heart Disease tiene una particularidad conocida: varias variables clínicas (presión arterial, colesterol, frecuencia cardíaca máxima, depresión del ST) usan el valor 0 para representar un dato faltante, no un valor real —un colesterol de 0 no tiene sentido fisiológico—. Por eso el primer paso es reemplazar esos ceros por `NaN` en las columnas relevantes, para que después puedan tratarse correctamente como valores faltantes (y no arrastrar ceros falsos que distorsionarían el entrenamiento del modelo).
+
+La función también separa la variable objetivo (`target_column`) del resto de las features, dejando todo listo para la siguiente etapa: la división en train/test.
 
 ```python
 import pandas as pd
@@ -93,6 +101,8 @@ def process_data(df: pd.DataFrame, columns_to_impute: list, target_column: str =
 <Image src={code2Img} alt="Visualización de /src/data/data_processor.py" loading="lazy" />
 
 ### src/data/data_splitter.py
+
+Este módulo divide el dataset en conjuntos de entrenamiento y prueba usando `train_test_split` de scikit-learn, con `stratify=y` activado por defecto. La estratificación es importante acá porque en datasets médicos las clases suelen estar desbalanceadas (menos casos positivos que negativos); estratificar asegura que la proporción de pacientes con y sin enfermedad cardíaca se mantenga similar tanto en train como en test, evitando que por azar el conjunto de prueba quede con muy pocos casos positivos para evaluar bien el modelo.
 
 ```python
 from sklearn.model_selection import train_test_split
@@ -128,6 +138,8 @@ def split_data(data: pd.DataFrame, target_column: str, test_size=0.2, random_sta
 ```
 
 ### src/main.py
+
+Este es el punto de entrada que orquesta todo el pipeline de punta a punta: carga los datos crudos, los limpia, los divide en train/test, entrena el modelo, lo evalúa y lo guarda — todo llamando a los módulos anteriores en secuencia, sin repetir lógica. Un detalle relevante: la columna objetivo original (`num`) del dataset UCI no es binaria, sino que va de 0 (sin enfermedad) a 4 (distintos grados de severidad); acá se binariza (`y > 0`) porque el objetivo del modelo es un caso de uso más simple y accionable: predecir presencia o ausencia de enfermedad cardíaca, no su severidad. Al final se imprimen las métricas clave del modelo entrenado.
 
 ```python
 import sys
@@ -186,6 +198,8 @@ if __name__ == "__main__":
 
 ### src/model/evaluator.py
 
+Para un problema de clasificación médica, una sola métrica de "accuracy" no alcanza —y puede incluso ser engañosa si las clases están desbalanceadas—. Por eso esta función calcula un conjunto más completo: precisión (de los que el modelo marcó como enfermos, cuántos lo eran realmente), recall (de los que realmente estaban enfermos, cuántos detectó el modelo — clave en salud, donde un falso negativo es más costoso que un falso positivo), F1 (el balance entre ambas) y AUC-ROC (qué tan bien el modelo distingue entre las dos clases en general, independientemente del umbral de decisión elegido).
+
 ```python
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import xgboost
@@ -219,6 +233,8 @@ def evaluate_model(model: xgboost.sklearn.XGBClassifier, test_data: pd.DataFrame
 
 ### src/model/saver.py
 
+Un detalle simple pero que denota buena práctica de MLOps: en vez de sobrescribir siempre el mismo archivo de modelo, esta función le agrega la fecha actual al nombre del archivo (`_YYYY-MM-DD.joblib`). Esto da versionado automático sin necesidad de una herramienta externa — cada vez que se reentrena el modelo con datos nuevos, queda un registro histórico de qué modelo se generó cuándo, útil tanto para trazabilidad como para poder comparar o revertir a una versión anterior si una nueva resulta peor.
+
 ```python
 from datetime import datetime
 import joblib
@@ -239,6 +255,8 @@ def save_model(model: xgboost.sklearn.XGBClassifier, model_path: str) -> None:
 ```
 
 ### src/model/trainer.py
+
+El entrenamiento usa XGBoost, un modelo de gradient boosting sobre árboles, muy usado en datos tabulares por su buen desempeño con relativamente poco tuning. Los hiperparámetros por defecto acá son conservadores a propósito: `max_depth=2` mantiene los árboles poco profundos (reduciendo el riesgo de overfitting en un dataset relativamente chico, como suele ser el caso en datasets clínicos), y `learning_rate=0.1` con `n_estimators=300` busca un aprendizaje gradual y estable en vez de ajustes bruscos. Que la función acepte un diccionario `params` opcional es lo que permite, más adelante, hacer búsqueda de hiperparámetros (grid search, optuna, etc.) sin tener que tocar el código del entrenador.
 
 ```python
 import xgboost as xgb

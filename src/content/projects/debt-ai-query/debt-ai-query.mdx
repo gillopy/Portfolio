@@ -44,6 +44,10 @@ Sistema de inteligencia artificial para consultas económicas:
 
 ### Vectorización con Chroma
 
+El primer paso de cualquier sistema RAG (Retrieval-Augmented Generation) es convertir los datos crudos en algo que un modelo de lenguaje pueda "buscar" por significado, no solo por texto exacto. Acá tomo los registros históricos de deuda desde un CSV y, en vez de dejarlos como filas sueltas de una tabla, los transformo en oraciones en lenguaje natural (ej. "En [fecha], el saldo era X, con desembolsos de Y y pagos de Z"). Esto es clave: un LLM entiende mucho mejor una oración descriptiva que una fila tabular aislada, y esa oración es la que después se va a comparar semánticamente contra las preguntas del usuario.
+
+Cada registro se guarda como un `Document` de LangChain, con su fecha como metadato (útil para filtrar o rastrear la fuente de una respuesta más adelante). Después, uso `OllamaEmbeddings` con el modelo `mxbai-embed-large` para convertir cada documento en un vector numérico que captura su significado, y esos vectores se almacenan en Chroma, una base de datos vectorial local. Todo esto corre en local vía Ollama, sin depender de una API externa de pago — algo relevante si el objetivo es un sistema económico, reproducible y sin costos recurrentes de inferencia.
+
 ```python
 import pandas as pd
 from langchain.vectorstores import Chroma
@@ -72,6 +76,10 @@ chroma_db.persist()
 <Image src={code1Img} alt="Visualización de Vectorización con Chroma" loading="lazy" />
 
 ### Interfaz de Consulta con LLM
+
+Esta es la parte de "generación aumentada por recuperación" propiamente dicha. Cuando el usuario escribe una pregunta económica por consola, el retriever busca en la base vectorial de Chroma los documentos más similares semánticamente a esa pregunta (no por palabras clave, sino por cercanía de significado en el espacio de embeddings), y esos registros recuperados se insertan como contexto (`{records}`) dentro de un prompt template.
+
+El prompt está diseñado deliberadamente para restringir al modelo a responder solo con la información recuperada, sin inventar datos que no estén en las fuentes — un control importante para reducir alucinaciones, sobre todo tratándose de cifras económicas donde precisión y trazabilidad importan. Como modelo uso `deepseek-r1:1.5b` corriendo localmente vía Ollama, con `temperature=0.3` para priorizar respuestas consistentes y poco creativas (lo cual tiene sentido acá: no queremos que el modelo "interprete" libremente una serie de deuda). El resultado es un loop de CLI simple donde cada pregunta dispara: búsqueda semántica → armado de contexto → generación de respuesta.
 
 ```python
 from langchain_ollama.llms import OllamaLLM
