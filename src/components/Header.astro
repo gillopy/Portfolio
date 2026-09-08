@@ -31,7 +31,7 @@ import siteConfig from '../data/siteConfig.json';
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
           <span class="font-mono text-[11px] tracking-widest uppercase text-ink-muted">Disponible</span>
         </span>
-        <a href="#contacto" class="btn-primary hidden !py-2 text-xs tracking-wide md:inline-flex">
+        <a href="#contacto" class="btn-primary hidden md:inline-flex">
           Contáctame
         </a>
         <button type="button" class="mobile-toggle flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg p-2 hover:bg-surface md:hidden" id="mobile-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
@@ -71,41 +71,120 @@ import siteConfig from '../data/siteConfig.json';
 </style>
 
 <script>
-  const mobileToggle = document.getElementById('mobile-toggle');
-  const navList = document.getElementById('mobile-nav');
-  const closeMenu = () => {
-    mobileToggle?.classList.remove('open');
-    navList?.classList.remove('open');
-    mobileToggle?.setAttribute('aria-expanded', 'false');
-    mobileToggle?.setAttribute('aria-label', 'Abrir menú');
-    if (navList) {
+  const initHeader = () => {
+    // Evita listeners duplicados con ClientRouter (navegación SPA)
+    (window as unknown as { __headerCleanup?: () => void }).__headerCleanup?.();
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const navList = document.getElementById('mobile-nav');
+    if (!mobileToggle || !navList) return;
+    let openScrollY = 0;
+    let ticking = false;
+    let gen = 0;
+    const isOpen = () => mobileToggle.classList.contains('open');
+
+    // Limpia TODOS los estilos en línea para que la clase `hidden` vuelva a ocultar el menú
+    const resetInline = () => {
+      navList.style.display = '';
       navList.style.height = '';
       navList.style.opacity = '';
-    }
-  };
-  const openMenu = () => {
-    if (!navList || !mobileToggle) return;
-    const isOpen = mobileToggle.classList.toggle('open');
-    navList.classList.toggle('open', isOpen);
-    mobileToggle.setAttribute('aria-expanded', String(isOpen));
-    mobileToggle.setAttribute('aria-label', isOpen ? 'Cerrar menú' : 'Abrir menú');
-    if (isOpen) {
+      navList.style.overflow = '';
+    };
+
+    const closeMenu = (animated = false) => {
+      gen++;
+      const myGen = gen;
+      navList.getAnimations().forEach((a) => a.cancel());
+      mobileToggle.classList.remove('open');
+      navList.classList.remove('open');
+      mobileToggle.setAttribute('aria-expanded', 'false');
+      mobileToggle.setAttribute('aria-label', 'Abrir menú');
+      if (!animated) {
+        resetInline();
+        return;
+      }
+      const h = navList.scrollHeight;
+      if (h === 0) {
+        resetInline();
+        return;
+      }
+      navList.style.display = 'flex';
+      navList.style.overflow = 'hidden';
+      navList.style.height = h + 'px';
+      const anim = navList.animate(
+        [{ height: h + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+        { duration: 220, easing: 'ease' },
+      );
+      anim.onfinish = () => { if (myGen === gen) resetInline(); };
+      anim.oncancel = () => { if (myGen === gen) resetInline(); };
+    };
+
+    const toggleMenu = () => {
+      if (isOpen()) {
+        closeMenu(true);
+        return;
+      }
+      gen++;
+      const myGen = gen;
+      navList.getAnimations().forEach((a) => a.cancel());
+      openScrollY = window.scrollY;
+      mobileToggle.classList.add('open');
+      navList.classList.add('open');
+      mobileToggle.setAttribute('aria-expanded', 'true');
+      mobileToggle.setAttribute('aria-label', 'Cerrar menú');
       navList.style.display = 'flex';
       navList.style.overflow = 'hidden';
       const h = navList.scrollHeight;
-      navList.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(0.16,1,0.3,1)' }).onfinish = () => {
+      const anim = navList.animate(
+        [{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }],
+        { duration: 260, easing: 'cubic-bezier(0.16,1,0.3,1)' },
+      );
+      anim.onfinish = () => {
+        if (myGen !== gen || !isOpen()) return;
         navList.style.height = 'auto';
         navList.style.opacity = '1';
       };
-    } else {
-      const h = navList.scrollHeight;
-      navList.animate([{ height: h + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 220, easing: 'ease' }).onfinish = () => {
-        navList.classList.remove('open');
-        navList.style.height = '';
-      };
-    }
+    };
+
+    // Cierre automático al scrollear: si se mueve +12px con el menú abierto, se cierra
+    const onScroll = () => {
+      if (!isOpen() || ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        if (isOpen() && Math.abs(window.scrollY - openScrollY) > 12) closeMenu();
+        ticking = false;
+      });
+    };
+    const onResize = () => {
+      if (window.innerWidth >= 768) closeMenu();
+    };
+    const onDocClick = (e: MouseEvent) => {
+      if (!isOpen()) return;
+      const t = e.target;
+      if (!(t instanceof Element)) return;
+      if (t.closest('#mobile-toggle')) return;
+      if (!t.closest('.site-header')) closeMenu(true);
+    };
+    const onKeydown = (e: KeyboardEvent) => { if (e.key === 'Escape') closeMenu(true); };
+    const onLinkClick = () => closeMenu();
+
+    mobileToggle.addEventListener('click', toggleMenu);
+    navList.querySelectorAll('a').forEach((link) => link.addEventListener('click', onLinkClick));
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    document.addEventListener('click', onDocClick);
+    document.addEventListener('keydown', onKeydown);
+
+    (window as unknown as { __headerCleanup?: () => void }).__headerCleanup = () => {
+      mobileToggle.removeEventListener('click', toggleMenu);
+      navList.querySelectorAll('a').forEach((link) => link.removeEventListener('click', onLinkClick));
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      document.removeEventListener('click', onDocClick);
+      document.removeEventListener('keydown', onKeydown);
+    };
   };
-  mobileToggle?.addEventListener('click', openMenu);
-  navList?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+
+  initHeader();
+  document.addEventListener('astro:page-load', initHeader);
+  document.addEventListener('astro:after-swap', initHeader);
 </script>
