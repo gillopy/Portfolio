@@ -15,9 +15,10 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const { title, shortDescription, tags, links, cover } = entry.data;
+const coverSrc = typeof cover === 'string' ? cover : (cover as { src?: string })?.src ?? String(cover);
 ---
 
-<ProjectLayout title={`${title} | Proyecto`}>
+<ProjectLayout title={`${title} | Proyecto`} description={shortDescription} image={coverSrc} ogType="article">
   <h1 class="mb-4 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-5xl">{title}</h1>
   <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-ink-muted">{shortDescription}</p>
 

@@ -7,9 +7,33 @@ import ProjectsSection from '../components/ProjectsSection.astro';
 import SkillsSection from '../components/SkillsSection.astro';
 import ContactSection from '../components/ContactSection.astro';
 import profile from '../data/profile.json';
+import siteConfig from '../data/siteConfig.json';
+
+const pageTitle = `${profile.name} — ${profile.title}`;
+const pageDescription = profile.summary;
+const siteUrl = siteConfig.siteUrl;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: profile.name,
+    jobTitle: profile.title,
+    url: siteUrl,
+    image: `${siteUrl}${profile.profileImage}`,
+    sameAs: profile.social.map((s: { url: string }) => s.url),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteConfig.title,
+    url: siteUrl,
+    description: pageDescription,
+    inLanguage: siteConfig.locale ?? 'es_PY',
+  },
+];
 ---
 
-<Layout title={`Portfolio | ${profile.name}`}>
+<Layout title={pageTitle} description={pageDescription} jsonLd={jsonLd}>
   <Header />
 
   <main id="main-content">
