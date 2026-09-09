@@ -1,0 +1,5 @@
+# robots.txt — replace placeholder domain before production deploy
+# Set SITE_URL env or update src/data/siteConfig.json siteUrl, then rebuild
+User-agent: *
+Allow: /
+Sitemap: https://portfolio-netlify-placeholder.netlify.app/sitemap-index.xml
