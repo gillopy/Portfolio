@@ -35,3 +35,8 @@ skills-lock.json
 # windows-specific files
 Thumbs.db
 Desktop.ini
+
+# session byproducts
+.playwright-mcp/
+*.log
+verify-report.candidate.md
