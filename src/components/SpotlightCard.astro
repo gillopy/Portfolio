@@ -1,0 +1,86 @@
+---
+import type { HTMLTag } from 'astro/types';
+/**
+ * SpotlightCard — wrapper reutilizable con efecto spotlight en borde + glow.
+ * Replica el efecto de pheralb.dev: el borde se ilumina donde está el cursor
+ * mediante mask radial, más un glow de fondo que sigue al mouse.
+ *
+ * Uso:
+ *   import SpotlightCard from './SpotlightCard.astro';
+ *   <SpotlightCard class="...">
+ *     <!-- cualquier contenido -->
+ *   </SpotlightCard>
+ */
+export interface Props {
+  /** Etiqueta del elemento raíz (ej. "article" para cards semánticas). Default: div. */
+  as?: HTMLTag;
+  class?: string;
+  /** Color del glow de fondo. Default: accent del tema con baja opacidad. */
+  glowColor?: string;
+  /** Color del borde iluminado. Default: blanco translúcido. */
+  borderColor?: string;
+  /** Diámetro del halo de fondo en px. */
+  glowSize?: number;
+  /** Diámetro del punto que ilumina el borde en px. */
+  borderSize?: number;
+}
+
+const {
+  as: RootTag = 'div',
+  class: className = '',
+  glowColor = 'rgba(0, 153, 255, 0.15)',
+  borderColor = 'rgba(255, 255, 255, 0.55)',
+  glowSize = 600,
+  borderSize = 120,
+} = Astro.props;
+---
+
+<RootTag
+  data-spotlight
+  class:list={['spotlight-card', className]}
+  style={`--spotlight-glow: ${glowColor}; --spotlight-border: ${borderColor}; --spotlight-glow-size: ${glowSize}px; --spotlight-border-size: ${borderSize}px;`}
+>
+  <div class="spotlight-border" aria-hidden="true"></div>
+  <div class="spotlight-glow" aria-hidden="true"></div>
+  <div class="spotlight-content">
+    <slot />
+  </div>
+</RootTag>
+
+<script>
+  const initSpotlight = () => {
+    const cards = document.querySelectorAll<HTMLElement>('[data-spotlight]:not([data-spotlight-init])');
+    cards.forEach((card) => {
+      card.setAttribute('data-spotlight-init', 'true');
+      let raf = 0;
+      let x = 0;
+      let y = 0;
+
+      const render = () => {
+        raf = 0;
+        card.style.setProperty('--mx', `${x}px`);
+        card.style.setProperty('--my', `${y}px`);
+      };
+
+      card.addEventListener('mousemove', (e: MouseEvent) => {
+        const rect = card.getBoundingClientRect();
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+        if (!raf) raf = requestAnimationFrame(render);
+      });
+
+      card.addEventListener('mouseenter', () => {
+        card.setAttribute('data-spotlight-active', 'true');
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.removeAttribute('data-spotlight-active');
+      });
+    });
+  };
+
+  initSpotlight();
+  // Re-inicializa en carga, navegación client-side y restore (bfcache/history).
+  document.addEventListener('astro:page-load', initSpotlight);
+  document.addEventListener('astro:after-swap', initSpotlight);
+</script>
