@@ -41,3 +41,6 @@ Desktop.ini
 .playwright-mcp/
 *.log
 verify-report.candidate.md
+
+# agent tooling
+.atl/
