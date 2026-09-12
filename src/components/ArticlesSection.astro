@@ -1,0 +1,39 @@
+---
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import ArticleRow from './ArticleRow.astro';
+
+const articles: CollectionEntry<'articles'>[] = (await getCollection('articles')).sort(
+	(a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+---
+
+{articles.length > 0 && (
+  <section id="articulos" class="articles relative bg-canvas py-24">
+    <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-hairline to-transparent"></div>
+    <div class="container mx-auto px-6">
+      <div class="gsap-reveal mb-6 flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <h2 class="font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
+            <span class="section-title-underline">Artículos</span>
+          </h2>
+          <p class="mt-3 max-w-xl text-sm leading-relaxed text-ink-muted">
+            Lecturas largas de estadística, economía y ciencia de datos: réplicas comentadas y notas metodológicas.
+          </p>
+        </div>
+        <div class="hidden items-center gap-2 font-mono text-xs text-ink-faint sm:flex">
+          <span class="h-px w-8 bg-hairline"></span>
+          {articles.length} artículos
+        </div>
+      </div>
+      <div class="section-rule mb-10"></div>
+
+      {/* Full-width flat list: one row per article, stacked vertically. */}
+      <div class="articles-list flex flex-col">
+        {articles.map((entry) => (
+          <ArticleRow entry={entry} />
+        ))}
+      </div>
+    </div>
+  </section>
+)}

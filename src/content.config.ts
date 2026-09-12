@@ -24,4 +24,27 @@ const projects = defineCollection({
 		}),
 });
 
-export const collections = { projects };
+const articles = defineCollection({
+	loader: glob({
+		pattern: '**/*.mdx',
+		base: './src/content/articles',
+		generateId: ({ entry }) => (entry.split('/').pop() ?? entry).replace(/\.[^/.]+$/, ''),
+	}),
+	schema: ({ image }) =>
+		z.object({
+			title: z.string(),
+			shortDescription: z.string(),
+			// Drives newest-first ordering in the landing section.
+			publishDate: z.coerce.date(),
+			tags: z.array(z.string()),
+			// Cover image lives in the same folder as the MDX entry.
+			cover: image(),
+			// Source credit for replica articles; rendered by the detail route.
+			attribution: z.object({
+				text: z.string(),
+				url: z.url(),
+			}),
+		}),
+});
+
+export const collections = { projects, articles };

@@ -15,7 +15,7 @@ import siteConfig from '../data/siteConfig.json';
         </a>
       </div>
       <nav class="nav hidden md:block" aria-label="Navegación principal">
-        <ul class="nav-list flex items-center gap-7">
+        <ul class="nav-list flex items-center gap-5 lg:gap-7">
           {siteConfig.navItems.map((item) => (
             <li class="nav-item">
               <a href={item.url} class:list={['nav-link relative group py-1 font-mono text-xs tracking-widest uppercase transition-colors duration-300', Astro.url.pathname + Astro.url.hash === item.url ? 'text-ink' : 'text-ink-muted hover:text-ink']} aria-current={Astro.url.pathname + Astro.url.hash === item.url ? 'page' : undefined}>

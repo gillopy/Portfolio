@@ -1,0 +1,60 @@
+---
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+	const articles: CollectionEntry<'articles'>[] = await getCollection('articles');
+	return articles.map((entry: CollectionEntry<'articles'>) => ({
+		params: { slug: entry.id },
+		props: { entry },
+	}));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const { title, shortDescription, tags, publishDate, cover, attribution } = entry.data;
+const coverSrc = typeof cover === 'string' ? cover : (cover as { src?: string })?.src ?? String(cover);
+const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(publishDate);
+---
+
+<ArticleLayout title={`${title} | Artículo`} description={shortDescription} image={coverSrc} ogType="article">
+  <h1 class="mb-4 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-5xl">{title}</h1>
+  <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-ink-muted">{shortDescription}</p>
+
+  <div class="mb-10">
+    <p class="mb-4 font-mono text-xs tracking-widest uppercase text-ink-faint">
+      Publicado el {dateLabel}
+    </p>
+    <div class="technologies mb-6">
+      <h3 class="mb-3 font-display text-lg font-bold tracking-tight text-ink">Etiquetas</h3>
+      <div class="flex flex-wrap gap-1.5">
+        {tags.map((tag: string) => (
+          <span class="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-ink-muted ring-1 ring-hairline transition-colors duration-200 hover:text-accent">
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Attribution (top): text and URL come from the article's frontmatter. -->
+  <aside class="mb-10 rounded-xl border border-hairline bg-surface p-4 font-mono text-xs leading-relaxed text-ink-muted">
+    <p class="mb-1 tracking-widest uppercase text-ink-faint">Fuente original</p>
+    <p class="mb-2">{attribution.text}</p>
+    <a href={attribution.url} target="_blank" rel="noopener noreferrer" class="text-accent hover:text-accent-hover">
+      Ver artículo en Towards Data Science ↗
+    </a>
+  </aside>
+
+  <Content />
+
+  <!-- Attribution (footer): same frontmatter source, repeated after the body. -->
+  <aside class="mt-10 rounded-xl border border-hairline bg-surface p-4 font-mono text-xs leading-relaxed text-ink-muted">
+    <p class="mb-1 tracking-widest uppercase text-ink-faint">Fuente original</p>
+    <p class="mb-2">{attribution.text}</p>
+    <a href={attribution.url} target="_blank" rel="noopener noreferrer" class="text-accent hover:text-accent-hover">
+      Ver artículo en Towards Data Science ↗
+    </a>
+  </aside>
+</ArticleLayout>
