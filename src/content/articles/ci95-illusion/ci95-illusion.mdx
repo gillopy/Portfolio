@@ -43,12 +43,24 @@ ya está o no está dentro: ningún 95% acompaña a ese caso individual.
 
 ### De dónde sale el 95%
 
-La justificación es el teorema central del límite. Si un estimador se
-distribuye de manera aproximadamente normal alrededor del valor verdadero, con
-error estándar SE, entonces en muestreos repetidos el estimador cae dentro de
-±1.96 SE del valor verdadero en el 95% de los casos. El intervalo se obtiene
-algebraicamente de esa afirmación, pero la aleatoriedad sigue perteneciendo al
-estimador: la interpretación correcta es de largo plazo y de procedimiento.
+La justificación es el teorema central del límite. Si $$\bar{x}$$ es la media muestral
+de $$n$$ extracciones de una distribución con media verdadera $$\mu$$ y desviación
+estándar $$\sigma$$, entonces para $$n$$ grande, en muestreos repetidos el estimador
+cae dentro de ±1.96 $$\sigma/\sqrt{n}$$ del valor verdadero en el 95% de los casos:
+
+$$
+P\left(\mu - 1.96\,\frac{\sigma}{\sqrt{n}} < \bar{x} < \mu + 1.96\,\frac{\sigma}{\sqrt{n}}\right) \approx 0.95
+$$
+
+Reordenando para que el parámetro quede en el centro se obtiene el intervalo familiar:
+
+$$
+P\left(\bar{x} - 1.96\,\frac{\sigma}{\sqrt{n}} < \mu < \bar{x} + 1.96\,\frac{\sigma}{\sqrt{n}}\right) \approx 0.95
+$$
+
+La aleatoriedad de ambas expresiones pertenece a $$\bar{x}$$, no a $$\mu$$: el intervalo
+se obtiene algebraicamente de la primera afirmación, pero la interpretación correcta
+sigue siendo de largo plazo y de procedimiento.
 
 Interpretar el intervalo como una probabilidad sobre el parámetro es el error
 más difundido en la práctica científica. La fuente de este proyecto remite,
@@ -100,9 +112,9 @@ antes de ver los datos.
 El punto de partida es el prior, una densidad sobre el parámetro. Bayes combina
 esa creencia previa con la información que traen los datos:
 
-```text
-densidad del parámetro dado el dato  ∝  verosimilitud del dato × prior
-```
+$$
+p(\mu \mid \text{data}) \propto p(\text{data} \mid \mu) \times p(\mu)
+$$
 
 El resultado es el posterior: una distribución sobre el parámetro que ya no es
 subjetiva en el sentido de arbitraria (está condicionada al dato observado),
@@ -174,13 +186,13 @@ Las unidades del análisis son puntos porcentuales.
 Se asume que la brecha verdadera es cero y se calcula cuánto ruido es esperable
 bajo esa hipótesis:
 
-```text
-SE = sqrt(p0 * (1 - p0) / n) = sqrt(0.015 * 0.985 / 20000) ≈ 0.086 pp
-z  = 0.25 / 0.086 ≈ 2.9
-p-valor bilateral ≈ 0.004
-```
+$$
+SE = \sqrt{\frac{p_0(1-p_0)}{n}} = \sqrt{\frac{0.015 \times 0.985}{20{,}000}} \approx 0.086\ \text{pp}
+$$
 
-Un `z` de 2.9 queda por encima del umbral de 1.96 y el p-valor muy por debajo
+Con la brecha observada de +0.25 pp, esto da `z = 0.25 / 0.086 ≈ 2.9` y un p-valor bilateral `≈ 0.004`.
+
+Ese `z` queda por encima del umbral de 1.96 y el p-valor muy por debajo
 de 0.05: con estos datos, un mundo donde el tratamiento no cambia nada resulta
 difícil de sostener. El intervalo Wald para la brecha es **0.25 ± 1.96·0.086 ≈
 [0.08, 0.42] pp**: entero por encima del cero.
@@ -198,9 +210,9 @@ de distintas maneras razonables, conviene probar dos extremos.
 compatible con mis conocimientos previos". Su precisión (1.0) es
 insignificante frente a la del dato (≈135.4):
 
-```text
-posterior ≈ N(0.248, 0.086²) → creíble 95% ≈ [0.08, 0.42] pp
-```
+$$
+\text{posterior} \approx \mathcal{N}(0.248,\ 0.086^2) \;\Rightarrow\; \text{creíble 95\%} \approx [0.08,\ 0.42]\ \text{pp}
+$$
 
 No incluye el cero: coincide con el veredicto frecuentista, como era de
 esperar. Con un prior vago, el bayesiano y el frequentista dicen lo mismo; la
@@ -210,9 +222,9 @@ máxima verosimilitud y la media del posterior prácticamente se superponen.
 de este tipo de cambios rara vez superan un par de décimas". Su precisión
 (400) triplica la del dato:
 
-```text
-posterior ≈ N(0.063, 0.043²) → creíble 95% ≈ [−0.02, 0.15] pp
-```
+$$
+\text{posterior} \approx \mathcal{N}(0.063,\ 0.043^2) \;\Rightarrow\; \text{creíble 95\%} \approx [-0.02,\ 0.15]\ \text{pp}
+$$
 
 Ahora el cero **sí** está dentro: el mismo experimento, con otro supuesto
 inicial declarado, pasa a ser inconcluyente.
@@ -242,13 +254,13 @@ muestra qué pasa cuando nadie elige nada y simplemente se deja crecer `n`.
 
 ### El mecanismo en una línea
 
-El error estándar de una proporción escala como `1/sqrt(n)`:
+El error estándar de una proporción escala como $$1/\sqrt{n}$$:
 
-```text
-SE(n) = sqrt(p0 * (1 - p0) / n)
-```
+$$
+SE(n) = \sqrt{\frac{p_0\,(1-p_0)}{n}}
+$$
 
-por lo que el `z` de una brecha **absoluta fija** crece como `sqrt(n)`. Nada
+por lo que el $$z$$ de una brecha **absoluta fija** crece como $$\sqrt{n}$$. Nada
 del análisis depende de que el efecto sea importante; basta con que no sea
 exactamente cero y con reunir suficientes usuarios.
 
@@ -258,9 +270,9 @@ exactamente cero y con reunir suficientes usuarios.
 0.25 pp contra `n` en escala log, de 10³ a 10⁶, con la recta de referencia
 `z = 1.96`:
 
-```text
-z(n) = 0.25 pp / (sqrt(0.015 * 0.985 / n) * 100)
-```
+$$
+z(n) = \frac{0.25\ \text{pp}}{\sqrt{0.015 \times 0.985 / n} \times 100}
+$$
 
 Resultados de la réplica:
 
