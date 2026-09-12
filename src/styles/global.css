@@ -470,6 +470,15 @@ body::before {
 	border-radius: var(--radius-xl);
 }
 
+/* ---------- Display math (KaTeX) — articles only ---------- */
+.article-content .math-display {
+	display: block;
+	margin: 1.5rem 0 2rem;
+	text-align: center;
+	overflow-x: auto;
+}
+.article-content pre:has(> .math-display) { margin: 0; }
+
 /* ---------- Code blocks ---------- */
 .project-content .astro-code {
 	margin: 1.5rem 0 2.5rem;

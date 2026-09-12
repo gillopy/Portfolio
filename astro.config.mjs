@@ -1,8 +1,11 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import { unified } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
+import remarkMath from 'remark-math';          // default export = plugin function
+import rehypeKatex from 'rehype-katex';        // default export = plugin function
 import siteConfig from './src/data/siteConfig.json' with { type: 'json' };
 
 const resolvedSite = process.env.SITE_URL?.trim() || siteConfig.siteUrl;
@@ -18,8 +21,10 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   markdown: {
-    shikiConfig: {
-      theme: 'github-dark',
-    },
+    shikiConfig: { theme: 'github-dark' },     // unchanged; flows through unified route
+    processor: unified({
+      remarkPlugins: [[remarkMath, { singleDollarTextMath: false }]], // tuple form; docs-attested
+      rehypePlugins: [rehypeKatex],
+    }),
   },
 });
