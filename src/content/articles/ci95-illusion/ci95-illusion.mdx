@@ -1,0 +1,427 @@
+---
+title: "La ilusión del 95 %: qué dice (y qué no) tu intervalo de confianza"
+shortDescription: "Réplica comentada del estudio de Towards Data Science sobre intervalos de confianza y creíbles: simulación de cobertura, el caso de churn, la paradoja de Jeffreys–Lindley y cuatro hábitos para reportar resultados."
+publishDate: 2026-09-12
+tags:
+  - "Estadística"
+  - "Inferencia"
+  - "Bayesiano"
+  - "A/B Testing"
+cover: ./cover.png
+attribution:
+  text: "Este artículo es una réplica analítica en español del estudio de Ananya Bhattacharyya «The 95% Illusion: Why Your Confidence Interval Isn't What You Think It Is» (Towards Data Science, 11 de septiembre de 2026). El texto es original de esta réplica y no reproduce el artículo fuente."
+  url: "https://towardsdatascience.com/the-95-illusion-why-your-confidence-interval-isnt-what-you-think-it-is/"
+---
+import { Image } from 'astro:assets';
+import fig1Img from "./01_coverage_intervals.png";
+import fig2Img from "./02_priors_posteriors.png";
+import fig3Img from "./03_z_vs_sample_size.png";
+
+## Qué significa (y qué no) un intervalo de confianza del 95%
+
+### La pregunta que se hace mal
+
+El escenario típico de un tablero de A/B: la versión nueva retiene 0.4 puntos
+porcentuales más de usuarios, el intervalo estimado no toca el cero, y alguien
+pregunta si eso significa que hay un 95% de probabilidad de que la versión
+nueva sea mejor. La respuesta es no, y la razón merece explicarse despacio.
+
+### La construcción de Neyman
+
+El intervalo de confianza proviene del trabajo de Jerzy Neyman en la década de
+1930. Su lectura correcta distingue dos objetos que suelen confundirse:
+
+- el **parámetro** (la proporción verdadera, el lift real): un número fijo,
+  desconocido, que no tiene distribución;
+- el **intervalo**: una cantidad aleatoria, porque sus extremos salen de una
+  muestra que pudo haber sido otra.
+
+El 95% describe al método, no al intervalo que se tiene en pantalla. Antes de
+recolectar los datos existe una probabilidad del 95% de que el método produzca
+un intervalo que contenga al valor verdadero. Una vez recolectados, el valor
+ya está o no está dentro: ningún 95% acompaña a ese caso individual.
+
+### De dónde sale el 95%
+
+La justificación es el teorema central del límite. Si un estimador se
+distribuye de manera aproximadamente normal alrededor del valor verdadero, con
+error estándar SE, entonces en muestreos repetidos el estimador cae dentro de
+±1.96 SE del valor verdadero en el 95% de los casos. El intervalo se obtiene
+algebraicamente de esa afirmación, pero la aleatoriedad sigue perteneciendo al
+estimador: la interpretación correcta es de largo plazo y de procedimiento.
+
+Interpretar el intervalo como una probabilidad sobre el parámetro es el error
+más difundido en la práctica científica. La fuente de este proyecto remite,
+sobre la extensión del error, a Hoekstra, Morey, Rouder y Wagenmakers (2014),
+que no se verificó de forma independiente en esta réplica.
+
+### La verificación empírica de esta réplica
+
+`Code/coverage_simulation.py` somete la definición a prueba: genera 100 muestras
+binomiales con `p_true = 0.015` y `n = 20.000` (semilla legacy 42), construye el
+intervalo Wald de cada una y cuenta cuántos contienen al valor verdadero.
+
+- **Cobertura empírica de la réplica: 95 de 100.** El método cumple lo que
+  promete.
+- `reports/figures/01_coverage_intervals.png` dibuja los primeros 40 intervalos
+  como segmentos horizontales frente a la línea vertical en 0.015. La mayoría
+  lo atraviesa; hay dos segmentos rojos (filas 26 y 27) que no lo contienen.
+  Esa falla no es un error del método: es la fracción esperada de fallos en una
+  secuencia larga de experimentos.
+- El detalle por simulacro está en `reports/intervals.csv` y el resumen con el
+  bloque de parámetros en `reports/coverage_report.txt`.
+
+<Image src={fig1Img} alt="Cuarenta intervalos de confianza simulados sobre la línea vertical en 0,015; dos segmentos rojos no cubren el valor verdadero" loading="lazy" />
+
+### Consecuencia práctica
+
+Quien lee un intervalo de confianza como una afirmación de probabilidad sobre
+el parámetro está contestando una pregunta distinta de la que el intervalo
+respondió. Si el equipo quiere una probabilidad directa sobre el efecto,
+necesita un marco que declare explícitamente sus supuestos previos: el
+bayesiano, que es el tema de la sección siguiente.
+
+## Intervalos creíbles: otra pregunta, otra respuesta
+
+### Qué pregunta responde el enfoque bayesiano
+
+El intervalo de confianza responde: "¿este método de construcción de intervalos
+funciona de manera confiable a largo plazo?". El intervalo creíble responde la
+pregunta que casi todo el mundo tenía en la cabeza: "dado lo que ya sabía y lo
+que acabo de observar, ¿qué valores del parámetro son plausibles, y con qué
+probabilidad?".
+
+Para poder responder eso hay que aceptar un costo: el parámetro se modela con
+una distribución de probabilidad, lo que exige declarar una creencia inicial
+antes de ver los datos.
+
+### La mecánica
+
+El punto de partida es el prior, una densidad sobre el parámetro. Bayes combina
+esa creencia previa con la información que traen los datos:
+
+```text
+densidad del parámetro dado el dato  ∝  verosimilitud del dato × prior
+```
+
+El resultado es el posterior: una distribución sobre el parámetro que ya no es
+subjetiva en el sentido de arbitraria (está condicionada al dato observado),
+pero tampoco es única para todos los analistas (depende del prior elegido). El
+intervalo creible al 95% es simplemente el rango donde el posterior acumula
+0.95 de su masa de probabilidad. Con esa distribución en la mano ya se pueden
+afirmar probabilidades sobre el parámetro, por ejemplo "hay un 94% de
+probabilidad de que el efecto sea positivo". El intervalo de confianza no
+autoriza ninguna frase de ese estilo.
+
+### La comparación, fila por fila
+
+| Aspecto | Intervalo de confianza | Intervalo creíble |
+|---|---|---|
+| Pregunta | ¿el procedimiento funciona de forma fiable? | ¿en qué creo tras ver el dato? |
+| Objeto aleatorio | el intervalo, que varía entre muestreos | el parámetro, bajo el posterior |
+| Requiere prior | no | sí |
+| Significado del 95% | 95% de los intervalos construidos así atrapan el valor | 95% de masa posterior dentro del rango |
+| Concordancia entre analistas | la misma para todos | varía con el prior declarado |
+
+### La dependencia del prior, ilustrada
+
+`Code/prior_posterior_demo.py` usa el ejemplo de churn de la fuente (brecha
+observada de 0.25 pp, SE = 0.086 pp) y aplica la conjugada Normal–Normal: la
+precisión del posterior es la suma de precisiones, y su media es un promedio
+ponderado por esas precisiones.
+
+- **Prior débil** `N(0, 1.00²)`: precisión 1 contra ~135 de la verosimilitud.
+  El dato manda por completo: posterior `N(0.248, 0.086²)` y intervalo creíble
+  [0.08, 0.42] pp. Numéricamente idéntico al Wald.
+- **Prior fuerte** `N(0, 0.05²)`: precisión 400, tres veces la del dato. El
+  posterior se apalanca hacia el prior: `N(0.063, 0.043²)` y creíble
+  [−0.02, 0.15] pp, que incluye el cero.
+
+Mismo dato, dos intervalos, dos decisiones. Es la razón por la que el bayesiano
+se ve más subjetivo: no oculta sus supuestos, los escribe en una fórmula. La
+figura `reports/figures/02_priors_posteriors.png` muestra las tres curvas
+(prior punteado, verosimilitud discontinua, posterior sólida) en cada panel, y
+todos los números están en `reports/prior_posterior_results.txt`.
+
+<Image src={fig2Img} alt="Curvas de prior, verosimilitud y posterior en dos paneles: con prior débil el posterior reproduce el dato; con prior fuerte se apalanca hacia el cero" loading="lazy" />
+
+### Cuándo sirve cada uno
+
+El intervalo creíble es la herramienta natural cuando existen conocimientos
+estables antes del experimento (métricas históricas, capacidad de producción,
+resultados de pruebas previas) y el objetivo es actualizar una creencia que va
+a alimentar una decisión. Si en cambio hace falta un umbral reproducible y
+verificable por terceros, sin pedirle a nadie que declare un prior, el terreno
+es el frequentista. La sección «Frequentista o bayesiano…» desarrolla este
+criterio.
+
+## La misma diferencia, analizada dos veces
+
+### El caso
+
+Una empresa mide churn (tasa de abandono) sobre 20.000 usuarios activos de un
+grupo tratado. La tasa histórica del grupo control es de 1.50 puntos
+porcentuales (pp). En el grupo tratado se registran 350 abandonos, es decir,
+1.75 pp: una brecha de **+0.25 pp** respecto de la línea de base. La pregunta
+de negocio es obvia: ¿ese deterioro es real o es ruido?
+
+`Code/prior_posterior_demo.py` resuelve el caso por fórmulas cerradas (no hay
+simulación) y vuelca todos los valores a `reports/prior_posterior_results.txt`.
+Las unidades del análisis son puntos porcentuales.
+
+### Primera lectura: frecuentista
+
+Se asume que la brecha verdadera es cero y se calcula cuánto ruido es esperable
+bajo esa hipótesis:
+
+```text
+SE = sqrt(p0 * (1 - p0) / n) = sqrt(0.015 * 0.985 / 20000) ≈ 0.086 pp
+z  = 0.25 / 0.086 ≈ 2.9
+p-valor bilateral ≈ 0.004
+```
+
+Un `z` de 2.9 queda por encima del umbral de 1.96 y el p-valor muy por debajo
+de 0.05: con estos datos, un mundo donde el tratamiento no cambia nada resulta
+difícil de sostener. El intervalo Wald para la brecha es **0.25 ± 1.96·0.086 ≈
+[0.08, 0.42] pp**: entero por encima del cero.
+
+Dictamen: efecto real, hay que actuar.
+
+### Segunda lectura: bayesiana
+
+La misma verosimilitud se combina con un prior sobre la brecha δ mediante la
+conjugada Normal–Normal: el posterior tiene precisión `1/SE² + 1/σ_prior²` y
+media ponderada por esas mismas precisiones. Como el prior se puede justificar
+de distintas maneras razonables, conviene probar dos extremos.
+
+**Prior débil** `δ ~ N(0, 1.00²) pp` — "cualquier cosa entre −2 y +2 pp es
+compatible con mis conocimientos previos". Su precisión (1.0) es
+insignificante frente a la del dato (≈135.4):
+
+```text
+posterior ≈ N(0.248, 0.086²) → creíble 95% ≈ [0.08, 0.42] pp
+```
+
+No incluye el cero: coincide con el veredicto frecuentista, como era de
+esperar. Con un prior vago, el bayesiano y el frequentista dicen lo mismo; la
+máxima verosimilitud y la media del posterior prácticamente se superponen.
+
+**Prior fuerte** `δ ~ N(0, 0.05²) pp` — "por historia del producto, los efectos
+de este tipo de cambios rara vez superan un par de décimas". Su precisión
+(400) triplica la del dato:
+
+```text
+posterior ≈ N(0.063, 0.043²) → creíble 95% ≈ [−0.02, 0.15] pp
+```
+
+Ahora el cero **sí** está dentro: el mismo experimento, con otro supuesto
+inicial declarado, pasa a ser inconcluyente.
+
+### Resumen
+
+| Análisis | Intervalo al 95% (pp) | ¿Contiene 0? | Conclusión |
+|---|---|---|---|
+| Frecuentista (Wald) | [0.08, 0.42] | No | efecto real |
+| Bayesiano, prior débil | [0.08, 0.42] | No | efecto real |
+| Bayesiano, prior fuerte | [−0.02, 0.15] | Sí | inconcluyente |
+
+Mismos 20.000 usuarios, mismos 350 eventos: tres conclusiones defendibles. Lo
+único que cambió fue lo que se asumía antes de ver el dato. La Figura 2
+(`reports/figures/02_priors_posteriors.png`) hace visible ese mecanismo: a
+izquierda el posterior (verde) calcando a la verosimilitud (naranja); a la
+derecha, el posterior pegado al prior (azul) y atravesando la línea gris del
+cero.
+
+La lección no es "gana el bayesiano". Es que cuando dos marcos razonables
+divergen, el desacuerdo es información: obliga a elegir un prior de forma
+explícita y a discutirlo, en lugar de esconderlo bajo la aparente
+objetividad del umbral fijo. La sección «La paradoja de Jeffreys–Lindley»
+muestra qué pasa cuando nadie elige nada y simplemente se deja crecer `n`.
+
+## La paradoja de Jeffreys–Lindley: tests grandes que engañan
+
+### El mecanismo en una línea
+
+El error estándar de una proporción escala como `1/sqrt(n)`:
+
+```text
+SE(n) = sqrt(p0 * (1 - p0) / n)
+```
+
+por lo que el `z` de una brecha **absoluta fija** crece como `sqrt(n)`. Nada
+del análisis depende de que el efecto sea importante; basta con que no sea
+exactamente cero y con reunir suficientes usuarios.
+
+### La curva, replicada
+
+`Code/prior_posterior_demo.py` dibuja (Figura 3) el `z` de una brecha fija de
+0.25 pp contra `n` en escala log, de 10³ a 10⁶, con la recta de referencia
+`z = 1.96`:
+
+```text
+z(n) = 0.25 pp / (sqrt(0.015 * 0.985 / n) * 100)
+```
+
+Resultados de la réplica:
+
+| n | z de la brecha fija de 0.25 pp |
+|---|---|
+| 1.000 | 0.65 — ruido completo |
+| ~9.100 | 1.96 — umbral de "significancia" |
+| 20.000 | 2.91 — el caso de churn de «La misma diferencia…» |
+| 100.000 | 6.51 |
+| 1.000.000 | 20.57 — "innegable" |
+
+<Image src={fig3Img} alt="Crecida del estadístico z de una brecha fija de 0,25 pp con n en escala logarítmica; cruza 1,96 cerca de 9.100 usuarios" loading="lazy" />
+
+Con poco más de 9.000 usuarios una diferencia que puede ser económicamente
+irrelevante cruza el umbral fatídico; con un millón, cualquier residuo del
+diseño experimental —un sesgo de asignación mínimo, una estacionalidad sin
+controlar— aparecerá como un hallazgo con seis cifras de `z`. La significancia
+estadística deja de discriminar entre "hay efecto" y "hay suficiente muestra
+para detectar cualquier cosa".
+
+**Advertencia de fidelidad:** el artículo muestra la curva pero no publica su
+fórmula; el modelo anterior es una **inferencia** a partir de los ejes del
+gráfico (escala log, ordenada "z para 0.25 pp fijo") y de la receta del SE del
+ejemplo de churn. Las lecturas visuales del gráfico original (~0.7 en 10³,
+~20.5 en 10⁶, cruce apenas bajo 10⁴) coinciden con los valores calculados
+(~0.65, ~20.57, cruce en ≈9.1×10³).
+
+### Qué dice la paradoja con nombres y apellidos
+
+Harold Jeffreys y Dennis Lindley observaron, desde veredas distintas, el mismo
+fenómeno: ante un `p-valor` minúsculo en una muestra enorme, la hipótesis nula
+puede seguir siendo la explicación más probable bajo un prior razonable. En
+lenguaje de la sección «La misma diferencia…»: al crecer `n`, la precisión del
+dato crece, pero si el prior asigna densidad alta a efectos pequeños (como
+ocurre cuando se cree, con razón, que los cambios chicos casi no mueven
+métricas), el posterior se queda con el prior y el "efecto detectado" no llega
+a convencer. El test grita; la actualización de creencias susurra.
+
+### La salida práctica
+
+La confusión central es tratar "detectable" como sinónimo de "material". Dos
+preguntas distintas, dos herramientas:
+
+1. **Magnitud:** ¿la brecha estimada y su intervalo son suficientemente grandes
+   para mover una decisión de negocio? (0.25 pp de churn rara vez mueve un
+   roadmap por sí solos.)
+2. **Fiabilidad:** ¿el experimento distingue ese umbral del ruido? (potencia,
+   diseño, aleatorización.)
+
+La sección de reglas prácticas resume la regla: fijar antes el umbral material,
+y al crecer `n` exigir más, no menos — intervalos y efectos, no solo
+asteriscos.
+
+## Frequentista o bayesiano: qué papel cumple cada uno en analítica de producto
+
+### No es una guerra de religión
+
+Después de las secciones anteriores queda una tentación equivocada: concluir
+que un marco es "correcto" y el otro "subjetivo". Los dos son consistentes
+internamente; contestan preguntas distintas («Qué significa…» e «Intervalos
+creíbles…»). La elección razonable depende de qué pregunta se necesita
+responder y de qué se puede justificar ante quien escucha el resultado.
+
+### Lo que el marco frequentista hace bien
+
+- **Puerta de control reproducible.** Sin declarar creencias previas, dos
+  analistas con los mismos datos obtienen el mismo número. Para procesos que
+  alguien debe auditar (lanzamientos, experimentos regulatorios, backtesting
+  de modelos), esa propiedad es un requisito, no un detalle.
+- **Garantía de procedimiento.** El 95% (o el 1%) se refiere al comportamiento
+  del método en el largo plazo. Bien usado, permite afirmar: "si este proceso
+  corre siempre igual, falsea menos del 5% de las veces".
+- **Sus límites.** No habla de la probabilidad de hipótesis, y su umbral fijo
+  degenera con muestras grandes («La paradoja de Jeffreys–Lindley»). Un diseño
+  que exige solo "p < 0.05" termina autorizando decisiones sobre diferencias
+  irrelevantes.
+
+### Lo que el marco bayesiano hace bien
+
+- **Actualiza creencias con evidencia.** Entrega lo que el interesado pregunta
+  de hecho: probabilidad de que el efecto supere un umbral, esperanza de
+  pérdida, rango plausible del parámetro.
+- **Obliga a explicitar supuestos.** El prior es una declaración escrita, y se
+  puede discutir, someter a análisis de sensibilidad y reemplazar cuando llega
+  evidencia nueva.
+- **Sus límites.** Dos prioristas con credos distintos obtienen intervalos
+  distintos sobre el mismo dato («La misma diferencia…»): si el resultado
+  depende fuertemente del prior, eso es información valiosa que hay que
+  reportar, no esconder. Con muestras muy chicas el prior domina la conclusión,
+  y con muestras enormes y modelos mal especificados, el posterior hereda el
+  sesgo del modelo.
+
+### Reglas de asignación en equipos de producto
+
+| Situación | Marco natural | Por qué |
+|---|---|---|
+| Puerta de release que debe auditar un tercero | frequentista | reproducibilidad sin supuestos ajenos |
+| Prior histórico sólido (métricas de trimestres previos, modelos base) | bayesiano | la información previa ya existe: usarla explícitamente mejora la estimación |
+| Comunicar riesgo a negocio ("probabilidad de no llegar a la meta") | bayesiano | el negocio pregunta probabilidades, no procedimientos |
+| Monitoreo continuo con inspecciones repetidas y decisión secuencial | frequentista (o bayesiano con modelo de decisión) | la tasa de falsos positivos es del procedimiento, no de la creencia |
+| Divergencia seria entre ambas lecturas («La misma diferencia…») | las dos, y a investigar | el desacuerdo apunta al supuesto o al dato que falla |
+
+### La síntesis que deja esta réplica
+
+Los números de `reports/` muestran por qué importa el etiquetado: un mismo
+experimento de churn admite "rechazo de la hipótesis nula" (frequentista),
+"el efecto probablemente existe" (bayesiano con prior débil) y "no alcanza a
+concluirse" (bayesiano con prior fuerte). Ninguna respuesta es "el 95%" del
+enunciado con el que se abrió la sección «Qué significa…». Elegir un marco es,
+en los hechos, elegir qué pregunta se está dispuesto a justificar ante el resto
+del equipo.
+
+## Regla de práctica: cuatro hábitos antes de reportar un intervalo
+
+Las secciones anteriores explican la teoría; esta cierra con lo accionable.
+Cuatro hábitos, en el orden en que aparecen en un flujo real de experimentación,
+deducidos de lo que la réplica mostró con números:
+
+### 1. Escribir el umbral de decisión antes de ver el dato
+
+Antes de lanzar el test, dejar por escrito qué resultado cambiaría la decisión
+—en magnitud y dirección, no en asteriscos—. Una brecha de 0.05 pp difícilmente
+justifica mover un roadmap aunque luzca "significativa" con 100.000 usuarios.
+Si el umbral material no estaba definido antes, el intervalo (de cualquier
+familia) no puede contestar la pregunta de negocio: solo se usará para
+racionalizar lo que ya se quería hacer.
+
+### 2. Ante un rechazo con muestra grande, mirar la materialidad
+
+«La paradoja de Jeffreys–Lindley» lo puso en una curva: `z` cruza 1.96 con
+~9.000 usuarios para una brecha de 0.25 pp y llega a ~20 con un millón.
+Significancia con muestras enormes casi siempre significa "no exactamente
+cero", nunca "suficientemente grande". Antes de celebrar, reportar la
+estimación con su intervalo y preguntarse en voz alta qué tamaño de efecto
+justificaría el esfuerzo.
+
+### 3. Cuando la lectura frecuentista y la bayesiana discrepan, investigar
+
+Fue el caso de «La misma diferencia…»: el mismo experimento fue concluyente con
+prior débil e inconcluyente con prior fuerte. Un desacuerdo así tiene tres
+lecturas posibles, y vale la pena distinguirlas antes de decidir:
+
+- el prior estaba mal calibrado (ninguneaba efectos reales de ese tamaño);
+- hay un problema de calidad de datos (sesgo, mezcla de poblaciones,
+  estacionalidad) que el modelo con prior delata mejor;
+- el régimen cambió: lo que el prior representaba ya no describe el producto.
+
+El error es elegir el resultado que más conviene y silenciar el otro.
+
+### 4. Etiquetar qué pregunta responde cada número reportado
+
+"95% CI" e "intervalo creíble al 95%" son criaturas distintas («Qué
+significa…» e «Intervalos creíbles…»). Quien lee un informe debe poder saber si
+el número promete un comportamiento de procedimiento a largo plazo o una
+probabilidad sobre el parámetro dado un prior declarado. Una línea de
+metadatos en la tabla evita semanas de malentendidos.
+
+### Cierre
+
+La "ilusión" del título de la fuente no es que el 95% sea falso: la simulación
+de esta réplica lo vio funcionar exactamente como anunciado (95 de 100
+intervalos cubriendo el valor verdadero). La ilusión es creer que ese número
+responde la pregunta que el negocio está haciendo. Conocer el procedimiento a
+fondo —y poder replicarlo, como aquí— es la mejor vacuna contra ese error.
