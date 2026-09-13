@@ -49,9 +49,9 @@ async function validateOgImage() {
 	} catch {
 		// sharp 0.35 throws a plain Error for missing/unreadable files.
 	}
-	assert(meta, 'og-default-v3.jpg is missing or unreadable — restore it from git (blob 6e19e4f); refusing to auto-generate a crop');
+	assert(meta, 'og-default.jpg is missing or unreadable — restore it from git (blob 6e19e4f); refusing to auto-generate a crop');
 	assert(meta.width === OG_TARGET.width && meta.height === OG_TARGET.height,
-		`og-default-v3.jpg is ${meta.width}x${meta.height}, expected ${OG_TARGET.width}x${OG_TARGET.height} — must be a genuine 1.91:1 card; never an automated crop`);
+		`og-default.jpg is ${meta.width}x${meta.height}, expected ${OG_TARGET.width}x${OG_TARGET.height} — must be a genuine 1.91:1 card; never an automated crop`);
 	console.log(`[seo-assets] og-default-v3.jpg validated at ${meta.width}x${meta.height} (validate-only, bytes untouched)`);
 }
 
@@ -155,8 +155,8 @@ async function whitePixelRatio(file) {
 
 // --- assertions -----------------------------------------------------------
 async function verify() {
-	const og = await sharp(pub('og-default-v3.jpg')).metadata();
-	assert(og.width === 1200 && og.height === 630, `og-default-v3.jpg is ${og.width}x${og.height}, expected 1200x630`);
+	const og = await sharp(pub('og-default.jpg')).metadata();
+	assert(og.width === 1200 && og.height === 630, `og-default.jpg is ${og.width}x${og.height}, expected 1200x630`);
 
 	const ico = await readFile(pub('favicon.ico'));
 	assert(ico.length > 22, 'favicon.ico too small');
