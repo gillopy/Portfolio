@@ -52,11 +52,42 @@ Todo lo aleatorio en esas dos líneas es $$\bar{x}$$, no $$\mu$$. Una vez que in
 
 ### La verificación por simulación
 
-`Code/coverage_simulation.py` pone esto a prueba: genera 100 muestras binomiales con `p_true = 0.015` y `n = 20.000` (semilla 42), construye intervalos Wald para cada una, y cuenta cuántos engloban el verdadero valor.
+```python
+import numpy as np
+import matplotlib.pyplot as plt
 
-- **Resultado: 95 de 100 intervalos capturaron el parámetro.** El procedimiento hace exactamente lo que prometió.
-- La figura `01_coverage_intervals.png` dibuja los primeros 40 como líneas horizontales. Dos de ellas (rojas, filas 26 y 27) fallan. Ese fallo no es un error: es la porción esperada de desaciertos en una serie larga.
-- Todos los detalles están en `reports/intervals.csv` y `reports/coverage_report.txt`.
+# True conversion rate
+p_true = 0.015
+n = 20_000
+n_sims = 100
+
+np.random.seed(42)
+covered = []
+intervals = []
+
+for _ in range(n_sims):
+    x = np.random.binomial(n, p_true)
+    p_hat = x / n
+    se = np.sqrt(p_hat * (1 - p_hat) / n)
+    lo = p_hat - 1.96 * se
+    hi = p_hat + 1.96 * se
+    intervals.append((lo, hi))
+    covered.append(lo <= p_true <= hi)
+
+# Plot first 40 intervals
+fig, ax = plt.subplots(figsize=(8, 5))
+for i, (lo, hi) in enumerate(intervals[:40]):
+    color = "tab:blue" if covered[i] else "tab:red"
+    ax.plot([lo, hi], [i, i], color=color, alpha=0.8)
+
+ax.axvline(p_true, color="black", linestyle="--", label=f"True p = {p_true:.3f}")
+ax.set_yticks([])
+ax.set_xlabel("95% confidence interval for p")
+ax.set_title("Coverage simulation: ~95% of intervals contain the true p")
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
 
 <Image src={fig1Img} alt="Cuarenta intervalos de confianza simulados sobre la línea vertical en 0,015; dos segmentos rojos no cubren el valor verdadero" loading="lazy" />
 
