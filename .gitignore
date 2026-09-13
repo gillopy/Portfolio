@@ -1,6 +1,5 @@
 # build output
 dist/
-_baseline-dist/
 
 # generated types
 .astro/
