@@ -57,12 +57,15 @@ const ogImageURL = site ? new URL(image ?? siteConfig.ogImage, site).href : unde
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		{ogImageURL && <meta name="twitter:image" content={ogImageURL} />}
+		<meta name="twitter:site" content={siteConfig.twitterHandle} />
+		<meta name="twitter:creator" content={siteConfig.twitterHandle} />
 		{site && <link rel="sitemap" href="/sitemap-index.xml" />}
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/x-icon" sizes="any" href="/favicon.ico" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="theme-color" content="#090909" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">

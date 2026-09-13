@@ -1,10 +1,12 @@
 // scripts/seo-assets.mjs
 // Idempotent SEO asset generator for the "seo-fixes" change.
 //
-// Produces three public/ assets before the build:
+// Produces five public/ assets before the build:
 //   1. og-default.jpg  -> resized to 1200x630 (sharp, cover-crop, JPEG q82)
 //   2. favicon.ico     -> PNG-in-ICO container wrapping favicon-32x32.png
 //   3. apple-touch-icon.png -> byte copy of favicon-180x180.png
+//   4. icon-192.png    -> rasterized from favicon.svg (PWA manifest icon)
+//   5. icon-512.png    -> rasterized from favicon.svg (PWA manifest icon)
 //
 // Note: sharp CANNOT encode or decode ICO (it silently writes raw PNG bytes
 // for a .ico target and cannot read them back), so the ICO container is
@@ -21,6 +23,11 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const pub = (...segments) => path.join(root, 'public', ...segments);
 
 const OG_TARGET = { width: 1200, height: 630 };
+const MANIFEST_ICON_SIZES = [192, 512];
+// Sanity band for the white "GC" glyph coverage over the total canvas
+// (design #103 D1 measurements: ~11.9-12.2%). Catches a blank or
+// degenerate raster that would still pass a dimensions-only check.
+const WHITE_RATIO_RANGE = [0.08, 0.18];
 
 function assert(condition, message) {
 	if (!condition) {
@@ -93,6 +100,58 @@ async function buildAppleTouchIcon() {
 	console.log(`[seo-assets] apple-touch-icon.png copied from favicon-180x180.png (${src.length} bytes)`);
 }
 
+// --- 4. PWA manifest icons (icon-192.png, icon-512.png) -------------------
+// FONT DEPENDENCY (design #103 D1 residual risk): favicon.svg renders the
+// white "GC" monogram with `font-family="Inter, sans-serif"`. sharp/librsvg
+// resolves that against the fonts INSTALLED ON THIS MACHINE. On a machine
+// without Inter, the raster silently falls back to the system sans font —
+// the numeric checks below (dimensions + white-pixel-ratio band) still pass,
+// but the glyph shape differs. If regenerating on a non-Inter machine, do a
+// visual confirm of icon-512.png against the browser favicon before commit.
+async function buildManifestIcons() {
+	const svg = await readFile(pub('favicon.svg'));
+
+	for (const size of MANIFEST_ICON_SIZES) {
+		const file = pub(`icon-${size}.png`);
+
+		let existing = null;
+		try {
+			existing = await sharp(file).metadata();
+		} catch {
+			// sharp 0.35 throws a plain "Input file is missing" Error (no ENOENT
+			// code) for absent files; missing or unreadable both mean regenerate.
+			existing = null;
+		}
+
+		if (existing && existing.width === size && existing.height === size) {
+			console.log(`[seo-assets] icon-${size}.png already ${size}x${size} -> skip`);
+			continue;
+		}
+
+		const buf = await sharp(svg, { density: (72 * size) / 100 })
+			.resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+			.png()
+			.toBuffer();
+		await writeFile(file, buf);
+		console.log(`[seo-assets] icon-${size}.png generated from favicon.svg`);
+	}
+}
+
+// Fraction of pixels that are (near-)white across all RGB channels — the
+// "GC" glyph coverage. Guards against a blank or degenerate icon.
+async function whitePixelRatio(file) {
+	const { data, info } = await sharp(file)
+		.ensureAlpha()
+		.raw()
+		.toBuffer({ resolveWithObject: true });
+	const total = info.width * info.height;
+	let white = 0;
+	for (let i = 0; i < data.length; i += info.channels) {
+		if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) white++;
+	}
+	return white / total;
+}
+
 // --- assertions -----------------------------------------------------------
 async function verify() {
 	const og = await sharp(pub('og-default.jpg')).metadata();
@@ -113,11 +172,22 @@ async function verify() {
 	const apple = await sharp(pub('apple-touch-icon.png')).metadata();
 	assert(apple.width === 180 && apple.height === 180, `apple-touch-icon.png is ${apple.width}x${apple.height}`);
 
+	for (const size of MANIFEST_ICON_SIZES) {
+		const icon = await sharp(pub(`icon-${size}.png`)).metadata();
+		assert(icon.width === size && icon.height === size,
+			`icon-${size}.png is ${icon.width}x${icon.height}, expected ${size}x${size}`);
+		const ratio = await whitePixelRatio(pub(`icon-${size}.png`));
+		assert(ratio >= WHITE_RATIO_RANGE[0] && ratio <= WHITE_RATIO_RANGE[1],
+			`icon-${size}.png white-pixel ratio ${ratio.toFixed(4)} outside [${WHITE_RATIO_RANGE[0]}, ${WHITE_RATIO_RANGE[1]}]`);
+		console.log(`[seo-assets] icon-${size}.png verified: ${size}x${size}, white ratio ${ratio.toFixed(4)}`);
+	}
+
 	console.log('[seo-assets] all outputs verified.');
 }
 
 await buildOgImage();
 await buildFaviconIco();
 await buildAppleTouchIcon();
+await buildManifestIcons();
 await verify();
 console.log('[seo-assets] done.');
