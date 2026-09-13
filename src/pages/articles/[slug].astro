@@ -18,7 +18,7 @@ const coverSrc = typeof cover === 'string' ? cover : (cover as { src?: string })
 const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(publishDate);
 ---
 
-<ArticleLayout title={`${title} | Artículo`} description={shortDescription} image={coverSrc} ogType="article">
+<ArticleLayout title={title} description={shortDescription} image={coverSrc} ogType="article">
   <h1 class="mb-4 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-5xl">{title}</h1>
   <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-ink-muted">{shortDescription}</p>
 

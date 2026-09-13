@@ -12,6 +12,9 @@ interface Props {
 	ogType?: 'website' | 'article';
 	noindex?: boolean;
 	jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+	ogImageWidth?: number;
+	ogImageHeight?: number;
+	ogImageAlt?: string;
 }
 
 const {
@@ -22,6 +25,9 @@ const {
 	ogType = 'website',
 	noindex = false,
 	jsonLd,
+	ogImageWidth,
+	ogImageHeight,
+	ogImageAlt,
 } = Astro.props;
 
 const site = Astro.site;
@@ -44,13 +50,19 @@ const ogImageURL = site ? new URL(image ?? siteConfig.ogImage, site).href : unde
 		<meta property="og:locale" content={siteConfig.locale ?? 'es_PY'} />
 		{canonicalURL && <meta property="og:url" content={canonicalURL} />}
 		{ogImageURL && <meta property="og:image" content={ogImageURL} />}
+		{ogImageURL && ogImageWidth && <meta property="og:image:width" content={String(ogImageWidth)} />}
+		{ogImageURL && ogImageHeight && <meta property="og:image:height" content={String(ogImageHeight)} />}
+		{ogImageURL && ogImageAlt && <meta property="og:image:alt" content={ogImageAlt} />}
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={title} />
 		<meta name="twitter:description" content={description} />
 		{ogImageURL && <meta name="twitter:image" content={ogImageURL} />}
 		{site && <link rel="sitemap" href="/sitemap-index.xml" />}
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/x-icon" sizes="any" href="/favicon.ico" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="theme-color" content="#090909" />
 		<link rel="preconnect" href="https://fonts.googleapis.com">

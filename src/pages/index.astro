@@ -10,8 +10,8 @@ import ContactSection from '../components/ContactSection.astro';
 import profile from '../data/profile.json';
 import siteConfig from '../data/siteConfig.json';
 
-const pageTitle = `${profile.name} — ${profile.title}`;
-const pageDescription = profile.summary;
+const pageTitle = `${profile.name} — ${profile.shortTitle}`;
+const pageDescription = profile.shortDescription;
 const siteUrl = siteConfig.siteUrl;
 const jsonLd = [
   {
@@ -34,7 +34,14 @@ const jsonLd = [
 ];
 ---
 
-<Layout title={pageTitle} description={pageDescription} jsonLd={jsonLd}>
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  jsonLd={jsonLd}
+  ogImageWidth={1200}
+  ogImageHeight={630}
+  ogImageAlt="Imagen de apertura del portafolio de Guillermo Cabrera"
+>
   <Header />
 
   <main id="main-content">
