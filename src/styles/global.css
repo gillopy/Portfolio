@@ -471,13 +471,16 @@ body::before {
 }
 
 /* ---------- Display math (KaTeX) — articles only ---------- */
-.article-content .math-display {
+/* rehype-katex renders display math as <span class="katex-display">; the
+   previous `.math-display` selector matched nothing, so long formulas
+   overflowed the container on small screens. */
+.article-content .katex-display {
 	display: block;
 	margin: 1.5rem 0 2rem;
 	text-align: center;
 	overflow-x: auto;
+	overflow-y: hidden;
 }
-.article-content pre:has(> .math-display) { margin: 0; }
 
 /* ---------- Code blocks ---------- */
 .project-content .astro-code {
