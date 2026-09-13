@@ -2,6 +2,7 @@
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
+import { getImage } from 'astro:assets';
 
 export async function getStaticPaths() {
 	const articles: CollectionEntry<'articles'>[] = await getCollection('articles');
@@ -14,11 +15,30 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const { title, shortDescription, tags, publishDate, cover, attribution } = entry.data;
-const coverSrc = typeof cover === 'string' ? cover : (cover as { src?: string })?.src ?? String(cover);
+// og:image must be a processed derivative served from /_astro (raw cover.src is
+// not a fetchable static asset) AND exactly 1.91:1, or WhatsApp crops it again.
+// Astro 7's sharp service hardcodes withoutEnlargement (and maps fit 'contain'
+// to sharp 'inside', no padding), so a plain 1200x630 cover request from a
+// smaller cover silently returns a wrong-ratio image. Instead, request the
+// largest 1200:630 window the source can provide at 1:1 (exactly 1200x630 for
+// large covers, native-detail 1.91:1 crops for smaller ones). JPEG for maximum
+// social-crawler compatibility. Layout falls back to the site default when no
+// derivative is produced.
+const ogW0 = typeof cover === 'string' ? 1200 : Math.min(cover.width, 1200);
+const ogH0 = typeof cover === 'string' ? 630 : Math.min(cover.height, 630);
+let ogW = ogW0;
+let ogH = Math.round((ogW0 * 630) / 1200);
+if (ogH > ogH0) {
+	ogH = ogH0;
+	ogW = Math.round((ogH0 * 1200) / 630);
+}
+const ogImage = cover
+	? (await getImage({ src: cover, width: ogW, height: ogH, fit: 'cover', format: 'jpeg' })).src
+	: undefined;
 const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(publishDate);
 ---
 
-<ArticleLayout title={title} description={shortDescription} image={coverSrc} ogType="article">
+<ArticleLayout title={title} description={shortDescription} image={ogImage} ogType="article">
   <h1 class="mb-4 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-5xl">{title}</h1>
   <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-ink-muted">{shortDescription}</p>
 
