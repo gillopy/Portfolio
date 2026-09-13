@@ -2,7 +2,7 @@
 // Idempotent SEO asset generator for the "seo-fixes" change.
 //
 // Produces five public/ assets before the build:
-//   1. og-default.jpg  -> resized to 1200x630 (sharp, cover-crop, JPEG q82)
+//   1. og-default-v3.jpg -> VALIDATE-ONLY (assert 1200x630; never resize/crop)
 //   2. favicon.ico     -> PNG-in-ICO container wrapping favicon-32x32.png
 //   3. apple-touch-icon.png -> byte copy of favicon-180x180.png
 //   4. icon-192.png    -> rasterized from favicon.svg (PWA manifest icon)
@@ -36,22 +36,23 @@ function assert(condition, message) {
 	}
 }
 
-// --- 1. og-default.jpg resize (guarded) -----------------------------------
-async function buildOgImage() {
-	const file = pub('og-default.jpg');
-	const meta = await sharp(file).metadata();
-
-	if (meta.width === OG_TARGET.width && meta.height === OG_TARGET.height) {
-		console.log(`[seo-assets] og-default.jpg already ${OG_TARGET.width}x${OG_TARGET.height} -> skip`);
-		return;
+// --- 1. og-default-v3.jpg validation (read-only) --------------------------
+// The OG card is purpose-built 1200x630 artwork (restored from git blob
+// 6e19e4f). This branch MUST never resize, re-encode or overwrite it: the
+// old blind centre-cover-crop silently clipped the composition, which is
+// exactly the regression fixed by sdd/fix-whatsapp-og-crop.
+async function validateOgImage() {
+	const file = pub('og-default-v3.jpg');
+	let meta = null;
+	try {
+		meta = await sharp(file).metadata();
+	} catch {
+		// sharp 0.35 throws a plain Error for missing/unreadable files.
 	}
-
-	const buf = await sharp(file)
-		.resize(OG_TARGET.width, OG_TARGET.height, { fit: 'cover', position: 'centre' })
-		.jpeg({ quality: 82 })
-		.toBuffer();
-	await writeFile(file, buf);
-	console.log(`[seo-assets] og-default.jpg resized ${meta.width}x${meta.height} -> ${OG_TARGET.width}x${OG_TARGET.height}`);
+	assert(meta, 'og-default-v3.jpg is missing or unreadable — restore it from git (blob 6e19e4f); refusing to auto-generate a crop');
+	assert(meta.width === OG_TARGET.width && meta.height === OG_TARGET.height,
+		`og-default-v3.jpg is ${meta.width}x${meta.height}, expected ${OG_TARGET.width}x${OG_TARGET.height} — must be a genuine 1.91:1 card; never an automated crop`);
+	console.log(`[seo-assets] og-default-v3.jpg validated at ${meta.width}x${meta.height} (validate-only, bytes untouched)`);
 }
 
 // --- 2. favicon.ico (manual PNG-in-ICO wrap) ------------------------------
@@ -154,8 +155,8 @@ async function whitePixelRatio(file) {
 
 // --- assertions -----------------------------------------------------------
 async function verify() {
-	const og = await sharp(pub('og-default.jpg')).metadata();
-	assert(og.width === 1200 && og.height === 630, `og-default.jpg is ${og.width}x${og.height}, expected 1200x630`);
+	const og = await sharp(pub('og-default-v3.jpg')).metadata();
+	assert(og.width === 1200 && og.height === 630, `og-default-v3.jpg is ${og.width}x${og.height}, expected 1200x630`);
 
 	const ico = await readFile(pub('favicon.ico'));
 	assert(ico.length > 22, 'favicon.ico too small');
@@ -185,7 +186,7 @@ async function verify() {
 	console.log('[seo-assets] all outputs verified.');
 }
 
-await buildOgImage();
+await validateOgImage();
 await buildFaviconIco();
 await buildAppleTouchIcon();
 await buildManifestIcons();
