@@ -1,0 +1,153 @@
+---
+title: "El Chaco perdió un tercio de su bosque en 25 años"
+shortDescription: "Atlas scrollytelling 2001–2025 del Chaco paraguayo con Hansen GFC v1.13: mapas año por año, foco Boquerón y Alto Paraguay"
+tags:
+  - "Vanilla JS"
+  - "Scrollama"
+  - "Hansen GFC v1.13"
+  - "Google Earth Engine"
+  - "Data Visualization"
+  - "Periodismo de datos"
+  - "GitHub Pages"
+links:
+  demo: "/project/paraguay-deforestacion-hansen"
+  github: "https://github.com/gillopy/Deforestation_Paraguay"
+cover: ./cover.png
+---
+import { Image } from 'astro:assets';
+import chartsImg from "./charts.png";
+
+## Descripción
+
+Atlas narrativo y sitio web estático que reconstruye, año por año y píxel por píxel (30 m/px), cómo avanzó la deforestación sobre el Chaco paraguayo entre 2001 y 2025. El foco está en **Boquerón** (3,25 Mha perdidas, 45,9 % de su bosque del año 2000) y **Alto Paraguay** (1,9 Mha, 28 %), que entre los dos concentran casi dos tercios de toda la pérdida forestal del país. A nivel nacional: 24,4 Mha de bosque en 2000, 8,28 Mha perdidas (33,9 %). Fuente satelital independiente: **Hansen Global Forest Change 2025 v1.13** (UMD) vía Google Earth Engine.
+
+El sitio combina scrollytelling, mapas exportados por departamento y gráficos anuales para responder no solo cuánto bosque desapareció, sino **cómo y dónde** se movió la frontera agropecuaria con el tiempo.
+
+<a href="https://gillopy.github.io/Deforestation_Paraguay/" target="_blank" rel="noopener noreferrer" class="btn-primary inline-flex items-center gap-2 mt-2">Ver sitio web — Atlas del Chaco ↗</a>
+
+## Resultados clave
+
+- **Boquerón:** 7.070.871 ha de bosque en 2000 → 3.245.165 ha perdidas (45,9 %). Pico en 2011 con 244.336 ha en un solo año.
+- **Alto Paraguay:** 6.862.216 ha en 2000 → ~1,9 Mha perdidas (28 %). Entre ambos, ~5,1 Mha: casi dos tercios del total nacional.
+- **Nacional:** 24,4 Mha → 8,28 Mha perdidas (33,9 %). Años más críticos: 2012 (541.332 ha), 2011 (494.535 ha), 2010 (478.183 ha).
+- **Metodología:** bosque = copa ≥ 30 % en 2000, resolución nativa 30 m, exportación PNG a 1600 px. Advertencia GFW: métodos cambiaron con corte en 2015.
+
+## Qué muestra el sitio
+
+- **Placa 01 · Serie temporal (scrollytelling):** tres lecturas del mismo territorio (2002 / 2010 / 2025) con imagen fija que cambia al hacer scroll. Lo que empieza como claros dispersos termina como un frente extendido.
+- **Placa 02 · Dos territorios:** comparativa Boquerón vs Alto Paraguay con capa combinada (cobertura + pérdida + ganancia 2000–2012).
+- **Placa 03 · Pérdida y emisiones:** gráficos anuales por departamento (barras = hectáreas perdidas, línea = emisiones brutas CO₂e) con datos de Global Forest Watch.
+- **Placa 04 · Explorador territorial:** vista de los 18 departamentos coloreados por porcentaje de pérdida sobre el bosque del año 2000.
+- **Placas 06–10 · Anexo documental:** figuras del informe Planet "Gran Chaco 2016–2026" y mapa de sitios replicado sobre `data/py.json`.
+
+## Detalles técnicos
+
+### 1. Pipeline en Earth Engine — estadísticas reales por departamento
+
+A diferencia del notebook original que solo exportaba mapas, `hansen_export_pipeline.py` calcula hectáreas reales con `reduceRegion` sobre el dataset. Para cada departamento: cobertura 2000 (copa ≥ 30 %), pérdida agrupada por año 2001–2025 y bounding box.
+
+```python
+# hansen_export_pipeline.py — núcleo del cálculo
+DATASET_ID = 'UMD/hansen/global_forest_change_2025_v1_13'
+CANOPY_THRESHOLD = 30  # % copa mínimo para contar como bosque en 2000
+STATS_SCALE = 30       # metros por pixel (nativo)
+
+def compute_department_stats(geometry, scale=STATS_SCALE, tile_scale=4):
+    geom = ee.Geometry(geometry)
+    # cobertura 2000: bosque = treecover2000 >= 30
+    forest_mask = dataset.select('treecover2000').gte(CANOPY_THRESHOLD)
+    cover_area_img = forest_mask.multiply(ee.Image.pixelArea()).rename('area')
+    cover_stats = cover_area_img.reduceRegion(
+        reducer=ee.Reducer.sum(),
+        geometry=geom, scale=scale, maxPixels=1e10,
+        bestEffort=True, tileScale=tile_scale,
+    ).getInfo()
+    cover_ha = (cover_stats.get('area') or 0) / 10000.0
+
+    # pérdida agrupada por año: reduceRegion + group sobre 'lossyear'
+    loss_area_img = dataset.select('loss').multiply(ee.Image.pixelArea()).rename('area')
+    grouped = loss_area_img.addBands(dataset.select('lossyear')).reduceRegion(
+        reducer=ee.Reducer.sum().group(groupField=1, groupName='year'),
+        geometry=geom, scale=scale, maxPixels=1e10,
+        bestEffort=True, tileScale=tile_scale,
+    ).getInfo()
+    loss_by_year = {str(y): 0.0 for y in range(2001, 2026)}
+    for group in grouped.get('groups', []):
+        year_code = int(group['year'])
+        if year_code == 0: continue
+        year = 2000 + year_code
+        loss_by_year[str(year)] = round(group['area'] / 10000.0, 2)
+    return cover_ha, loss_by_year, bbox
+```
+
+El pipeline arma un único `paraguay_deforestacion.json` (y `.csv`) con la misma estructura que consume `index.html`, más 3 PNG por departamento (`cover`, `loss`, `combined` a 1600 px). Ejecutado en Colab con `ee.Authenticate()` / `ee.Initialize(project='hansen-480517')` y `geemap.get_image_thumbnail`.
+
+### 2. Scrollytelling con Scrollama — sin frameworks
+
+El sitio es 100 % estático (vanilla JS, sin build). Scrollama se carga por CDN con `defer` y se instancia en `DOMContentLoaded`, cuando los scripts diferidos ya corrieron. Cada `.step` dispara `changeStoryImage` que hace snap de la imagen fija (2002 → 2010 → 2025) con soporte para `prefers-reduced-motion` y persistencia del paso en `sessionStorage`.
+
+```javascript
+// assets/js/main.js — scrollytelling
+const CONFIG = {
+  jsonPath: "data/paraguay_deforestacion.json",
+  imagePath: "images/",
+  storyImages: {
+    1: "map_export_Alto_Paraguay_Boquerón_combined_forest_change_year_2_high_res.png",
+    2: "map_export_Alto_Paraguay_Boquerón_combined_forest_change_year_10_high_res.png",
+    3: "map_export_Alto_Paraguay_Boquerón_combined_forest_change_year_25_high_res.png"
+  },
+  storyLabels: {
+    1: "AÑO 2002 · ALTO PARAGUAY + BOQUERÓN",
+    2: "AÑO 2010 · ALTO PARAGUAY + BOQUERÓN",
+    3: "AÑO 2025 · ALTO PARAGUAY + BOQUERÓN"
+  }
+};
+
+function setupScroller() {
+  if (!window.scrollama) {
+    console.warn("Scrollama no disponible; se omite animación, el resto sigue funcionando.");
+    return;
+  }
+  scroller = scrollama();
+  scroller.setup({ step: "#scrolly article .step", offset: 0.55, progress: false })
+    .onStepEnter(response => {
+      document.querySelectorAll(".step").forEach(el => el.classList.remove("is-active"));
+      response.element.classList.add("is-active");
+      changeStoryImage(response.element.dataset.step);
+    });
+}
+window.addEventListener("resize", () => scroller?.resize());
+```
+
+### 3. Datos y visualización
+
+`data/paraguay_deforestacion.json` expone `national` y `departments[]` con `treecover2000_ha`, `loss_total_ha`, `loss_pct`, `loss_by_year_ha` y `bbox`. El JS formatea con `Intl.NumberFormat("es-PY")`, calcula la concentración Boquerón + Alto Paraguay sobre el total nacional y alimenta el explorador territorial y los gráficos anuales (barras + línea CO₂e).
+
+```javascript
+// assets/js/main.js — métrica de concentración
+function updateConcentrationStat(data) {
+  const byName = Object.fromEntries(data.departments.map(d => [d.name, d]));
+  const share = ((byName["Boquerón"].loss_total_ha + byName["Alto Paraguay"].loss_total_ha)
+    / data.national.loss_total_ha) * 100;
+  document.getElementById("statConcentration").textContent = `${formatPct(share)} del total`;
+}
+```
+
+## Resultado — Gráficos de pérdida y emisiones
+
+Captura directa del sitio vivo (Placa 03). Barras = hectáreas perdidas por año, línea = emisiones brutas CO₂e. Boquerón concentra el pico en 2011 (244 kha) y Alto Paraguay muestra la misma dinámica con menor intensidad.
+
+<Image src={chartsImg} alt="Gráficos de barras — pérdida anual y emisiones CO₂e por departamento (Boquerón y Alto Paraguay, 2001–2025)" loading="lazy" />
+
+*Placa 03 del atlas — captura Playwright de `gillopy.github.io/Deforestation_Paraguay` (`.department-charts`). Datos: Hansen GFC v1.13 vía Earth Engine + GFW para emisiones.*
+
+## Stack y despliegue
+
+- **Frontend:** HTML/CSS vanilla (`assets/css/styles.css` con tokens Dragon/Kanagawa), JS vanilla, Scrollama por CDN
+- **Datos:** Hansen GFC 2025 v1.13 vía Earth Engine, `data/paraguay_deforestacion.json/.csv`, PNG por departamento en `images/`
+- **Deploy:** GitHub Pages. Local: `python -m http.server 5500`
+
+## Enlaces
+
+- **Sitio vivo:** [gillopy.github.io/Deforestation_Paraguay](https://gillopy.github.io/Deforestation_Paraguay/)
+- **Código:** [github.com/gillopy/Deforestation_Paraguay](https://github.com/gillopy/Deforestation_Paraguay)
