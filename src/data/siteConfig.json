@@ -1,11 +1,11 @@
 {
   "siteUrl": "https://guillermocabrera.pages.dev",
-  "title": "Portfolio | Data Scientist",
+  "title": "Guillermo Cabrera | Data Scientist",
   "description": "Portfolio profesional de ciencia de datos, economía y estadística",
   "author": "Guillermo Cabrera",
   "twitterHandle": "@Gillo97",
   "locale": "es_PY",
-  "ogImage": "/og-default-v4.jpg",
+  "ogImage": "/og-default.jpg",
   "logoText": "GC",
   "navItems": [
     {

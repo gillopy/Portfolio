@@ -7,12 +7,15 @@ interface Props {
 	image?: string;
 	ogType?: 'website' | 'article';
 	canonical?: string;
+	ogImageWidth?: number;
+	ogImageHeight?: number;
+	ogImageAlt?: string;
 }
 
-const { title, description, image, ogType, canonical } = Astro.props;
+const { title, description, image, ogType, canonical, ogImageWidth, ogImageHeight, ogImageAlt } = Astro.props;
 ---
 
-<Layout title={title} description={description} image={image} ogType={ogType} canonical={canonical}>
+<Layout title={title} description={description} image={image} ogType={ogType} canonical={canonical} ogImageWidth={ogImageWidth} ogImageHeight={ogImageHeight} ogImageAlt={ogImageAlt}>
   <main>
     <div class="project-header border-b border-hairline-soft bg-canvas py-5">
       <div class="container mx-auto px-6">

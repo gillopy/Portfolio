@@ -2,7 +2,7 @@
 // Idempotent SEO asset generator for the "seo-fixes" change.
 //
 // Produces five public/ assets before the build:
-//   1. og-default-v3.jpg -> VALIDATE-ONLY (assert 1200x630; never resize/crop)
+//   1. og-default-v3.jpg + og-default-v4.jpg + og-default.jpg -> VALIDATE-ONLY (assert 1200x630; never resize/crop)
 //   2. favicon.ico     -> PNG-in-ICO container wrapping favicon-32x32.png
 //   3. apple-touch-icon.png -> byte copy of favicon-180x180.png
 //   4. icon-192.png    -> rasterized from favicon.svg (PWA manifest icon)
@@ -42,17 +42,24 @@ function assert(condition, message) {
 // old blind centre-cover-crop silently clipped the composition, which is
 // exactly the regression fixed by sdd/fix-whatsapp-og-crop.
 async function validateOgImage() {
-	const file = pub('og-default-v3.jpg');
-	let meta = null;
-	try {
-		meta = await sharp(file).metadata();
-	} catch {
-		// sharp 0.35 throws a plain Error for missing/unreadable files.
+	for (const name of ['og-default-v3.jpg', 'og-default-v4.jpg', 'og-default.jpg']) {
+		const file = pub(name);
+		let meta = null;
+		try {
+			meta = await sharp(file).metadata();
+		} catch {
+			// sharp 0.35 throws a plain Error for missing/unreadable files.
+		}
+		if (!meta) {
+			if (name === 'og-default.jpg') {
+				assert(false, 'og-default.jpg is missing or unreadable — restore it from git (blob 6e19e4f); refusing to auto-generate a crop');
+			}
+			continue;
+		}
+		assert(meta.width === OG_TARGET.width && meta.height === OG_TARGET.height,
+			`${name} is ${meta.width}x${meta.height}, expected ${OG_TARGET.width}x${OG_TARGET.height} — must be a genuine 1.91:1 card; never an automated crop`);
+		console.log(`[seo-assets] ${name} validated at ${meta.width}x${meta.height} (validate-only, bytes untouched)`);
 	}
-	assert(meta, 'og-default.jpg is missing or unreadable — restore it from git (blob 6e19e4f); refusing to auto-generate a crop');
-	assert(meta.width === OG_TARGET.width && meta.height === OG_TARGET.height,
-		`og-default.jpg is ${meta.width}x${meta.height}, expected ${OG_TARGET.width}x${OG_TARGET.height} — must be a genuine 1.91:1 card; never an automated crop`);
-	console.log(`[seo-assets] og-default-v3.jpg validated at ${meta.width}x${meta.height} (validate-only, bytes untouched)`);
 }
 
 // --- 2. favicon.ico (manual PNG-in-ICO wrap) ------------------------------
@@ -155,8 +162,14 @@ async function whitePixelRatio(file) {
 
 // --- assertions -----------------------------------------------------------
 async function verify() {
-	const og = await sharp(pub('og-default.jpg')).metadata();
-	assert(og.width === 1200 && og.height === 630, `og-default.jpg is ${og.width}x${og.height}, expected 1200x630`);
+	for (const name of ['og-default-v3.jpg', 'og-default-v4.jpg', 'og-default.jpg']) {
+		try {
+			const og = await sharp(pub(name)).metadata();
+			assert(og.width === 1200 && og.height === 630, `${name} is ${og.width}x${og.height}, expected 1200x630`);
+		} catch (e) {
+			if (name === 'og-default.jpg') throw e;
+		}
+	}
 
 	const ico = await readFile(pub('favicon.ico'));
 	assert(ico.length > 22, 'favicon.ico too small');
