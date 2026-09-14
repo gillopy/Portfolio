@@ -96,3 +96,16 @@ import skills from '../data/skills.json';
   .skill-bar { position: relative; }
   .skill-progress { will-change: width; }
 </style>
+
+<script>
+  const ticker = document.querySelector('.tools-ticker') as HTMLElement | null;
+  const track = ticker?.querySelector('.ticker-track') as HTMLElement | null;
+  if (ticker && track) {
+    const anims = () => track.getAnimations() as Animation[];
+    const setRate = (r: number) => anims().forEach(a => { try { a.playbackRate = r; } catch {} });
+    ticker.addEventListener('mouseenter', () => setRate(0.33));
+    ticker.addEventListener('mouseleave', () => setRate(1));
+    ticker.addEventListener('focusin', () => setRate(0.33));
+    ticker.addEventListener('focusout', () => setRate(1));
+  }
+</script>
