@@ -83,6 +83,16 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 			<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 		)}
 		<ClientRouter />
+		<script is:inline>
+			(() => {
+				try {
+					const t = localStorage.getItem('theme');
+					document.documentElement.dataset.theme = (t === 'light' || t === 'dark') ? t : 'dark';
+				} catch {
+					document.documentElement.dataset.theme = 'dark';
+				}
+			})();
+		</script>
 	</head>
 	<body class="bg-canvas font-sans text-ink antialiased">
 		<div class="scroll-progress" aria-hidden="true"><div class="scroll-progress-bar" id="scroll-progress-bar"></div></div>
@@ -104,6 +114,48 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 	gsap.registerPlugin(ScrollTrigger);
 
 	const prefersReduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+	// ---------- Theme runtime (markup in ThemeToggle.astro; state on html[data-theme]) ----------
+	// Set by the GSAP header ScrollTrigger (Layout script below) so a theme swap
+	// without scrolling can repaint the GSAP-owned inline header background.
+	// Stays null in reduced-motion (header bg is CSS-var owned there) and on
+	// pages without a header — both guarded by the optional call.
+	let repaintHeaderBg: (() => void) | null = null;
+
+	const syncThemeChrome = () => {
+		const light = document.documentElement.dataset.theme === 'light';
+		const meta = document.querySelector('meta[name="theme-color"]');
+		if (meta) meta.setAttribute('content', light ? '#fbfbfb' : '#090909');
+		document.querySelectorAll('[data-theme-toggle]').forEach((btn) =>
+			btn.setAttribute('aria-label', light ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'),
+		);
+		// Covers both the toggle click and page-load/after-swap applyTheme():
+		// the tween only re-ticks on scroll progress, so re-resolve theme vars now.
+		repaintHeaderBg?.();
+	};
+
+	const applyTheme = () => {
+		let stored: string | null = null;
+		try { stored = localStorage.getItem('theme'); } catch {}
+		document.documentElement.dataset.theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+		syncThemeChrome();
+	};
+
+	// Delegated single document listener: survives ClientRouter swaps without rebinding.
+	document.addEventListener('click', (e) => {
+		const target = e.target as Element | null;
+		if (!target?.closest('[data-theme-toggle]')) return;
+		const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+		document.documentElement.dataset.theme = next;
+		try { localStorage.setItem('theme', next); } catch {}
+		syncThemeChrome();
+	});
+
+	// Re-apply on load/swap: view-transition swap may drop <html> attributes.
+	document.addEventListener('astro:page-load', applyTheme);
+	document.addEventListener('astro:after-swap', applyTheme);
+
+	applyTheme();
 
 	const initCopyButtons = () => {
 		document.querySelectorAll('.project-content .astro-code:not([data-copy-setup])').forEach((pre) => {
@@ -136,6 +188,9 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 	const initGSAP = () => {
 		if (ctx) { ctx.revert(); ctx = null; }
 		ScrollTrigger.getAll().forEach(t => t.kill());
+		// Stale repaint hooks must never outlive the tween that registered them
+		// (page swap, or a reduced-motion re-init that returns before the tween).
+		repaintHeaderBg = null;
 
 		if (prefersReduced()) {
 			// fallback: show everything
@@ -183,19 +238,39 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 				});
 			}
 
-			// -- header shrink
-			const header = document.querySelector('.site-header');
-			if (header) {
-				ScrollTrigger.create({
-					start: "top top",
-					end: 120,
-					onUpdate: (self) => {
-						const p = Math.min(self.scroll() / 120, 1);
-						gsap.to(header, { backgroundColor: p > 0.5 ? "rgba(9,9,9,0.92)" : "rgba(9,9,9,0.6)", backdropFilter: "blur(16px)", duration: 0.3, overwrite: true });
-						header.classList.toggle('is-scrolled', p > 0.2);
-					}
-				});
-			}
+		// -- header shrink
+		const header = document.querySelector('.site-header');
+		if (header) {
+			// Cached live CSSStyleDeclaration: resolves --header-solid/--header-soft
+			// at tick time, so the tween follows the active theme (P-4).
+			const cs = getComputedStyle(document.documentElement);
+			// Latest scroll progress seen by onUpdate. A theme swap between scrolls
+			// never fires scroll, so gsap wouldn't repaint the inline
+			// backgroundColor; syncThemeChrome calls repaintHeaderBg() instead.
+			let lastP = 0;
+			const bgFor = (p: number) =>
+				// Hero state (p === 0): --header-hero-bg — transparent in dark (the
+				// old literal), canvas in light so the glow film doesn't seam under
+				// the pill (fix B). p > 0 keeps soft/solid per theme (P-4);
+				// hysteresis and the is-scrolled threshold are unchanged.
+				p === 0
+					? cs.getPropertyValue('--header-hero-bg').trim() || 'rgba(0,0,0,0)'
+					: p > 0.5
+						? cs.getPropertyValue('--header-solid').trim()
+						: cs.getPropertyValue('--header-soft').trim();
+			repaintHeaderBg = () => {
+				gsap.to(header, { backgroundColor: bgFor(lastP), duration: 0.3, overwrite: true });
+			};
+			ScrollTrigger.create({
+				start: "top top",
+				end: 120,
+				onUpdate: (self) => {
+					lastP = Math.min(self.scroll() / 120, 1);
+					gsap.to(header, { backgroundColor: bgFor(lastP), backdropFilter: "blur(16px)", duration: 0.3, overwrite: true });
+					header.classList.toggle('is-scrolled', lastP > 0.2);
+				}
+			});
+		}
 
 			// -- generic batch reveals
 			ScrollTrigger.batch(".gsap-reveal", {
