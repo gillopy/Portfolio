@@ -2,9 +2,9 @@
 import siteConfig from '../data/siteConfig.json';
 ---
 
-<header class="site-header header sticky top-0 z-50 w-full border-b border-hairline-soft bg-canvas/60 backdrop-blur-xl">
-  <div class="container mx-auto px-6">
-    <div class="header-content flex items-center justify-between py-3.5 transition-all duration-300">
+<header id="site-header" data-appearance="hero" class="site-header sticky top-0 z-50 w-full border-b transition-[background-color,border-color,padding] duration-300 ease-out motion-reduce:transition-none">
+  <div id="navigation-shell" data-testid="navigation-shell" class="navigation-shell relative z-10 w-full px-6 transition-[border-radius,background-color,box-shadow,border-color] duration-300 ease-out motion-reduce:transition-none lg:px-8">
+    <div class="header-content mx-auto flex max-w-7xl items-center justify-between transition-[height] duration-300 ease-out motion-reduce:transition-none">
       <div class="logo flex items-center gap-3">
         <a href="/" class="no-underline group flex items-center gap-3" aria-label="Ir al inicio">
           <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface ring-1 ring-hairline font-mono text-xs font-bold tracking-widest text-ink group-hover:ring-accent transition-colors">{siteConfig.logoText}</span>
@@ -66,17 +66,115 @@ import siteConfig from '../data/siteConfig.json';
   .mobile-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
   .mobile-toggle.open span:nth-child(2) { opacity: 0; }
   .mobile-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-  .site-header.is-scrolled { border-color: #262626; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-  .site-header.is-scrolled .header-content { padding-top: 0.6rem; padding-bottom: 0.6rem; }
+
+  /* — Floating hero vs sticky standard — */
+  .site-header[data-appearance="hero"] {
+    background-color: transparent;
+    border-color: transparent;
+    padding: 6px 8px 8px;
+  }
+  @media (min-width: 640px) {
+    .site-header[data-appearance="hero"] {
+      padding: 8px 12px 12px;
+    }
+  }
+  .site-header[data-appearance="hero"] .navigation-shell {
+    background-color: rgba(20, 20, 20, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid #262626;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+  .site-header[data-appearance="hero"] .header-content {
+    height: 4rem;
+  }
+  .site-header[data-appearance="standard"] {
+    background-color: rgba(9, 9, 9, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: #262626;
+    padding: 0;
+  }
+  @supports not (backdrop-filter: blur(12px)) {
+    .site-header[data-appearance="standard"] {
+      background-color: #090909;
+    }
+    .site-header[data-appearance="hero"] .navigation-shell {
+      background-color: #141414;
+    }
+  }
+  .site-header[data-appearance="standard"] .navigation-shell {
+    background-color: transparent;
+    border-color: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    border-width: 0;
+  }
+  .site-header[data-appearance="standard"] .header-content {
+    height: 3.5rem;
+  }
 </style>
 
 <script>
   const initHeader = () => {
     // Evita listeners duplicados con ClientRouter (navegación SPA)
     (window as unknown as { __headerCleanup?: () => void }).__headerCleanup?.();
+    const header = document.getElementById('site-header');
     const mobileToggle = document.getElementById('mobile-toggle');
     const navList = document.getElementById('mobile-nav');
-    if (!mobileToggle || !navList) return;
+    if (!header || !mobileToggle || !navList) return;
+
+    // — Apariencia hero (flotante) vs standard (pegado) —
+    // Histéresis + rAF para evitar temblor en el umbral:
+    // el header cambia ~22px de alto (h-16+padding vs h-14), así que
+    // el gap entre umbrales debe ser >22px o el propio cambio de layout
+    // hace que el scroll rebote entre estados.
+    let appearance: 'hero' | 'standard' = header.getAttribute('data-appearance') === 'standard' ? 'standard' : 'hero';
+    let tickingAppearance = false;
+    const ENTER_Y = 32; // hero -> standard
+    const LEAVE_Y = 4;  // standard -> hero (gap 28px > delta layout)
+
+    const applyAppearance = (next: 'hero' | 'standard') => {
+      if (next === appearance) return;
+      appearance = next;
+      header.setAttribute('data-appearance', next);
+    };
+
+    const evaluateAppearance = () => {
+      const y = window.scrollY;
+      if (appearance === 'hero' && y > ENTER_Y) applyAppearance('standard');
+      else if (appearance === 'standard' && y < LEAVE_Y) applyAppearance('hero');
+      tickingAppearance = false;
+    };
+
+    const syncAppearance = () => {
+      const y = window.scrollY;
+      // Estado inicial: si está entre umbrales, preferir hero para no flashear
+      if (y > LEAVE_Y && y <= ENTER_Y) {
+        appearance = 'hero';
+        header.setAttribute('data-appearance', 'hero');
+      } else {
+        const initial = y > ENTER_Y ? 'standard' : 'hero';
+        appearance = initial;
+        header.setAttribute('data-appearance', initial);
+      }
+      tickingAppearance = false;
+    };
+
+    syncAppearance();
+
+    const onScrollAppearance = () => {
+      if (tickingAppearance) return;
+      tickingAppearance = true;
+      requestAnimationFrame(evaluateAppearance);
+    };
+    window.addEventListener('scroll', onScrollAppearance, { passive: true });
+    window.addEventListener('pageshow', syncAppearance);
+    const cleanupAppearance = () => {
+      window.removeEventListener('scroll', onScrollAppearance);
+      window.removeEventListener('pageshow', syncAppearance);
+    };
     let openScrollY = 0;
     let ticking = false;
     let gen = 0;
@@ -175,6 +273,7 @@ import siteConfig from '../data/siteConfig.json';
     document.addEventListener('keydown', onKeydown);
 
     (window as unknown as { __headerCleanup?: () => void }).__headerCleanup = () => {
+      cleanupAppearance();
       mobileToggle.removeEventListener('click', toggleMenu);
       navList.querySelectorAll('a').forEach((link) => link.removeEventListener('click', onLinkClick));
       window.removeEventListener('scroll', onScroll);
