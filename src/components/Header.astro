@@ -1,5 +1,6 @@
 ---
 import siteConfig from '../data/siteConfig.json';
+import ThemeToggle from './ThemeToggle.astro';
 ---
 
 <header id="site-header" data-appearance="hero" class="site-header sticky top-0 z-50 w-full border-b transition-[background-color,border-color,padding] duration-300 ease-out motion-reduce:transition-none">
@@ -27,6 +28,7 @@ import siteConfig from '../data/siteConfig.json';
         </ul>
       </nav>
       <div class="flex items-center gap-2">
+        <ThemeToggle />
         <span class="hidden lg:flex items-center gap-2 rounded-pill bg-surface px-3 py-1.5 ring-1 ring-hairline">
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
           <span class="font-mono text-[11px] tracking-widest uppercase text-ink-muted">Disponible</span>
@@ -69,7 +71,10 @@ import siteConfig from '../data/siteConfig.json';
 
   /* — Floating hero vs sticky standard — */
   .site-header[data-appearance="hero"] {
-    background-color: transparent;
+    /* --header-hero-bg: transparent in dark (unchanged); canvas-white in
+       light so the body::before glow film doesn't leak through the header
+       band and cut a hard seam under the floating pill (fix B). */
+    background-color: var(--header-hero-bg);
     border-color: transparent;
     padding: 6px 8px 8px;
   }
@@ -79,29 +84,29 @@ import siteConfig from '../data/siteConfig.json';
     }
   }
   .site-header[data-appearance="hero"] .navigation-shell {
-    background-color: rgba(20, 20, 20, 0.85);
+    background-color: var(--header-shell);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid #262626;
+    border: 1px solid var(--color-hairline);
     border-radius: 0.75rem;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.04) inset;
+    box-shadow: var(--header-shell-shadow), 0 1px 0 var(--header-shell-inset) inset;
   }
   .site-header[data-appearance="hero"] .header-content {
     height: 4rem;
   }
   .site-header[data-appearance="standard"] {
-    background-color: rgba(9, 9, 9, 0.8);
+    background-color: var(--header-standard-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-color: #262626;
+    border-color: var(--color-hairline);
     padding: 0;
   }
   @supports not (backdrop-filter: blur(12px)) {
     .site-header[data-appearance="standard"] {
-      background-color: #090909;
+      background-color: var(--color-canvas);
     }
     .site-header[data-appearance="hero"] .navigation-shell {
-      background-color: #141414;
+      background-color: var(--color-surface);
     }
   }
   .site-header[data-appearance="standard"] .navigation-shell {
