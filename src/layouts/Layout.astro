@@ -111,77 +111,11 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 <script>
 	import gsap from "gsap";
 	import ScrollTrigger from "gsap/ScrollTrigger";
+	import { setHeaderBgRepaint } from '../scripts/theme';
+	import '../scripts/copy-buttons';
 	gsap.registerPlugin(ScrollTrigger);
 
 	const prefersReduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-	// ---------- Theme runtime (markup in ThemeToggle.astro; state on html[data-theme]) ----------
-	// Set by the GSAP header ScrollTrigger (Layout script below) so a theme swap
-	// without scrolling can repaint the GSAP-owned inline header background.
-	// Stays null in reduced-motion (header bg is CSS-var owned there) and on
-	// pages without a header — both guarded by the optional call.
-	let repaintHeaderBg: (() => void) | null = null;
-
-	const syncThemeChrome = () => {
-		const light = document.documentElement.dataset.theme === 'light';
-		const meta = document.querySelector('meta[name="theme-color"]');
-		if (meta) meta.setAttribute('content', light ? '#fbfbfb' : '#090909');
-		document.querySelectorAll('[data-theme-toggle]').forEach((btn) =>
-			btn.setAttribute('aria-label', light ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'),
-		);
-		// Covers both the toggle click and page-load/after-swap applyTheme():
-		// the tween only re-ticks on scroll progress, so re-resolve theme vars now.
-		repaintHeaderBg?.();
-	};
-
-	const applyTheme = () => {
-		let stored: string | null = null;
-		try { stored = localStorage.getItem('theme'); } catch {}
-		document.documentElement.dataset.theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
-		syncThemeChrome();
-	};
-
-	// Delegated single document listener: survives ClientRouter swaps without rebinding.
-	document.addEventListener('click', (e) => {
-		const target = e.target as Element | null;
-		if (!target?.closest('[data-theme-toggle]')) return;
-		const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-		document.documentElement.dataset.theme = next;
-		try { localStorage.setItem('theme', next); } catch {}
-		syncThemeChrome();
-	});
-
-	// Re-apply on load/swap: view-transition swap may drop <html> attributes.
-	document.addEventListener('astro:page-load', applyTheme);
-	document.addEventListener('astro:after-swap', applyTheme);
-
-	applyTheme();
-
-	const initCopyButtons = () => {
-		document.querySelectorAll('.project-content .astro-code:not([data-copy-setup])').forEach((pre) => {
-			pre.setAttribute('data-copy-setup', 'true');
-			const group = document.createElement('div');
-			group.className = 'code-group';
-			pre.parentNode?.insertBefore(group, pre);
-			group.appendChild(pre);
-			const button = document.createElement('button');
-			button.className = 'copy-btn';
-			button.type = 'button';
-			button.setAttribute('aria-label', 'Copiar código');
-			button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>`;
-			button.addEventListener('click', async () => {
-				const code = pre.querySelector('code')?.textContent ?? '';
-				try {
-					await navigator.clipboard.writeText(code);
-					const original = button.innerHTML;
-					button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
-					button.classList.add('copy-success');
-					setTimeout(() => { button.innerHTML = original; button.classList.remove('copy-success'); }, 2000);
-				} catch {}
-			});
-			group.appendChild(button);
-		});
-	};
 
 	let ctx: gsap.Context | null = null;
 
@@ -190,7 +124,7 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 		ScrollTrigger.getAll().forEach(t => t.kill());
 		// Stale repaint hooks must never outlive the tween that registered them
 		// (page swap, or a reduced-motion re-init that returns before the tween).
-		repaintHeaderBg = null;
+		setHeaderBgRepaint(null);
 
 		if (prefersReduced()) {
 			// fallback: show everything
@@ -254,9 +188,9 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 					: p > 0.5
 						? cs.getPropertyValue('--header-solid').trim()
 						: cs.getPropertyValue('--header-soft').trim();
-			repaintHeaderBg = () => {
+			setHeaderBgRepaint(() => {
 				gsap.to(header, { backgroundColor: bgFor(lastP), duration: 0.3, overwrite: true });
-			};
+			});
 			ScrollTrigger.create({
 				start: "top top",
 				end: 120,
@@ -376,7 +310,6 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 	};
 
 	const init = () => {
-		initCopyButtons();
 		initGSAP();
 	};
 
