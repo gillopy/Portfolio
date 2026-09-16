@@ -44,3 +44,7 @@ verify-report.candidate.md
 
 # agent tooling
 .atl/
+
+# hidden from GitHub (local-only)
+.codegraph/
+scripts/
