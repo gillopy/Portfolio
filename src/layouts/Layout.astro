@@ -198,10 +198,6 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 				el.style.opacity = '1';
 				el.style.transform = 'none';
 			});
-			document.querySelectorAll<HTMLElement>('.skill-progress').forEach(bar => {
-				const p = bar.getAttribute('data-percentage');
-				if (p) bar.style.width = p + '%';
-			});
 			// keep legacy scroll-reveal visible
 			document.querySelectorAll('.scroll-reveal').forEach(el => el.classList.add('revealed'));
 			return;
@@ -351,17 +347,6 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 			}
 
 			// -- skills
-			const skillBars = document.querySelectorAll<HTMLElement>('.skill-progress');
-			skillBars.forEach(b => b.style.width = '0%');
-			skillBars.forEach((bar) => {
-				const p = bar.getAttribute('data-percentage') || '0';
-				ScrollTrigger.create({
-					trigger: bar,
-					start: "top 88%",
-					once: true,
-					onEnter: () => gsap.to(bar, { width: p + '%', duration: 1.2, ease: "power3.out", delay: 0.15 })
-				});
-			});
 			const tools = document.querySelectorAll('.tool-item');
 			if (tools.length) {
 				gsap.set(tools, { opacity: 0, y: 14, scale: 0.97 });
