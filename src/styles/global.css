@@ -613,7 +613,11 @@ html[data-theme="light"] {
 	--glow-2: rgba(124,92,255,0.08);
 	--scroll-thumb-hover: #cfcfcf;
 	--spot-border: rgba(23,23,23,0.20);
-	--spot-glow: rgba(0,111,221,0.13);
+	/* Spotlight hover glow: neutral ink, not accent blue. Over #ffffff the
+	   accent-alpha radial read as a cold cyan tint on the project cards; a
+	   low-alpha ink wash keeps the "lift" cue with no hue shift and sits
+	   inside the same .08–.12 alpha band as the light shadows. */
+	--spot-glow: rgba(23,23,23,0.08);
 	--shadow-hero: 0 14px 32px rgba(23,23,23,0.12), 0 3px 10px rgba(23,23,23,0.08);
 	/* Portrait lift: single .10 shadow read detached on #fbfbfb (fix C) —
 	   two layers inside the contracted α band, deeper y/scale for float. */
