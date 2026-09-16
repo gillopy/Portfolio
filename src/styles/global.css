@@ -369,7 +369,6 @@ body::before {
 .tools-ticker {
 	--ticker-duration: 45s;
 	overflow: hidden;
-	margin-top: 5rem;
 	-webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
 	mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
 }
@@ -378,6 +377,9 @@ body::before {
 	width: max-content;
 	animation: ticker-scroll var(--ticker-duration) linear infinite;
 	will-change: transform;
+}
+.ticker-track--reverse {
+	animation-direction: reverse;
 }
 /* hover slowdown handled via JS playbackRate to avoid jump — no CSS duration change */
 .ticker-group {

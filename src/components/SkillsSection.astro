@@ -7,102 +7,53 @@ import skills from '../data/skills.json';
   <div class="container mx-auto px-6">
     <div class="gsap-reveal mb-10">
       <h2 class="font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-4xl">
-        <span class="section-title-underline">Habilidades</span>
+        <span class="section-title-underline">Herramientas y Tecnologías</span>
       </h2>
       <p class="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
-        Métricas auditables, no buzzwords. Cada barra refleja uso en producción, no autoevaluación vacía.
+        Stack probado en producción
       </p>
     </div>
     <div class="section-rule mb-10"></div>
 
-    <div class="skills-container grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12">
-      <div class="skills-column gsap-reveal rounded-xl bg-surface p-6 ring-1 ring-hairline lg:p-7">
-        <h3 class="mb-6 flex items-center gap-3 font-display text-[1.05rem] font-bold tracking-tight text-ink">
-          <span class="h-6 w-0.5 rounded-full bg-accent"></span>
-          Habilidades Técnicas
-          <span class="ml-auto font-mono text-[10px] tracking-widest uppercase text-ink-faint">Core</span>
-        </h3>
-        <div class="skills-list space-y-5">
-          {skills.technical.map((skill) => (
-            <div class="skill">
-              <div class="skill-info flex justify-between items-center mb-1.5">
-                <span class="font-mono text-sm text-ink-muted">{skill.name}</span>
-                <span class="font-mono text-xs text-accent">{skill.percentage}%</span>
-              </div>
-              <div class="skill-bar h-1.5 w-full overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-label={skill.name} aria-valuemin="0" aria-valuemax="100" aria-valuenow={skill.percentage}>
-                <div
-                  class="skill-progress h-full bg-ink rounded-full"
-                  style={`width: ${skill.percentage}%;`}
-                  data-percentage={skill.percentage}
-                >
-                </div>
-              </div>
-            </div>
-          ))}
+    <div class="flex flex-col gap-4">
+      <div class="tools-ticker gsap-reveal" aria-label="Herramientas y tecnologías — fila 1">
+        <div class="ticker-track ticker-track--reverse">
+          <div class="ticker-group">
+            {skills.tools.map((tool) => (
+              <span class="ticker-item">{tool}</span>
+            ))}
+          </div>
+          <div class="ticker-group" aria-hidden="true">
+            {skills.tools.map((tool) => (
+              <span class="ticker-item" tabindex="-1">{tool}</span>
+            ))}
+          </div>
         </div>
       </div>
-
-      <div class="skills-column gsap-reveal rounded-xl bg-surface p-6 ring-1 ring-hairline lg:p-7">
-        <h3 class="mb-6 flex items-center gap-3 font-display text-[1.05rem] font-bold tracking-tight text-ink">
-          <span class="h-6 w-0.5 rounded-full bg-ink-muted"></span>
-          Habilidades Personales
-          <span class="ml-auto font-mono text-[10px] tracking-widest uppercase text-ink-faint">Human</span>
-        </h3>
-        <div class="skills-list space-y-5">
-          {skills.personal.map((skill) => (
-            <div class="skill">
-              <div class="skill-info flex justify-between items-center mb-1.5">
-                <span class="font-mono text-sm text-ink-muted">{skill.name}</span>
-                <span class="font-mono text-xs text-ink-muted/70">{skill.percentage}%</span>
-              </div>
-              <div class="skill-bar h-1.5 w-full overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-label={skill.name} aria-valuemin="0" aria-valuemax="100" aria-valuenow={skill.percentage}>
-                <div
-                  class="skill-progress h-full bg-ink-muted/70 rounded-full"
-                  style={`width: ${skill.percentage}%;`}
-                  data-percentage={skill.percentage}
-                >
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-14 text-center gsap-reveal">
-      <h3 class="mb-2 font-display text-[1.05rem] font-bold tracking-tight text-ink">
-        Herramientas y Tecnologías
-      </h3>
-      <p class="mb-8 font-mono text-xs text-ink-faint">Stack probado en producción</p>
-    </div>
-    <div class="tools-ticker gsap-reveal" aria-label="Herramientas y tecnologías">
-      <div class="ticker-track">
-        <div class="ticker-group">
-          {skills.tools.map((tool) => (
-            <span class="ticker-item">{tool}</span>
-          ))}
-        </div>
-        <div class="ticker-group" aria-hidden="true">
-          {skills.tools.map((tool) => (
-            <span class="ticker-item" tabindex="-1">{tool}</span>
-          ))}
+      <div class="tools-ticker gsap-reveal" aria-label="Herramientas y tecnologías — fila 2">
+        <div class="ticker-track">
+          <div class="ticker-group">
+            {skills.tools.map((tool) => (
+              <span class="ticker-item">{tool}</span>
+            ))}
+          </div>
+          <div class="ticker-group" aria-hidden="true">
+            {skills.tools.map((tool) => (
+              <span class="ticker-item" tabindex="-1">{tool}</span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<style>
-  .skill-bar { position: relative; }
-  .skill-progress { will-change: width; }
-</style>
-
 <script>
-  const ticker = document.querySelector('.tools-ticker') as HTMLElement | null;
-  const track = ticker?.querySelector('.ticker-track') as HTMLElement | null;
-  if (ticker && track) {
-    const anims = () => track.getAnimations() as Animation[];
-    const setRate = (r: number) => anims().forEach(a => { try { a.playbackRate = r; } catch {} });
+  for (const ticker of document.querySelectorAll('.tools-ticker')) {
+    const track = ticker.querySelector('.ticker-track') as HTMLElement | null;
+    if (!track) continue;
+    const anims = () => (track.getAnimations() as Animation[]);
+    const setRate = (r: number) => anims().forEach((a) => { try { a.playbackRate = r; } catch {} });
     ticker.addEventListener('mouseenter', () => setRate(0.33));
     ticker.addEventListener('mouseleave', () => setRate(1));
     ticker.addEventListener('focusin', () => setRate(0.33));
