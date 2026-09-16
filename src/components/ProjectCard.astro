@@ -11,7 +11,7 @@ const { entry } = Astro.props;
 const { title, shortDescription, tags, links, cover } = entry.data;
 ---
 
-<SpotlightCard as="article" class="project-card group flex h-full flex-col rounded-xl border border-hairline bg-surface transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)]">
+<SpotlightCard as="article" class="project-card group flex h-full flex-col rounded-xl border border-hairline bg-surface transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card-hover)]">
   <a href={links.demo} class="project-image block overflow-hidden rounded-t-xl" aria-label={title}>
     <div class="aspect-video overflow-hidden rounded-t-xl relative">
       <Image

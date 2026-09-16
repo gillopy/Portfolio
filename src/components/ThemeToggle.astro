@@ -1,0 +1,46 @@
+---
+/**
+ * ThemeToggle — zero-CLS sun/moon button for the light/dark theme.
+ *
+ * Markup only: the active theme lives on `html[data-theme]`, the icon swap is
+ * pure CSS (works pre-JS in dark), and click behavior is a single delegated
+ * `[data-theme-toggle]` listener owned by Layout.astro (survives ClientRouter
+ * swaps without rebinding). aria-label carries the next action and is kept in
+ * sync by that module; no aria-pressed (the label is the state contract).
+ */
+---
+
+<button
+	type="button"
+	data-theme-toggle
+	aria-label="Cambiar a modo claro"
+	class="theme-toggle relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg p-2 text-ink transition-colors duration-300 hover:bg-surface"
+>
+	<svg class="theme-toggle-icon theme-toggle-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+		<path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.773-1.591 1.591M5.25 12H3m4.773-4.773L6.634 3.386M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+	</svg>
+	<svg class="theme-toggle-icon theme-toggle-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+		<path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+	</svg>
+</button>
+
+<style>
+	.theme-toggle-icon {
+		position: absolute;
+		inset: 0.5rem;
+		transition: opacity 0.25s ease, transform 0.25s ease;
+	}
+	/* Dark (default / no attribute): sun shown in place, moon hidden — fixed box, zero CLS. */
+	.theme-toggle-moon {
+		opacity: 0;
+		transform: scale(0.5) rotate(-45deg);
+	}
+	html[data-theme="light"] .theme-toggle-sun {
+		opacity: 0;
+		transform: scale(0.5) rotate(45deg);
+	}
+	html[data-theme="light"] .theme-toggle-moon {
+		opacity: 1;
+		transform: none;
+	}
+</style>

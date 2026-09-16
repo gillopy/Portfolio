@@ -15,9 +15,9 @@ export interface Props {
   /** Etiqueta del elemento raíz (ej. "article" para cards semánticas). Default: div. */
   as?: HTMLTag;
   class?: string;
-  /** Color del glow de fondo. Default: accent del tema con baja opacidad. */
+  /** Color del glow de fondo. Default: tema vía var(--spot-glow) (fallback CSS). */
   glowColor?: string;
-  /** Color del borde iluminado. Default: blanco translúcido. */
+  /** Color del borde iluminado. Default: tema vía var(--spot-border) (fallback CSS). */
   borderColor?: string;
   /** Diámetro del halo de fondo en px. */
   glowSize?: number;
@@ -28,17 +28,29 @@ export interface Props {
 const {
   as: RootTag = 'div',
   class: className = '',
-  glowColor = 'rgba(0, 153, 255, 0.15)',
-  borderColor = 'rgba(255, 255, 255, 0.55)',
+  glowColor,
+  borderColor,
   glowSize = 600,
   borderSize = 120,
 } = Astro.props;
+
+// Only emit per-instance overrides when explicitly passed; when omitted, the
+// CSS fallbacks (--spotlight-border, var(--spot-border)) keep the spotlight
+// theme-aware in both light and dark.
+const spotlightStyle = [
+  glowColor && `--spotlight-glow: ${glowColor};`,
+  borderColor && `--spotlight-border: ${borderColor};`,
+  `--spotlight-glow-size: ${glowSize}px;`,
+  `--spotlight-border-size: ${borderSize}px;`,
+]
+  .filter(Boolean)
+  .join(' ');
 ---
 
 <RootTag
   data-spotlight
   class:list={['spotlight-card', className]}
-  style={`--spotlight-glow: ${glowColor}; --spotlight-border: ${borderColor}; --spotlight-glow-size: ${glowSize}px; --spotlight-border-size: ${borderSize}px;`}
+  style={spotlightStyle}
 >
   <div class="spotlight-border" aria-hidden="true"></div>
   <div class="spotlight-glow" aria-hidden="true"></div>
