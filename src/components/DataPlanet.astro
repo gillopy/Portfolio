@@ -1,0 +1,649 @@
+---
+interface Props {
+  /** Extra classes for the figure root (layout/spacing owned by the parent). */
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props;
+---
+
+<figure class:list={['data-planet', className]}>
+  <div class="data-planet-stage" data-planet>
+    <canvas data-planet-canvas aria-hidden="true"></canvas>
+  </div>
+  <p class="sr-only">
+    Ilustración decorativa de un planeta de datos: esfera de puntos proyectada con meridianos,
+    tres órbitas inclinadas y nodos de señal en azul, violeta y lima.
+  </p>
+  <figcaption class="data-planet-caption">
+    <span>Planeta de señales</span>
+    <span>Proyección ortográfica</span>
+  </figcaption>
+</figure>
+
+<style>
+  .data-planet {
+    width: 100%;
+    max-width: 430px;
+    margin: 0;
+  }
+
+  .data-planet-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-xl);
+  }
+
+  /* Soft observatory glow behind the sphere; theme-aware via --color-accent. */
+  .data-planet-stage::before {
+    content: "";
+    position: absolute;
+    inset: 6%;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--color-accent) 11%, transparent) 0%,
+      transparent 68%
+    );
+    pointer-events: none;
+  }
+
+  .data-planet-stage canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
+
+  .data-planet-caption {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--color-hairline);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+  }
+
+  .data-planet-caption span:first-child {
+    color: var(--color-ink);
+  }
+
+  @media (max-width: 1024px) {
+    .data-planet {
+      max-width: 420px;
+    }
+  }
+</style>
+
+<script>
+  // DataPlanet — decorative, dependency-free canvas planet for the hero.
+  //
+  // Lifecycle contract (Astro ClientRouter):
+  // - module script runs once; instances are tracked per stage element
+  // - init is idempotent on astro:page-load / astro:after-swap
+  // - astro:before-preparation tears every instance down (rAF, listeners,
+  //   observers) so nothing outlives the swap
+  // - the loop pauses while the tab is hidden or the stage is offscreen
+  // - prefers-reduced-motion renders a single static frame (no loop, no
+  //   pointer parallax) and reacts to preference changes at runtime
+  // - theme colors are read from CSS custom properties and refreshed when
+  //   html[data-theme] changes
+
+  interface Vec3 {
+    x: number;
+    y: number;
+    z: number;
+  }
+
+  interface RGB {
+    r: number;
+    g: number;
+    b: number;
+  }
+
+  interface Palette {
+    inkMuted: RGB;
+    inkFaint: RGB;
+    accent: RGB;
+    accent2: RGB;
+    accent3: RGB;
+  }
+
+  interface OrbitDef {
+    radius: number;
+    tiltX: number;
+    tiltZ: number;
+    speed: number;
+    phase: number;
+    color: keyof Pick<Palette, 'accent' | 'accent2' | 'accent3'>;
+  }
+
+  interface LinePaths {
+    front: Path2D;
+    back: Path2D;
+  }
+
+  interface Xf {
+    x: number;
+    y: number;
+    z: number;
+  }
+
+  interface Controller {
+    destroy: () => void;
+  }
+
+  const POINT_COUNT = 520;
+  const SPIN_SPEED = 0.1; // rad/s → one rotation ≈ 63 s
+  const BASE_TILT = 0.32; // camera pitch (north pole slightly toward viewer)
+  const PARALLAX_MAX = 0.12; // pointer parallax amplitude ≈ ±7°
+  const STATIC_SPIN = 0.75; // fixed yaw for the reduced-motion frame
+  const ORBIT_SAMPLES = 128;
+  const MERIDIAN_SAMPLES = 44;
+
+  const ORBIT_DEFS: OrbitDef[] = [
+    { radius: 1.24, tiltX: 1.05, tiltZ: 0.28, speed: 0.2, phase: 0.5, color: 'accent' },
+    { radius: 1.37, tiltX: 0.42, tiltZ: -0.72, speed: -0.14, phase: 2.7, color: 'accent2' },
+    { radius: 1.5, tiltX: -0.78, tiltZ: 0.62, speed: 0.11, phase: 4.6, color: 'accent3' },
+  ];
+
+  const MERIDIAN_LONGITUDES = [
+    0,
+    Math.PI / 3,
+    (2 * Math.PI) / 3,
+    Math.PI,
+    (4 * Math.PI) / 3,
+    (5 * Math.PI) / 3,
+  ];
+
+  // Soft key light (view space) giving the point cloud a gentle terminator.
+  const LIGHT = (() => {
+    const x = -0.35;
+    const y = 0.5;
+    const z = 0.8;
+    const len = Math.hypot(x, y, z);
+    return { x: x / len, y: y / len, z: z / len };
+  })();
+
+  // Shared transform scratch: draws never interleave (single-threaded), so one
+  // instance-level buffer is enough even with multiple planets on a page.
+  const scratch: Xf = { x: 0, y: 0, z: 0 };
+
+  const controllers = new Map<HTMLElement, Controller>();
+
+  function parseHex(value: string, fallback: RGB): RGB {
+    const hex = value.trim().replace(/^#/, '');
+    const short = hex.length === 3 && /^[0-9a-f]{3}$/i.test(hex);
+    const long = hex.length === 6 && /^[0-9a-f]{6}$/i.test(hex);
+    if (!short && !long) return fallback;
+    const full = short
+      ? hex
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : hex;
+    const num = Number.parseInt(full, 16);
+    if (Number.isNaN(num)) return fallback;
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function readPalette(): Palette {
+    const styles = getComputedStyle(document.documentElement);
+    const v = (name: string) => styles.getPropertyValue(name).trim();
+    return {
+      inkMuted: parseHex(v('--color-ink-muted'), { r: 153, g: 153, b: 153 }),
+      inkFaint: parseHex(v('--color-ink-faint'), { r: 107, g: 107, b: 107 }),
+      accent: parseHex(v('--color-accent'), { r: 0, g: 153, b: 255 }),
+      accent2: parseHex(v('--color-accent-2'), { r: 124, g: 92, b: 255 }),
+      accent3: parseHex(v('--color-accent-3'), { r: 198, g: 255, b: 74 }),
+    };
+  }
+
+  function rgba(c: RGB, alpha: number): string {
+    return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`;
+  }
+
+  /** Fibonacci-spiral point sphere (unit radius, y = up). */
+  function buildSphere(count: number): Vec3[] {
+    const points: Vec3[] = [];
+    const golden = Math.PI * (3 - Math.sqrt(5));
+    for (let i = 0; i < count; i += 1) {
+      const y = 1 - (i / (count - 1)) * 2;
+      const ring = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = golden * i;
+      points.push({ x: Math.cos(theta) * ring, y, z: Math.sin(theta) * ring });
+    }
+    return points;
+  }
+
+  /** Half-meridians: one polyline per longitude, pole to pole. */
+  function buildMeridians(lons: number[], samples: number): Vec3[][] {
+    return lons.map((lon) => {
+      const line: Vec3[] = [];
+      for (let s = 0; s <= samples; s += 1) {
+        const lat = -Math.PI / 2 + (Math.PI * s) / samples;
+        line.push({
+          x: Math.cos(lat) * Math.cos(lon),
+          y: Math.sin(lat),
+          z: Math.cos(lat) * Math.sin(lon),
+        });
+      }
+      return line;
+    });
+  }
+
+  /** Full circle in the XZ plane at the given latitude (unit radius). */
+  function buildCircle(lat: number, samples: number): Vec3[] {
+    const line: Vec3[] = [];
+    for (let s = 0; s <= samples; s += 1) {
+      const lon = (Math.PI * 2 * s) / samples;
+      line.push({
+        x: Math.cos(lat) * Math.cos(lon),
+        y: Math.sin(lat),
+        z: Math.cos(lat) * Math.sin(lon),
+      });
+    }
+    return line;
+  }
+
+  /**
+   * Split a projected polyline into front/back Path2D halves so occlusion can
+   * be staged: orbit backs first, sphere next, orbit fronts last.
+   */
+  function buildLinePaths(
+    points: Vec3[],
+    project: (p: Vec3, out: Xf) => void,
+    cx: number,
+    cy: number,
+    radius: number,
+  ): LinePaths {
+    const front = new Path2D();
+    const back = new Path2D();
+    let prevFront: boolean | null = null;
+    for (const p of points) {
+      project(p, scratch);
+      const sx = cx + scratch.x * radius;
+      const sy = cy - scratch.y * radius;
+      const isFront = scratch.z >= 0;
+      if (prevFront === null) {
+        (isFront ? front : back).moveTo(sx, sy);
+      } else if (isFront === prevFront) {
+        (isFront ? front : back).lineTo(sx, sy);
+      } else {
+        // Depth crossing: close the old side and open the new one here.
+        (prevFront ? front : back).lineTo(sx, sy);
+        (isFront ? front : back).moveTo(sx, sy);
+      }
+      prevFront = isFront;
+    }
+    return { front, back };
+  }
+
+  function createController(stage: HTMLElement, canvas: HTMLCanvasElement): Controller {
+    const ctx = canvas.getContext('2d');
+    const sphere = buildSphere(POINT_COUNT);
+    const meridians = buildMeridians(MERIDIAN_LONGITUDES, MERIDIAN_SAMPLES);
+    const equator = buildCircle(0, ORBIT_SAMPLES);
+    const orbitRing = buildCircle(0, ORBIT_SAMPLES);
+    const reduceQuery = matchMedia('(prefers-reduced-motion: reduce)');
+
+    let palette = readPalette();
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let time = 0;
+    let lastTs = 0;
+    let rafId = 0;
+    let inView = true;
+    let destroyed = false;
+    let targetPX = 0;
+    let targetPY = 0;
+    let curPX = 0;
+    let curPY = 0;
+
+    // Per-frame trig, captured by the projection helpers below.
+    let cosS = 1;
+    let sinS = 0;
+    let cosP = 1;
+    let sinP = 0;
+    let cosY = 1;
+    let sinY = 0;
+
+    if (!ctx) {
+      return {
+        destroy: () => {
+          destroyed = true;
+        },
+      };
+    }
+
+    // Sphere-surface point: spin about Y, then camera pitch (X) and yaw (Y).
+    const spinPoint = (p: Vec3, out: Xf): void => {
+      const x1 = p.x * cosS + p.z * sinS;
+      const z1 = -p.x * sinS + p.z * cosS;
+      const y2 = p.y * cosP - z1 * sinP;
+      const z2 = p.y * sinP + z1 * cosP;
+      out.x = x1 * cosY + z2 * sinY;
+      out.z = -x1 * sinY + z2 * cosY;
+      out.y = y2;
+    };
+
+    // Orbit-space point: tilt about X then Z, then the camera (no planet spin).
+    const orbitTransform = (
+      x0: number,
+      y0: number,
+      z0: number,
+      cosOX: number,
+      sinOX: number,
+      cosOZ: number,
+      sinOZ: number,
+      out: Xf,
+    ): void => {
+      const y1 = y0 * cosOX - z0 * sinOX;
+      const z1 = y0 * sinOX + z0 * cosOX;
+      const x2 = x0 * cosOZ - y1 * sinOZ;
+      const y2 = x0 * sinOZ + y1 * cosOZ;
+      const y3 = y2 * cosP - z1 * sinP;
+      const z3 = y2 * sinP + z1 * cosP;
+      out.x = x2 * cosY + z3 * sinY;
+      out.z = -x2 * sinY + z3 * cosY;
+      out.y = y3;
+    };
+
+    const colorOf = (def: OrbitDef): RGB => palette[def.color];
+
+    const draw = (): void => {
+      if (width < 4 || height < 4) return;
+      const staticFrame = reduceQuery.matches;
+      const spin = staticFrame ? STATIC_SPIN : time * SPIN_SPEED;
+      const parX = staticFrame ? 0 : curPX;
+      const parY = staticFrame ? 0 : curPY;
+
+      cosS = Math.cos(spin);
+      sinS = Math.sin(spin);
+      const pitch = BASE_TILT + parY;
+      cosP = Math.cos(pitch);
+      sinP = Math.sin(pitch);
+      cosY = Math.cos(parX);
+      sinY = Math.sin(parX);
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const radius = Math.min(width, height) * 0.3;
+      const scale = Math.max(0.7, radius / 125);
+      const lineWidth = Math.max(0.75, Math.min(1.2, scale));
+
+      // --- 1. orbit halves behind the planet ---
+      const orbitPaths: LinePaths[] = [];
+      for (const def of ORBIT_DEFS) {
+        const cosOX = Math.cos(def.tiltX);
+        const sinOX = Math.sin(def.tiltX);
+        const cosOZ = Math.cos(def.tiltZ);
+        const sinOZ = Math.sin(def.tiltZ);
+        const paths = buildLinePaths(
+          orbitRing,
+          (p, out) => {
+            orbitTransform(
+              p.x * def.radius,
+              p.y * def.radius,
+              p.z * def.radius,
+              cosOX,
+              sinOX,
+              cosOZ,
+              sinOZ,
+              out,
+            );
+          },
+          cx,
+          cy,
+          radius,
+        );
+        orbitPaths.push(paths);
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = rgba(colorOf(def), 0.09);
+        ctx.stroke(paths.back);
+      }
+
+      // --- 2. sphere point cloud ---
+      for (const p of sphere) {
+        spinPoint(p, scratch);
+        const depth = (scratch.z + 1) / 2;
+        const light = Math.max(
+          0,
+          scratch.x * LIGHT.x + scratch.y * LIGHT.y + scratch.z * LIGHT.z,
+        );
+        const alpha = Math.min(0.72, 0.1 + 0.5 * depth * (0.4 + 0.6 * light));
+        const r = Math.max(0.65, (0.85 + 1.25 * depth) * scale);
+        ctx.fillStyle = rgba(palette.inkMuted, alpha);
+        ctx.beginPath();
+        ctx.arc(cx + scratch.x * radius, cy - scratch.y * radius, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // --- 3. sparse meridian structure + equator ---
+      ctx.lineWidth = lineWidth;
+      for (const line of meridians) {
+        const paths = buildLinePaths(line, spinPoint, cx, cy, radius);
+        ctx.strokeStyle = rgba(palette.inkFaint, 0.05);
+        ctx.stroke(paths.back);
+        ctx.strokeStyle = rgba(palette.inkFaint, 0.16);
+        ctx.stroke(paths.front);
+      }
+      const equatorPaths = buildLinePaths(equator, spinPoint, cx, cy, radius);
+      ctx.strokeStyle = rgba(palette.inkFaint, 0.07);
+      ctx.stroke(equatorPaths.back);
+      ctx.strokeStyle = rgba(palette.inkFaint, 0.22);
+      ctx.stroke(equatorPaths.front);
+
+      // --- 4. orbit fronts + signal nodes ---
+      ORBIT_DEFS.forEach((def, i) => {
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = rgba(colorOf(def), 0.26);
+        ctx.stroke(orbitPaths[i].front);
+
+        const cosOX = Math.cos(def.tiltX);
+        const sinOX = Math.sin(def.tiltX);
+        const cosOZ = Math.cos(def.tiltZ);
+        const sinOZ = Math.sin(def.tiltZ);
+        const ang = def.phase + (staticFrame ? 0 : time * def.speed);
+        orbitTransform(
+          Math.cos(ang) * def.radius,
+          0,
+          Math.sin(ang) * def.radius,
+          cosOX,
+          sinOX,
+          cosOZ,
+          sinOZ,
+          scratch,
+        );
+        const sx = cx + scratch.x * radius;
+        const sy = cy - scratch.y * radius;
+        const front = scratch.z >= 0;
+        const withinDisc = (sx - cx) * (sx - cx) + (sy - cy) * (sy - cy) < radius * radius;
+        if (!front && withinDisc) return; // occluded by the planet body
+
+        const alpha = front ? 1 : 0.4;
+        const core = Math.max(1.6, 2.4 * scale);
+        const halo = core * 2.8;
+        const color = colorOf(def);
+        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, halo);
+        grad.addColorStop(0, rgba(color, 0.45 * alpha));
+        grad.addColorStop(1, rgba(color, 0));
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(sx, sy, halo, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = rgba(color, alpha);
+        ctx.beginPath();
+        ctx.arc(sx, sy, core, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    };
+
+    const shouldRun = (): boolean =>
+      !destroyed &&
+      !reduceQuery.matches &&
+      inView &&
+      !document.hidden &&
+      stage.isConnected;
+
+    const destroy = (): void => {
+      if (destroyed) return;
+      destroyed = true;
+      stop();
+      ro.disconnect();
+      io.disconnect();
+      themeObserver.disconnect();
+      reduceQuery.removeEventListener('change', onReduceChange);
+      document.removeEventListener('visibilitychange', onVisibility);
+      stage.removeEventListener('pointermove', onPointerMove);
+      stage.removeEventListener('pointerleave', onPointerLeave);
+      controllers.delete(stage);
+    };
+
+    const frame = (ts: number): void => {
+      rafId = 0;
+      if (!stage.isConnected) {
+        destroy();
+        return;
+      }
+      const dt = Math.min((ts - lastTs) / 1000, 0.06);
+      lastTs = ts;
+      time += dt;
+      const k = 1 - Math.exp(-dt * 7);
+      curPX += (targetPX - curPX) * k;
+      curPY += (targetPY - curPY) * k;
+      draw();
+      if (shouldRun()) rafId = requestAnimationFrame(frame);
+    };
+
+    function start(): void {
+      if (rafId || !shouldRun()) return;
+      lastTs = performance.now();
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function stop(): void {
+      if (!rafId) return;
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+
+    const resize = (): void => {
+      const rect = stage.getBoundingClientRect();
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height);
+      if (w < 4 || h < 4) return;
+      const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (w === width && h === height && nextDpr === dpr) return;
+      width = w;
+      height = h;
+      dpr = nextDpr;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      draw();
+    };
+
+    const ro = new ResizeObserver(() => {
+      resize();
+    });
+    ro.observe(stage);
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) inView = entry.isIntersecting;
+        if (inView) {
+          draw();
+          start();
+        } else {
+          stop();
+        }
+      },
+      { threshold: 0 },
+    );
+    io.observe(stage);
+
+    function onVisibility(): void {
+      if (document.hidden) stop();
+      else start();
+    }
+    document.addEventListener('visibilitychange', onVisibility);
+
+    const onPointerMove = (e: PointerEvent): void => {
+      if (e.pointerType !== 'mouse' || reduceQuery.matches) return;
+      const rect = stage.getBoundingClientRect();
+      if (rect.width < 4 || rect.height < 4) return;
+      targetPX = ((e.clientX - rect.left) / rect.width - 0.5) * PARALLAX_MAX * 2;
+      targetPY = ((e.clientY - rect.top) / rect.height - 0.5) * PARALLAX_MAX * 2;
+    };
+    const onPointerLeave = (): void => {
+      targetPX = 0;
+      targetPY = 0;
+    };
+    stage.addEventListener('pointermove', onPointerMove);
+    stage.addEventListener('pointerleave', onPointerLeave);
+
+    function onReduceChange(): void {
+      targetPX = 0;
+      targetPY = 0;
+      curPX = 0;
+      curPY = 0;
+      if (reduceQuery.matches) {
+        stop();
+        draw();
+      } else {
+        start();
+      }
+    }
+    reduceQuery.addEventListener('change', onReduceChange);
+
+    const themeObserver = new MutationObserver(() => {
+      palette = readPalette();
+      draw();
+    });
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    resize();
+    start();
+
+    return { destroy };
+  }
+
+  function initPlanets(): void {
+    document.querySelectorAll<HTMLElement>('[data-planet]').forEach((stage) => {
+      if (controllers.has(stage)) return;
+      const canvas = stage.querySelector<HTMLCanvasElement>('canvas[data-planet-canvas]');
+      if (!canvas) return;
+      controllers.set(stage, createController(stage, canvas));
+    });
+    // Sweep instances whose stage left the DOM without a router event.
+    for (const [stage, controller] of controllers) {
+      if (!stage.isConnected) controller.destroy();
+    }
+  }
+
+  function destroyPlanets(): void {
+    for (const controller of [...controllers.values()]) controller.destroy();
+    controllers.clear();
+  }
+
+  initPlanets();
+  document.addEventListener('astro:page-load', initPlanets);
+  document.addEventListener('astro:after-swap', initPlanets);
+  document.addEventListener('astro:before-preparation', destroyPlanets);
+</script>
