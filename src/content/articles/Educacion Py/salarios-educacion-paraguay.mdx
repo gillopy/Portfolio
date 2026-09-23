@@ -14,8 +14,6 @@ attribution:
 ---
 import { Image } from 'astro:assets';
 import coverImg from "./cover.jpg";
-import figCuadro1Img from "./Fig1.png";
-import figCuadro2Img from "./Fig2.png";
 
 <Image src={coverImg} alt="Billetes de 100 mil guaraníes del Banco Central del Paraguay" loading="lazy" />
 
@@ -109,7 +107,7 @@ $$
 
 *Variable dependiente: $$\ln(\text{salario})$$. Notas: Errores estándar robustos a heterocedasticidad en paréntesis. *** $$p<0.01$$, ** $$p<0.05$$, * $$p<0.1$$. Fuente: EPH 2023, elaboración propia.*
 
-{/* Revert en un paso a figuras: <Image src={figCuadro1Img} alt="Cuadro 1 como figura" /> / <Image src={figCuadro2Img} alt="Cuadro 2 como figura" /> — imports conservados. */}
+{/* Cuadros renderizados como tablas KaTeX. */}
 
 ## Conclusiones
 
