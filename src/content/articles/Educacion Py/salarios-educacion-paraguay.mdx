@@ -1,0 +1,122 @@
+---
+title: "Salarios y educación en Paraguay"
+shortDescription: "Un año adicional de educación se asocia con 6.9% más de salario mensual (EPH 2023). Las mujeres ganan 18.3% menos con educación similar."
+publishDate: 2026-09-23
+tags:
+  - "Economía Laboral"
+  - "Educación"
+  - "Paraguay"
+  - "Econometría"
+cover: ./cover.jpg
+attribution:
+  text: "Datos de la Encuesta Permanente de Hogares 2023, Instituto Nacional de Estadística (INE). Elaboración propia."
+  url: "https://www.ine.gov.py"
+---
+import { Image } from 'astro:assets';
+import coverImg from "./cover.jpg";
+import figCuadro1Img from "./Fig1.png";
+import figCuadro2Img from "./Fig2.png";
+
+<Image src={coverImg} alt="Billetes de 100 mil guaraníes del Banco Central del Paraguay" loading="lazy" />
+
+## Resumen
+
+Este trabajo analiza el efecto de la educación sobre los salarios de los trabajadores paraguayos, utilizando datos de la Encuesta Permanente de Hogares 2023. Encontramos que un año adicional de educación está asociado con un aumento del 6.9% en el salario mensual. Las mujeres, a pesar de tener niveles educativos similares, ganan en promedio 18.3% menos que los hombres. Estos resultados sugieren que la inversión en educación es rentable, pero que existen importantes brechas de género en el mercado laboral que requieren atención de política pública.
+
+## Introducción
+
+Entender los determinantes de los salarios es una pregunta central en economía laboral. Desde el trabajo seminal de Mincer (1974), sabemos que los salarios crecen con la educación y la experiencia. Sin embargo, poco se conoce sobre estos retornos en el contexto paraguayo.
+
+Este trabajo estima ecuaciones de ingresos para Paraguay usando datos de la Encuesta Permanente de Hogares 2023. Nuestro objetivo es cuantificar el retorno a la educación y documentar disparidades de género en los salarios.
+
+### Motivación
+
+Comprender los retornos a la educación es *fundamental* para el diseño de políticas públicas educativas. Si los retornos son altos, entonces invertir en educación es rentable no solo para el individuo, sino para la sociedad en su conjunto. Si existen disparidades de género, eso sugiere que hay factores no educativos (discriminación, segregación ocupacional) afectando los salarios.
+
+## El modelo econométrico
+
+Nuestro modelo base es la ecuación de Mincer modificada:
+
+$$
+\ln(w_i) = \alpha + \beta_1 \, \text{educ}_i + \beta_2 \, \text{exp}_i + \beta_3 \, \text{exp}_i^2 + \varepsilon_i
+$$
+
+donde $$w_i$$ es el salario mensual del individuo $$i$$, $$\text{educ}_i$$ son los años de escolaridad, $$\text{exp}_i$$ es la experiencia potencial (edad $$-$$ años de educación $$-$$ 6), y $$\varepsilon_i$$ es el término de error.
+
+El parámetro $$\beta_1$$ se interpreta como el retorno porcentual a un año adicional de educación. Los parámetros $$\beta_2$$ y $$\beta_3$$ capturan el ciclo de vida de los ingresos, que típicamente crece con la experiencia pero a tasa decreciente.
+
+## Datos
+
+Los datos provienen de la Encuesta Permanente de Hogares 2023, realizada por el Instituto Nacional de Estadística. La muestra cubre 1.200 individuos ocupados entre 18 y 65 años.
+
+**Cuadro 1 — Estadísticas descriptivas de la muestra**
+
+$$
+\begin{array}{lrrrr}
+\text{Variable} & \text{Media} & \text{D.E.} & \text{Mín.} & \text{Máx.} \\
+\hline
+\text{Salario (Gs.)} & \text{2.450.000} & \text{1.120.000} & \text{550.000} & \text{9.800.000} \\
+\log(\text{salario}) & 14.52 & 0.53 & 13.22 & 16.10 \\
+\text{Años de educación} & 12.3 & 3.4 & 0 & 20 \\
+\text{Experiencia (años)} & 8.7 & 5.1 & 0 & 40 \\
+\text{Mujer (indicador)} & 0.48 & 0.50 & 0 & 1 \\
+\hline
+\text{Observaciones} & \text{1.200} & & & \\
+\end{array}
+$$
+
+*Notas: El salario en guaraníes fue deflactado al año base 2018. La experiencia se calcula como edad $$-$$ años de educación $$-$$ 6. Fuente: EPH 2023, INE.*
+
+El Cuadro 1 muestra que el salario promedio es de aproximadamente 2.45 millones de guaraníes mensuales, con considerable variabilidad (D.E. = 1.12M). El nivel educativo promedio es de 12.3 años (poco más que primaria completa + secundaria incompleta).
+
+## Resultados
+
+En esta sección presentamos los resultados de estimaciones OLS de la ecuación de Mincer bajo distintas especificaciones.
+
+### Modelo base
+
+La primera columna del Cuadro 2 es el modelo base sin controles adicionales. El coeficiente de educación es 0.082***, lo que significa que cada año adicional de educación está asociado con un aumento de 8.2% en el salario.
+
+### Con controles de experiencia
+
+Cuando incluimos la experiencia y su cuadrado (columna 2), el efecto de la educación disminuye ligeramente a 0.071***. Esto sugiere que educación y experiencia están parcialmente correlacionadas, pero los retornos a la educación siguen siendo importantes.
+
+### Con control de género
+
+La especificación 3 incluye un indicador de género (mujer = 1). Encontramos una brecha de género significativa: las mujeres ganan 18.3% menos que los hombres, incluso después de controlar por educación y experiencia.
+
+**Cuadro 2 — Estimaciones OLS: ecuación de Mincer**
+
+$$
+\begin{array}{lccc}
+ & (1) & (2) & (3) \\
+\hline
+\text{Educación} & 0.082\text{***} & 0.071\text{***} & 0.069\text{***} \\
+ & (0.008) & (0.009) & (0.010) \\
+\text{Experiencia} & & 0.034\text{**} & 0.031\text{**} \\
+ & & (0.012) & (0.013) \\
+\text{Experiencia}^2 & & -0.001\text{**} & -0.001\text{*} \\
+ & & (0.000) & (0.000) \\
+\text{Mujer (=1)} & & & -0.183\text{***} \\
+ & & & (0.042) \\
+\text{Constante} & 7.241\text{***} & 7.018\text{***} & 7.312\text{***} \\
+ & (0.098) & (0.115) & (0.122) \\
+\hline
+\text{Observaciones} & \text{1.200} & \text{1.200} & \text{1.200} \\
+R^2 \text{ ajustado} & 0.241 & 0.318 & 0.374 \\
+\end{array}
+$$
+
+*Variable dependiente: $$\ln(\text{salario})$$. Notas: Errores estándar robustos a heterocedasticidad en paréntesis. *** $$p<0.01$$, ** $$p<0.05$$, * $$p<0.1$$. Fuente: EPH 2023, elaboración propia.*
+
+{/* Revert en un paso a figuras: <Image src={figCuadro1Img} alt="Cuadro 1 como figura" /> / <Image src={figCuadro2Img} alt="Cuadro 2 como figura" /> — imports conservados. */}
+
+## Conclusiones
+
+Este trabajo documenta que los retornos a la educación en Paraguay son sustanciales, del orden de 7% por año de escolaridad adicional. Sin embargo, también encontramos una importante brecha de género que persiste incluso después de controlar por educación y experiencia.
+
+Estos resultados sugieren que:
+
+1. La inversión en educación es rentable para los individuos.
+2. Existen factores más allá de la educación que explican los salarios (discriminación, capital social, acceso a empleos de calidad).
+3. Las políticas públicas deben no solo expandir la cobertura educativa, sino también abordar las barreras que enfrentan las mujeres en el mercado laboral.

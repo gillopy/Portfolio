@@ -1,0 +1,209 @@
+%% ============================================================
+%%  SOLUCIÓN — Ejercicio 4: Artículo básico completo (INTEGRADOR)
+%%  Clase 1 — Al final de la Clase 1
+%%  Compilar: F5 (pdflatex, dos veces para TOC y referencias)
+%% ============================================================
+
+\documentclass[12pt, a4paper]{article}
+
+% --- Codificación y lenguaje ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+
+% --- Márgenes ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+
+% --- Matemáticas y tablas ---
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, linkcolor=black]{hyperref}
+
+% --- Metadatos ---
+\title{Salarios y educación en Paraguay}
+\author{Tu Nombre}
+\date{\today}
+
+% ================================================================
+\begin{document}
+% ================================================================
+
+\maketitle
+\thispagestyle{empty}
+
+% --- Abstract ---
+\begin{abstract}
+\noindent
+Este trabajo analiza el efecto causal de la educación sobre los salarios 
+de los trabajadores paraguayos, utilizando datos de la Encuesta Permanente 
+de Hogares 2023. Encontramos que un año adicional de educación está asociado 
+con un aumento del 6.9\% en el salario mensual. Las mujeres, a pesar de tener 
+niveles educativos similares, ganan en promedio 18.3\% menos que los hombres. 
+Estos resultados sugieren que la inversión en educación es rentable, pero que 
+existen importantes brechas de género en el mercado laboral que requieren 
+atención de política pública.
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% ================================================================
+\section{Introducción}
+% ================================================================
+
+Entender los determinantes de los salarios es una pregunta central en economía 
+laboral. Desde el trabajo seminal de Mincer (1974), sabemos que los salarios 
+crecen con la educación y la experiencia. Sin embargo, poco se conoce sobre 
+estos retornos en el contexto paraguayo.
+
+Este trabajo estima ecuaciones de ingresos para Paraguay usando datos de la 
+Encuesta Permanente de Hogares 2023. Nuestro objetivo es cuantificar el 
+retorno a la educación y documentar disparidades de género en los salarios.
+
+\subsection{Motivación}
+
+Comprender los retornos a la educación es \emph{fundamental} para el diseño 
+de políticas públicas educativas. Si los retornos son altos, entonces invertir 
+en educación es rentable no solo para el individuo, sino para la sociedad en 
+su conjunto. Si existen disparidades de género, eso sugiere que hay factores 
+no educativos (discriminación, segregación ocupacional) afectando los salarios.
+
+% ================================================================
+\section{El modelo econométrico}
+% ================================================================
+
+Nuestro modelo base es la ecuación de Mincer modificada:
+\begin{equation}
+  \ln(w_i) = \alpha + \beta_1 \, \text{educ}_i + \beta_2 \, \text{exp}_i 
+             + \beta_3 \, \text{exp}_i^2 + \varepsilon_i
+  \label{eq:mincer}
+\end{equation}
+
+donde $w_i$ es el salario mensual del individuo $i$, $\text{educ}_i$ son los 
+años de escolaridad, $\text{exp}_i$ es la experiencia potencial (edad $-$ años 
+de educación $-$ 6), y $\varepsilon_i$ es el término de error.
+
+El parámetro $\beta_1$ en la ecuación \eqref{eq:mincer} se interpreta como el 
+retorno porcentual a un año adicional de educación. Los parámetros $\beta_2$ 
+y $\beta_3$ capturan el ciclo de vida de los ingresos, que típicamente crece 
+con la experiencia pero a tasa decreciente.
+
+% ================================================================
+\section{Datos}
+% ================================================================
+
+Los datos provienen de la Encuesta Permanente de Hogares 2023, realizada por 
+el Instituto Nacional de Estadística. La muestra cubre 1.200 individuos 
+ocupados entre 18 y 65 años.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Estadísticas descriptivas de la muestra}
+  \label{tab:desc}
+  \begin{tabular}{lrrrr}
+    \toprule
+    Variable                & Media  & D.E.   & Mín. & Máx. \\
+    \midrule
+    Salario (Gs.)           & 2.450.000 & 1.120.000 & 550.000 & 9.800.000 \\
+    Log(salario)            & 14.52  & 0.53   & 13.22 & 16.10 \\
+    Años de educación       & 12.3   & 3.4    & 0    & 20   \\
+    Experiencia (años)      & 8.7    & 5.1    & 0    & 40   \\
+    Mujer (indicador)       & 0.48   & 0.50   & 0    & 1    \\
+    \midrule
+    Observaciones           & \multicolumn{4}{c}{1.200} \\
+    \bottomrule
+  \end{tabular}
+  \begin{minipage}{\linewidth}
+    \footnotesize \textit{Notas:} El salario en guaraníes fue deflactado 
+    al año base 2018. La experiencia se calcula como edad $-$ años de 
+    educación $-$ 6. \textit{Fuente:} EPH 2023, INE.
+  \end{minipage}
+\end{table}
+
+La Tabla \ref{tab:desc} muestra que el salario promedio es de aproximadamente 
+2.45 millones de guaraníes mensuales, con considerable variabilidad (D.E. = 
+1.12M). El nivel educativo promedio es de 12.3 años (poco más que primaria 
+completa + secundaria incompleta).
+
+% ================================================================
+\section{Resultados}
+% ================================================================
+
+En esta sección presentamos los resultados de estimaciones OLS de la ecuación 
+de Mincer bajo distintas especificaciones.
+
+\subsection{Modelo base}
+
+La primera columna de la Tabla \ref{tab:reg} es el modelo base sin controles 
+adicionales. El coeficiente de educación es 0.082***, lo que significa que 
+cada año adicional de educación está asociado con un aumento de 8.2\% en el 
+salario.
+
+\subsection{Con controles de experiencia}
+
+Cuando incluimos la experiencia y su cuadrado (columna 2), el efecto de la 
+educación disminuye ligeramente a 0.071***. Esto sugiere que educación y 
+experiencia están parcialmente correlacionadas, pero los retornos a la 
+educación siguen siendo importantes.
+
+\subsection{Con control de género}
+
+La especificación 3 incluye un indicador de género (mujer = 1). Encontramos 
+una brecha de género significativa: las mujeres ganan 18.3\% menos que los 
+hombres, incluso después de controlar por educación y experiencia.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Estimaciones OLS: Ecuación de Mincer}
+  \label{tab:reg}
+  \begin{tabular}{lccc}
+    \toprule
+                    & (1)        & (2)        & (3)        \\
+                    & \multicolumn{3}{c}{\textit{Var. dep.: } $\ln(\text{salario})$} \\
+    \midrule
+    Educación       & 0.082***   & 0.071***   & 0.069***   \\
+                    & (0.008)    & (0.009)    & (0.010)    \\[4pt]
+    Experiencia     &            & 0.034**    & 0.031**    \\
+                    &            & (0.012)    & (0.013)    \\[4pt]
+    Experiencia$^2$ &            & $-$0.001** & $-$0.001*  \\
+                    &            & (0.000)    & (0.000)    \\[4pt]
+    Mujer (=1)      &            &            & $-$0.183***\\
+                    &            &            & (0.042)    \\[4pt]
+    Constante       & 7.241***   & 7.018***   & 7.312***   \\
+                    & (0.098)    & (0.115)    & (0.122)    \\
+    \midrule
+    Observaciones   & 1.200      & 1.200      & 1.200      \\
+    $R^2$ ajustado  & 0.241      & 0.318      & 0.374      \\
+    \bottomrule
+  \end{tabular}
+  \begin{minipage}{\linewidth}
+    \footnotesize \textit{Notas:} Errores estándar robustos a 
+    heterocedasticidad en paréntesis. *** $p<0.01$, ** $p<0.05$, 
+    * $p<0.1$. \textit{Fuente:} EPH 2023, elaboración propia.
+  \end{minipage}
+\end{table}
+
+% ================================================================
+\section{Conclusiones}
+% ================================================================
+
+Este trabajo documenta que los retornos a la educación en Paraguay son 
+sustanciales, del orden de 7\% por año de escolaridad adicional. Sin embargo, 
+también encontramos una importante brecha de género que persiste incluso después 
+de controlar por educación y experiencia.
+
+Estos resultados sugieren que:
+\begin{enumerate}
+  \item La inversión en educación es rentable para los individuos.
+  \item Existen factores más allá de la educación que explican los salarios 
+        (discriminación, capital social, acceso a empleos de calidad).
+  \item Las políticas públicas deben no solo expandir la cobertura educativa, 
+        sino también abordar las barreras que enfrentan las mujeres en el 
+        mercado laboral.
+\end{enumerate}
+
+% ================================================================
+\end{document}
