@@ -29,6 +29,7 @@ pnpm-debug.log*
 .claude/
 .agents/
 openspec/
+odd/
 
 # tooling lockfiles (project uses bun)
 skills-lock.json
