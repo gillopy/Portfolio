@@ -182,15 +182,15 @@ const { class: className = '' } = Astro.props;
   const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
   const SURFACE_SEED = 0x4d4c414e;
   const SURFACE_SAMPLE_COUNT = 11000;
-  const LAND_POINT_COUNT = 3400;
-  const OCEAN_POINT_COUNT = 1600;
+  const LAND_POINT_COUNT = 3800;
+  const OCEAN_POINT_COUNT = 2100;
   const LINK_CELL_SIZE = 0.16;
   const MAX_LINK_DISTANCE = 0.145;
-  const MAX_LAND_LINKS = 900;
+  const MAX_LAND_LINKS = 1600;
   const SPIN_SPEED = 0.1; // rad/s → one rotation ≈ 63 s
   const BASE_TILT = 0.32; // camera pitch (north pole slightly toward viewer)
   const PARALLAX_MAX = 0.12; // pointer parallax amplitude ≈ ±7°
-  const STATIC_SPIN = -3.25; // slightly right-shifted Atlantic-facing yaw
+  const STATIC_SPIN = -2.58; // initial yaw so the globe opens facing South America
   const ORBIT_SAMPLES = 144;
   const MERIDIAN_SAMPLES = 48;
   const PULSE_CYCLE = 0.045;
@@ -601,7 +601,6 @@ const { class: className = '' } = Astro.props;
             const bucket = buckets.get(`${cellX + dx}:${cellY + dy}:${cellZ + dz}`);
             if (!bucket) continue;
             for (const j of bucket) {
-              if (j <= i) continue;
               const other = points[j];
               const distance =
                 (point.x - other.x) ** 2 +
@@ -674,7 +673,7 @@ const { class: className = '' } = Astro.props;
     let prevFront: boolean | null = null;
     for (const point of points) {
       project(point, scratch);
-      const sx = cx + scratch.x * radius;
+      const sx = cx - scratch.x * radius;
       const sy = cy - scratch.y * radius;
       const isFront = scratch.z >= 0;
       if (prevFront === null) {
@@ -875,11 +874,11 @@ const { class: className = '' } = Astro.props;
       ctx.lineWidth = Math.max(0.45, scale * 0.52);
       for (const link of landLinks) {
         spinPoint(landPoints[link.a], scratch);
-        const ax = cx + scratch.x * radius;
+        const ax = cx - scratch.x * radius;
         const ay = cy - scratch.y * radius;
         const az = scratch.z;
         spinPoint(landPoints[link.b], scratch);
-        const bx = cx + scratch.x * radius;
+        const bx = cx - scratch.x * radius;
         const by = cy - scratch.y * radius;
         const bz = scratch.z;
         const aFront = az >= 0;
@@ -924,7 +923,7 @@ const { class: className = '' } = Astro.props;
       if (cycle >= PULSE_VISIBLE) return;
       const travel = cycle / PULSE_VISIBLE;
       orbitPoint(def, def.phase + travel * TAU, scratch);
-      const sx = cx + scratch.x * radius;
+      const sx = cx - scratch.x * radius;
       const sy = cy - scratch.y * radius;
       const isFront = scratch.z >= 0;
       if (isFront !== front) return;
@@ -955,7 +954,7 @@ const { class: className = '' } = Astro.props;
     ): void => {
       const angle = def.phase + (staticFrame ? 0 : time * def.speed);
       orbitPoint(def, angle, scratch);
-      const sx = cx + scratch.x * radius;
+      const sx = cx - scratch.x * radius;
       const sy = cy - scratch.y * radius;
       const isFront = scratch.z >= 0;
       if (isFront !== front) return;
@@ -1077,7 +1076,8 @@ const { class: className = '' } = Astro.props;
       // --- 4. ocean field, land masses, and selected data nodes ---
       for (const point of surface) {
         spinPoint(point, scratch);
-        const sx = cx + scratch.x * radius;
+        if (scratch.z < 0) continue;
+        const sx = cx - scratch.x * radius;
         const sy = cy - scratch.y * radius;
         const depth = clamp((scratch.z + 1) / 2, 0, 1);
         const light = Math.max(
