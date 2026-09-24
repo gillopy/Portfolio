@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle.astro';
   <div id="navigation-shell" data-testid="navigation-shell" class="navigation-shell relative z-10 w-full px-6 transition-[border-radius,background-color,box-shadow,border-color] duration-300 ease-out motion-reduce:transition-none lg:px-8">
     <div class="header-content mx-auto flex max-w-7xl items-center justify-between transition-[height] duration-300 ease-out motion-reduce:transition-none">
       <div class="logo flex items-center gap-3">
-        <a href="/" class="no-underline group flex items-center gap-3" aria-label="Ir al inicio">
+        <a href="/" class="no-underline group flex min-h-11 min-w-11 items-center justify-center gap-3" aria-label="Ir al inicio">
           <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface ring-1 ring-hairline font-mono text-xs font-bold tracking-widest text-ink group-hover:ring-accent transition-colors">{siteConfig.logoText}</span>
           <span class="hidden sm:block h-4 w-px bg-hairline"></span>
           <span class="hidden sm:block font-mono text-[10px] leading-none tracking-[0.14em] text-ink-faint uppercase">
@@ -15,7 +15,7 @@ import ThemeToggle from './ThemeToggle.astro';
           </span>
         </a>
       </div>
-      <nav class="nav hidden md:block" aria-label="Navegación principal">
+      <nav class="nav desktop-nav" aria-label="Navegación principal">
         <ul class="nav-list flex items-center gap-5 lg:gap-7">
           {siteConfig.navItems.map((item) => (
             <li class="nav-item">
@@ -33,7 +33,7 @@ import ThemeToggle from './ThemeToggle.astro';
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
           <span class="text-xs font-medium leading-none">Disponible</span>
         </span>
-        <button type="button" class="mobile-toggle flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg p-2 hover:bg-surface md:hidden" id="mobile-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
+        <button type="button" class="mobile-toggle mobile-toggle-control h-11 w-11 flex-col items-center justify-center gap-1.5 rounded-lg p-2 hover:bg-surface" id="mobile-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
           <span class="block w-full h-px bg-ink rounded-full transition-all duration-300"></span>
           <span class="block w-full h-px bg-ink rounded-full transition-all duration-300"></span>
           <span class="block w-full h-px bg-ink rounded-full transition-all duration-300"></span>
@@ -43,10 +43,10 @@ import ThemeToggle from './ThemeToggle.astro';
   </div>
 
   <div class="mobile-menu overflow-hidden">
-    <ul id="mobile-nav" class="nav-list absolute left-0 top-full hidden w-full flex-col space-y-1 border-b border-hairline bg-canvas px-6 py-4 shadow-xl md:hidden">
+    <ul id="mobile-nav" class="nav-list absolute left-0 top-full hidden w-full flex-col space-y-1 border-b border-hairline bg-canvas px-6 py-4 shadow-xl">
       {siteConfig.navItems.map((item) => (
         <li class="nav-item">
-          <a href={item.url} class="nav-link block rounded-lg py-2.5 font-mono text-sm text-ink-muted transition-colors duration-300 hover:bg-surface hover:text-ink">
+          <a href={item.url} class="nav-link flex min-h-11 items-center rounded-lg py-2.5 font-mono text-sm text-ink-muted transition-colors duration-300 hover:bg-surface hover:text-ink">
             {item.text}
           </a>
         </li>
@@ -57,6 +57,24 @@ import ThemeToggle from './ThemeToggle.astro';
 
 <style>
   .nav-list.open { display: flex; }
+  .desktop-nav {
+    display: none;
+  }
+  .mobile-toggle-control {
+    display: flex;
+  }
+  /* Keep this breakpoint in sync with DESKTOP_NAV_MEDIA below. */
+  @media (min-width: 900px) {
+    .desktop-nav {
+      display: block;
+    }
+    .mobile-toggle-control {
+      display: none;
+    }
+    #mobile-nav {
+      display: none !important;
+    }
+  }
   .mobile-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
   .mobile-toggle.open span:nth-child(2) { opacity: 0; }
   .mobile-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
@@ -114,6 +132,8 @@ import ThemeToggle from './ThemeToggle.astro';
 </style>
 
 <script>
+  const DESKTOP_NAV_MEDIA = '(min-width: 900px)';
+
   const initHeader = () => {
     // Evita listeners duplicados con ClientRouter (navegación SPA)
     (window as unknown as { __headerCleanup?: () => void }).__headerCleanup?.();
@@ -249,8 +269,10 @@ import ThemeToggle from './ThemeToggle.astro';
         ticking = false;
       });
     };
-    const onResize = () => {
-      if (window.innerWidth >= 768) closeMenu();
+    const desktopNavQuery = window.matchMedia(DESKTOP_NAV_MEDIA);
+    if (desktopNavQuery.matches) closeMenu();
+    const onDesktopNavChange = () => {
+      if (desktopNavQuery.matches) closeMenu();
     };
     const onDocClick = (e: MouseEvent) => {
       if (!isOpen()) return;
@@ -265,7 +287,7 @@ import ThemeToggle from './ThemeToggle.astro';
     mobileToggle.addEventListener('click', toggleMenu);
     navList.querySelectorAll('a').forEach((link) => link.addEventListener('click', onLinkClick));
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize);
+    desktopNavQuery.addEventListener('change', onDesktopNavChange);
     document.addEventListener('click', onDocClick);
     document.addEventListener('keydown', onKeydown);
 
@@ -274,7 +296,7 @@ import ThemeToggle from './ThemeToggle.astro';
       mobileToggle.removeEventListener('click', toggleMenu);
       navList.querySelectorAll('a').forEach((link) => link.removeEventListener('click', onLinkClick));
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
+      desktopNavQuery.removeEventListener('change', onDesktopNavChange);
       document.removeEventListener('click', onDocClick);
       document.removeEventListener('keydown', onKeydown);
     };

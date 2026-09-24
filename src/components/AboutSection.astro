@@ -37,18 +37,18 @@ import { Image } from 'astro:assets';
         </div>
       </div>
 
-      <div class="about-text w-full md:w-3/5 lg:w-[65%]">
+      <div class="about-text min-w-0 w-full md:w-3/5 lg:w-[65%]">
         {profile.about.text.map((paragraph) => (
           <p class="mb-5 text-[1.05rem] leading-relaxed text-ink-muted">
             {paragraph}
           </p>
         ))}
 
-        <div class="about-details mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+        <div class="about-details min-w-0 mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           {profile.about.details.map((detail) => (
-            <div class="detail group border-t border-hairline-soft pt-3">
+            <div class="detail min-w-0 group border-t border-hairline-soft pt-3">
               <span class="block font-mono text-[11px] uppercase tracking-widest text-ink-faint mb-1">{detail.label}</span>
-              <span class="text-sm text-ink group-hover:text-accent transition-colors">{detail.value}</span>
+              <span class="break-words text-sm text-ink group-hover:text-accent transition-colors">{detail.value}</span>
             </div>
           ))}
         </div>

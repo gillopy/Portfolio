@@ -9,7 +9,7 @@ const year = new Date().getFullYear();
   <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-hairline to-transparent"></div>
   <div class="container mx-auto px-6">
     <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
-      <a href="/" class="group flex items-center gap-3 font-display text-xl font-bold tracking-tight text-ink transition-colors duration-300 hover:text-accent">
+      <a href="/" class="group flex min-h-11 min-w-11 items-center justify-center gap-3 font-display text-xl font-bold tracking-tight text-ink transition-colors duration-300 hover:text-accent">
         <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface ring-1 ring-hairline font-mono text-xs tracking-widest">{siteConfig.logoText}</span>
         <span class="hidden sm:block font-mono text-[10px] leading-none tracking-[0.14em] text-ink-faint uppercase">Observatory<br/>2026</span>
       </a>
@@ -21,7 +21,7 @@ const year = new Date().getFullYear();
               href={social.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="rounded-pill bg-surface px-3 py-1.5 font-mono text-xs text-ink-muted ring-1 ring-hairline transition-colors duration-300 hover:text-ink hover:ring-accent"
+              class="inline-flex min-h-11 items-center rounded-pill bg-surface px-3 py-1.5 font-mono text-xs text-ink-muted ring-1 ring-hairline transition-colors duration-300 hover:text-ink hover:ring-accent"
             >
               {social.platform}
             </a>

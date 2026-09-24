@@ -1174,9 +1174,8 @@ const { class: className = '' } = Astro.props;
     }
 
     const resize = (): void => {
-      const rect = stage.getBoundingClientRect();
-      const w = Math.round(rect.width);
-      const h = Math.round(rect.height);
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
       if (w < 4 || h < 4) return;
       const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
       if (w === width && h === height && nextDpr === dpr) return;
