@@ -12,8 +12,9 @@ const { class: className = '' } = Astro.props;
     <canvas data-planet-canvas aria-hidden="true"></canvas>
   </div>
   <p class="sr-only">
-    Ilustración decorativa de un planeta de datos: esfera de puntos proyectada con meridianos,
-    tres órbitas inclinadas y nodos de señal en azul, violeta y lima.
+    Ilustración decorativa de un planeta de datos: masas continentales abstractas formadas por
+    miles de partículas, una red de conexiones y cuatro órbitas técnicas que representan datos,
+    modelos, contenedores y la inferencia desplegada.
   </p>
   <figcaption class="data-planet-caption">
     <span>Planeta de señales</span>
@@ -24,7 +25,7 @@ const { class: className = '' } = Astro.props;
 <style>
   .data-planet {
     width: 100%;
-    max-width: 430px;
+    max-width: 520px;
     margin: 0;
   }
 
@@ -32,18 +33,21 @@ const { class: className = '' } = Astro.props;
     position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
+    overflow: hidden;
     border-radius: var(--radius-xl);
+    isolation: isolate;
   }
 
-  /* Soft observatory glow behind the sphere; theme-aware via --color-accent. */
+  /* A quiet observatory halo keeps the planet dimensional without becoming a second focal point. */
   .data-planet-stage::before {
     content: "";
     position: absolute;
-    inset: 6%;
+    inset: 7%;
     border-radius: 50%;
     background: radial-gradient(
-      circle,
-      color-mix(in srgb, var(--color-accent) 11%, transparent) 0%,
+      circle at 43% 38%,
+      color-mix(in srgb, var(--color-accent) 13%, transparent) 0%,
+      color-mix(in srgb, var(--color-accent-2) 5%, transparent) 30%,
       transparent 68%
     );
     pointer-events: none;
@@ -77,15 +81,19 @@ const { class: className = '' } = Astro.props;
     color: var(--color-ink);
   }
 
+  .data-planet-caption span:last-child {
+    text-align: right;
+  }
+
   @media (max-width: 1024px) {
     .data-planet {
-      max-width: 420px;
+      max-width: 500px;
     }
   }
 </style>
 
 <script>
-  // DataPlanet — decorative, dependency-free canvas planet for the hero.
+  // DataPlanet — a decorative, dependency-free ML/data planet for the hero.
   //
   // Lifecycle contract (Astro ClientRouter):
   // - module script runs once; instances are tracked per stage element
@@ -104,6 +112,14 @@ const { class: className = '' } = Astro.props;
     z: number;
   }
 
+  interface SurfacePoint extends Vec3 {
+    kind: 'land' | 'ocean';
+    size: number;
+    phase: number;
+    tone: number;
+    node: boolean;
+  }
+
   interface RGB {
     r: number;
     g: number;
@@ -111,6 +127,7 @@ const { class: className = '' } = Astro.props;
   }
 
   interface Palette {
+    surface: RGB;
     inkMuted: RGB;
     inkFaint: RGB;
     accent: RGB;
@@ -118,13 +135,32 @@ const { class: className = '' } = Astro.props;
     accent3: RGB;
   }
 
+  type GeoCoordinate = [longitude: number, latitude: number];
+
+  interface GeoPolygon {
+    name: string;
+    points: GeoCoordinate[];
+    tone: number;
+  }
+
+  interface NetworkLink {
+    a: number;
+    b: number;
+    strength: number;
+  }
+
+  type AccentKey = 'accent' | 'accent2' | 'accent3';
+  type IconKind = 'database' | 'model' | 'container' | 'inference';
+
   interface OrbitDef {
     radius: number;
     tiltX: number;
     tiltZ: number;
     speed: number;
     phase: number;
-    color: keyof Pick<Palette, 'accent' | 'accent2' | 'accent3'>;
+    color: AccentKey;
+    icon: IconKind;
+    pulseOffset: number;
   }
 
   interface LinePaths {
@@ -142,18 +178,67 @@ const { class: className = '' } = Astro.props;
     destroy: () => void;
   }
 
-  const POINT_COUNT = 520;
+  const TAU = Math.PI * 2;
+  const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+  const SURFACE_SEED = 0x4d4c414e;
+  const SURFACE_SAMPLE_COUNT = 6200;
+  const LAND_POINT_COUNT = 2200;
+  const OCEAN_POINT_COUNT = 1250;
+  const LINK_CELL_SIZE = 0.16;
+  const MAX_LINK_DISTANCE = 0.145;
+  const MAX_LAND_LINKS = 900;
   const SPIN_SPEED = 0.1; // rad/s → one rotation ≈ 63 s
   const BASE_TILT = 0.32; // camera pitch (north pole slightly toward viewer)
   const PARALLAX_MAX = 0.12; // pointer parallax amplitude ≈ ±7°
   const STATIC_SPIN = 0.75; // fixed yaw for the reduced-motion frame
-  const ORBIT_SAMPLES = 128;
-  const MERIDIAN_SAMPLES = 44;
+  const ORBIT_SAMPLES = 144;
+  const MERIDIAN_SAMPLES = 48;
+  const PULSE_CYCLE = 0.045;
+  const PULSE_VISIBLE = 0.16;
 
+  // The stations are ordered as a quiet visual reading of the ML pipeline:
+  // data storage → model registry → packaged environments → deployed inference.
   const ORBIT_DEFS: OrbitDef[] = [
-    { radius: 1.24, tiltX: 1.05, tiltZ: 0.28, speed: 0.2, phase: 0.5, color: 'accent' },
-    { radius: 1.37, tiltX: 0.42, tiltZ: -0.72, speed: -0.14, phase: 2.7, color: 'accent2' },
-    { radius: 1.5, tiltX: -0.78, tiltZ: 0.62, speed: 0.11, phase: 4.6, color: 'accent3' },
+    {
+      radius: 1.22,
+      tiltX: 1.04,
+      tiltZ: 0.28,
+      speed: 0.18,
+      phase: 0.45,
+      color: 'accent',
+      icon: 'database',
+      pulseOffset: 0.08,
+    },
+    {
+      radius: 1.35,
+      tiltX: 0.42,
+      tiltZ: -0.72,
+      speed: -0.14,
+      phase: 2.35,
+      color: 'accent2',
+      icon: 'model',
+      pulseOffset: 0.34,
+    },
+    {
+      radius: 1.48,
+      tiltX: -0.78,
+      tiltZ: 0.62,
+      speed: 0.11,
+      phase: 4.15,
+      color: 'accent3',
+      icon: 'container',
+      pulseOffset: 0.61,
+    },
+    {
+      radius: 1.5,
+      tiltX: 0.18,
+      tiltZ: 0.96,
+      speed: 0.08,
+      phase: 5.55,
+      color: 'accent',
+      icon: 'inference',
+      pulseOffset: 0.86,
+    },
   ];
 
   const MERIDIAN_LONGITUDES = [
@@ -165,7 +250,169 @@ const { class: className = '' } = Astro.props;
     (5 * Math.PI) / 3,
   ];
 
-  // Soft key light (view space) giving the point cloud a gentle terminator.
+  // Simplified geographic rings keep the point cloud recognizable without
+  // carrying a cartographic atlas into the component. Longitudes are degrees.
+  const LAND_POLYGONS: GeoPolygon[] = [
+    {
+      name: 'north-america',
+      tone: 0,
+      points: [
+        [-168, 65],
+        [-151, 72],
+        [-130, 73],
+        [-110, 70],
+        [-92, 65],
+        [-78, 60],
+        [-60, 55],
+        [-55, 48],
+        [-67, 44],
+        [-75, 41],
+        [-81, 25],
+        [-90, 29],
+        [-97, 20],
+        [-88, 15],
+        [-105, 20],
+        [-117, 32],
+        [-128, 52],
+      ],
+    },
+    {
+      name: 'greenland',
+      tone: 0,
+      points: [
+        [-73, 60],
+        [-55, 60],
+        [-25, 68],
+        [-20, 78],
+        [-42, 83],
+        [-62, 80],
+        [-73, 70],
+      ],
+    },
+    {
+      name: 'south-america',
+      tone: 0,
+      points: [
+        [-81, 12],
+        [-70, 12],
+        [-60, 8],
+        [-50, 2],
+        [-35, -5],
+        [-40, -20],
+        [-52, -32],
+        [-62, -42],
+        [-68, -55],
+        [-75, -48],
+        [-79, -20],
+        [-81, 0],
+      ],
+    },
+    {
+      name: 'africa',
+      tone: 2,
+      points: [
+        [-17, 36],
+        [-5, 37],
+        [10, 37],
+        [25, 32],
+        [33, 31],
+        [43, 12],
+        [51, 11],
+        [45, 0],
+        [41, -12],
+        [35, -24],
+        [25, -35],
+        [15, -35],
+        [5, -30],
+        [0, -20],
+        [-8, -5],
+        [-15, 12],
+      ],
+    },
+    {
+      name: 'europe',
+      tone: 1,
+      points: [
+        [-10, 36],
+        [-10, 44],
+        [-5, 48],
+        [0, 50],
+        [5, 52],
+        [10, 55],
+        [20, 60],
+        [30, 60],
+        [40, 55],
+        [35, 48],
+        [30, 45],
+        [25, 40],
+        [20, 38],
+        [15, 37],
+        [8, 40],
+        [0, 42],
+        [-2, 36],
+      ],
+    },
+    {
+      name: 'asia',
+      tone: 0,
+      points: [
+        [30, 40],
+        [35, 50],
+        [45, 55],
+        [60, 58],
+        [80, 68],
+        [110, 72],
+        [140, 68],
+        [170, 60],
+        [180, 55],
+        [180, 45],
+        [165, 40],
+        [150, 35],
+        [135, 30],
+        [122, 22],
+        [115, 10],
+        [105, 5],
+        [95, 8],
+        [88, 8],
+        [80, 12],
+        [77, 22],
+        [70, 23],
+        [60, 25],
+        [50, 30],
+        [40, 38],
+      ],
+    },
+    {
+      name: 'far-east-asia',
+      tone: 0,
+      points: [
+        [160, 55],
+        [179, 55],
+        [-175, 55],
+        [-175, 75],
+        [179, 75],
+        [160, 75],
+      ],
+    },
+    {
+      name: 'australia',
+      tone: 2,
+      points: [
+        [113, -22],
+        [122, -14],
+        [132, -12],
+        [142, -11],
+        [153, -25],
+        [150, -37],
+        [140, -43],
+        [130, -44],
+        [120, -35],
+        [115, -30],
+      ],
+    },
+  ];
+
+  // Soft key light (view space) giving the point field a gentle terminator.
   const LIGHT = (() => {
     const x = -0.35;
     const y = 0.5;
@@ -175,10 +422,30 @@ const { class: className = '' } = Astro.props;
   })();
 
   // Shared transform scratch: draws never interleave (single-threaded), so one
-  // instance-level buffer is enough even with multiple planets on a page.
+  // module-level buffer is enough even with multiple planets on a page.
   const scratch: Xf = { x: 0, y: 0, z: 0 };
 
   const controllers = new Map<HTMLElement, Controller>();
+
+  function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function createSeededRandom(seed: number): () => number {
+    let value = seed >>> 0;
+    return () => {
+      value += 0x6d2b79f5;
+      let t = value;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function unitVector(x: number, y: number, z: number): Vec3 {
+    const length = Math.hypot(x, y, z) || 1;
+    return { x: x / length, y: y / length, z: z / length };
+  }
 
   function parseHex(value: string, fallback: RGB): RGB {
     const hex = value.trim().replace(/^#/, '');
@@ -198,31 +465,158 @@ const { class: className = '' } = Astro.props;
 
   function readPalette(): Palette {
     const styles = getComputedStyle(document.documentElement);
-    const v = (name: string) => styles.getPropertyValue(name).trim();
+    const value = (name: string) => styles.getPropertyValue(name).trim();
     return {
-      inkMuted: parseHex(v('--color-ink-muted'), { r: 153, g: 153, b: 153 }),
-      inkFaint: parseHex(v('--color-ink-faint'), { r: 107, g: 107, b: 107 }),
-      accent: parseHex(v('--color-accent'), { r: 0, g: 153, b: 255 }),
-      accent2: parseHex(v('--color-accent-2'), { r: 124, g: 92, b: 255 }),
-      accent3: parseHex(v('--color-accent-3'), { r: 198, g: 255, b: 74 }),
+      surface: parseHex(value('--color-surface'), { r: 12, g: 14, b: 18 }),
+      inkMuted: parseHex(value('--color-ink-muted'), { r: 153, g: 153, b: 153 }),
+      inkFaint: parseHex(value('--color-ink-faint'), { r: 107, g: 107, b: 107 }),
+      accent: parseHex(value('--color-accent'), { r: 0, g: 153, b: 255 }),
+      accent2: parseHex(value('--color-accent-2'), { r: 124, g: 92, b: 255 }),
+      accent3: parseHex(value('--color-accent-3'), { r: 198, g: 255, b: 74 }),
     };
   }
 
-  function rgba(c: RGB, alpha: number): string {
-    return `rgba(${c.r}, ${c.g}, ${c.b}, ${alpha})`;
+  function rgba(color: RGB, alpha: number): string {
+    return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`;
   }
 
-  /** Fibonacci-spiral point sphere (unit radius, y = up). */
-  function buildSphere(count: number): Vec3[] {
-    const points: Vec3[] = [];
-    const golden = Math.PI * (3 - Math.sqrt(5));
-    for (let i = 0; i < count; i += 1) {
-      const y = 1 - (i / (count - 1)) * 2;
-      const ring = Math.sqrt(Math.max(0, 1 - y * y));
-      const theta = golden * i;
-      points.push({ x: Math.cos(theta) * ring, y, z: Math.sin(theta) * ring });
+  function shortestLongitudeDelta(delta: number): number {
+    return ((delta + 180) % 360 + 360) % 360 - 180;
+  }
+
+  function pointInGeoPolygon(point: GeoCoordinate, polygon: GeoPolygon): boolean {
+    const [longitude, latitude] = point;
+    const ring = polygon.points;
+    let unwrapped = ring[0][0];
+    let longitudeSum = unwrapped;
+
+    for (let i = 1; i < ring.length; i += 1) {
+      unwrapped += shortestLongitudeDelta(ring[i][0] - ring[i - 1][0]);
+      longitudeSum += unwrapped;
     }
-    return points;
+
+    // Shift the complete unwrapped ring near the query. This keeps distant
+    // polygons outside the query while preserving dateline-crossing edges.
+    const offset =
+      longitude + 360 * Math.round((longitudeSum / ring.length - longitude) / 360);
+    let previousX = unwrapped - offset;
+    let previousY = ring[ring.length - 1][1];
+    let currentUnwrapped = ring[0][0] - offset;
+    let winding = 0;
+
+    for (let i = 0; i < ring.length; i += 1) {
+      if (i > 0) currentUnwrapped += shortestLongitudeDelta(ring[i][0] - ring[i - 1][0]);
+      const currentX = currentUnwrapped;
+      const currentY = ring[i][1];
+      const side =
+        (currentX - previousX) * (latitude - previousY) -
+        (currentY - previousY) * (0 - previousX);
+
+      if (previousY <= latitude && currentY > latitude && side > 0) winding += 1;
+      if (previousY > latitude && currentY <= latitude && side < 0) winding -= 1;
+      previousX = currentX;
+      previousY = currentY;
+    }
+
+    return winding !== 0;
+  }
+
+  function continentFor(point: Vec3): number {
+    const coordinate: GeoCoordinate = [
+      (Math.atan2(point.z, point.x) * 180) / Math.PI,
+      (Math.asin(clamp(point.y, -1, 1)) * 180) / Math.PI,
+    ];
+    for (let i = 0; i < LAND_POLYGONS.length; i += 1) {
+      if (pointInGeoPolygon(coordinate, LAND_POLYGONS[i])) return i;
+    }
+    return -1;
+  }
+
+  function evenlySample<T>(items: T[], max: number): T[] {
+    if (items.length <= max) return items;
+    const stride = items.length / max;
+    const sampled: T[] = [];
+    for (let i = 0; i < max; i += 1) sampled.push(items[Math.floor(i * stride)]);
+    return sampled;
+  }
+
+  /** Build a deterministic, clustered surface field once per page. */
+  function buildSurface(): SurfacePoint[] {
+    const random = createSeededRandom(SURFACE_SEED);
+    const land: SurfacePoint[] = [];
+    const ocean: SurfacePoint[] = [];
+
+    for (let i = 0; i < SURFACE_SAMPLE_COUNT; i += 1) {
+      const y = 1 - (2 * (i + 0.5)) / SURFACE_SAMPLE_COUNT;
+      const ring = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = GOLDEN_ANGLE * i + (random() - 0.5) * 0.12;
+      const point = unitVector(
+        Math.cos(theta) * ring,
+        y + (random() - 0.5) * 0.006,
+        Math.sin(theta) * ring,
+      );
+      const polygonIndex = continentFor(point);
+      const kind = polygonIndex >= 0 ? 'land' : 'ocean';
+      const surfacePoint: SurfacePoint = {
+        ...point,
+        kind,
+        size: kind === 'land' ? 0.72 + random() * 0.9 : 0.42 + random() * 0.56,
+        phase: random() * TAU,
+        tone: polygonIndex >= 0 ? LAND_POLYGONS[polygonIndex].tone : 0,
+        node: kind === 'land' && random() > 0.91,
+      };
+      (kind === 'land' ? land : ocean).push(surfacePoint);
+    }
+
+    return [...evenlySample(land, LAND_POINT_COUNT), ...evenlySample(ocean, OCEAN_POINT_COUNT)];
+  }
+
+  /** Precompute sparse local links once; the render loop never searches an O(n²) graph. */
+  function buildLandLinks(points: SurfacePoint[]): NetworkLink[] {
+    const buckets = new Map<string, number[]>();
+    const links: NetworkLink[] = [];
+    const cellKey = (x: number, y: number, z: number): string =>
+      `${Math.floor((x + 1) / LINK_CELL_SIZE)}:${Math.floor((y + 1) / LINK_CELL_SIZE)}:${Math.floor(
+        (z + 1) / LINK_CELL_SIZE,
+      )}`;
+
+    for (let i = 0; i < points.length; i += 1) {
+      const point = points[i];
+      const cellX = Math.floor((point.x + 1) / LINK_CELL_SIZE);
+      const cellY = Math.floor((point.y + 1) / LINK_CELL_SIZE);
+      const cellZ = Math.floor((point.z + 1) / LINK_CELL_SIZE);
+
+      for (let dx = -1; dx <= 1; dx += 1) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dz = -1; dz <= 1; dz += 1) {
+            const bucket = buckets.get(`${cellX + dx}:${cellY + dy}:${cellZ + dz}`);
+            if (!bucket) continue;
+            for (const j of bucket) {
+              if (j <= i) continue;
+              const other = points[j];
+              const distance =
+                (point.x - other.x) ** 2 +
+                (point.y - other.y) ** 2 +
+                (point.z - other.z) ** 2;
+              if (distance > MAX_LINK_DISTANCE ** 2) continue;
+              links.push({
+                a: i,
+                b: j,
+                strength: 1 - Math.sqrt(distance) / MAX_LINK_DISTANCE,
+              });
+              if (links.length >= MAX_LAND_LINKS) return links;
+            }
+          }
+        }
+      }
+
+      const key = cellKey(point.x, point.y, point.z);
+      const bucket = buckets.get(key);
+      if (bucket) bucket.push(i);
+      else buckets.set(key, [i]);
+    }
+
+    return links;
   }
 
   /** Half-meridians: one polyline per longitude, pole to pole. */
@@ -245,7 +639,7 @@ const { class: className = '' } = Astro.props;
   function buildCircle(lat: number, samples: number): Vec3[] {
     const line: Vec3[] = [];
     for (let s = 0; s <= samples; s += 1) {
-      const lon = (Math.PI * 2 * s) / samples;
+      const lon = (TAU * s) / samples;
       line.push({
         x: Math.cos(lat) * Math.cos(lon),
         y: Math.sin(lat),
@@ -269,8 +663,8 @@ const { class: className = '' } = Astro.props;
     const front = new Path2D();
     const back = new Path2D();
     let prevFront: boolean | null = null;
-    for (const p of points) {
-      project(p, scratch);
+    for (const point of points) {
+      project(point, scratch);
       const sx = cx + scratch.x * radius;
       const sy = cy - scratch.y * radius;
       const isFront = scratch.z >= 0;
@@ -279,7 +673,6 @@ const { class: className = '' } = Astro.props;
       } else if (isFront === prevFront) {
         (isFront ? front : back).lineTo(sx, sy);
       } else {
-        // Depth crossing: close the old side and open the new one here.
         (prevFront ? front : back).lineTo(sx, sy);
         (isFront ? front : back).moveTo(sx, sy);
       }
@@ -288,12 +681,102 @@ const { class: className = '' } = Astro.props;
     return { front, back };
   }
 
+  function drawSatelliteIcon(
+    ctx: CanvasRenderingContext2D,
+    kind: IconKind,
+    size: number,
+  ): void {
+    const s = size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (kind === 'database') {
+      ctx.beginPath();
+      ctx.ellipse(0, -s * 0.46, s * 0.72, s * 0.2, 0, 0, TAU);
+      ctx.moveTo(-s * 0.72, -s * 0.46);
+      ctx.lineTo(-s * 0.72, s * 0.42);
+      ctx.ellipse(0, s * 0.42, s * 0.72, s * 0.2, 0, Math.PI, 0, true);
+      ctx.moveTo(s * 0.72, -s * 0.46);
+      ctx.lineTo(s * 0.72, s * 0.42);
+      ctx.moveTo(-s * 0.72, s * 0.02);
+      ctx.ellipse(0, s * 0.02, s * 0.72, s * 0.2, 0, 0, Math.PI);
+      ctx.stroke();
+      return;
+    }
+
+    if (kind === 'container') {
+      ctx.beginPath();
+      ctx.strokeRect(-s * 0.74, -s * 0.54, s * 1.48, s * 1.08);
+      ctx.moveTo(-s * 0.5, -s * 0.54);
+      ctx.lineTo(-s * 0.5, s * 0.54);
+      ctx.moveTo(s * 0.5, -s * 0.54);
+      ctx.lineTo(s * 0.5, s * 0.54);
+      ctx.moveTo(-s * 0.74, 0);
+      ctx.lineTo(s * 0.74, 0);
+      ctx.stroke();
+      return;
+    }
+
+    if (kind === 'model') {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i += 1) {
+        const angle = -Math.PI / 2 + (TAU * i) / 6;
+        const x = Math.cos(angle) * s * 0.72;
+        const y = Math.sin(angle) * s * 0.72;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.moveTo(0, -s * 0.22);
+      ctx.lineTo(0, s * 0.32);
+      ctx.moveTo(-s * 0.22, s * 0.05);
+      ctx.lineTo(s * 0.22, s * 0.05);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, s * 0.05, s * 0.14, 0, TAU);
+      ctx.stroke();
+      return;
+    }
+
+    const inputs = [
+      { x: -s * 0.72, y: -s * 0.42 },
+      { x: -s * 0.72, y: 0 },
+      { x: -s * 0.72, y: s * 0.42 },
+    ];
+    const hidden = [
+      { x: -s * 0.12, y: -s * 0.24 },
+      { x: -s * 0.12, y: s * 0.24 },
+    ];
+    const output = { x: s * 0.72, y: 0 };
+    ctx.beginPath();
+    for (const input of inputs) {
+      for (const node of hidden) {
+        ctx.moveTo(input.x, input.y);
+        ctx.lineTo(node.x, node.y);
+      }
+    }
+    for (const node of hidden) {
+      ctx.moveTo(node.x, node.y);
+      ctx.lineTo(output.x, output.y);
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    for (const node of [...inputs, ...hidden, output]) {
+      ctx.moveTo(node.x + s * 0.12, node.y);
+      ctx.arc(node.x, node.y, s * 0.12, 0, TAU);
+    }
+    ctx.stroke();
+  }
+
+  const surface = buildSurface();
+  const landPoints = surface.filter((point) => point.kind === 'land');
+  const landLinks = buildLandLinks(landPoints);
+  const meridians = buildMeridians(MERIDIAN_LONGITUDES, MERIDIAN_SAMPLES);
+  const latitudeRings = [buildCircle(0.64, ORBIT_SAMPLES), buildCircle(0, ORBIT_SAMPLES), buildCircle(-0.64, ORBIT_SAMPLES)];
+  const orbitRing = buildCircle(0, ORBIT_SAMPLES);
+
   function createController(stage: HTMLElement, canvas: HTMLCanvasElement): Controller {
     const ctx = canvas.getContext('2d');
-    const sphere = buildSphere(POINT_COUNT);
-    const meridians = buildMeridians(MERIDIAN_LONGITUDES, MERIDIAN_SAMPLES);
-    const equator = buildCircle(0, ORBIT_SAMPLES);
-    const orbitRing = buildCircle(0, ORBIT_SAMPLES);
     const reduceQuery = matchMedia('(prefers-reduced-motion: reduce)');
 
     let palette = readPalette();
@@ -327,11 +810,11 @@ const { class: className = '' } = Astro.props;
     }
 
     // Sphere-surface point: spin about Y, then camera pitch (X) and yaw (Y).
-    const spinPoint = (p: Vec3, out: Xf): void => {
-      const x1 = p.x * cosS + p.z * sinS;
-      const z1 = -p.x * sinS + p.z * cosS;
-      const y2 = p.y * cosP - z1 * sinP;
-      const z2 = p.y * sinP + z1 * cosP;
+    const spinPoint = (point: Vec3, out: Xf): void => {
+      const x1 = point.x * cosS + point.z * sinS;
+      const z1 = -point.x * sinS + point.z * cosS;
+      const y2 = point.y * cosP - z1 * sinP;
+      const z2 = point.y * sinP + z1 * cosP;
       out.x = x1 * cosY + z2 * sinY;
       out.z = -x1 * sinY + z2 * cosY;
       out.y = y2;
@@ -359,7 +842,138 @@ const { class: className = '' } = Astro.props;
       out.y = y3;
     };
 
+    const orbitPoint = (def: OrbitDef, angle: number, out: Xf): void => {
+      orbitTransform(
+        Math.cos(angle) * def.radius,
+        0,
+        Math.sin(angle) * def.radius,
+        Math.cos(def.tiltX),
+        Math.sin(def.tiltX),
+        Math.cos(def.tiltZ),
+        Math.sin(def.tiltZ),
+        out,
+      );
+    };
+
     const colorOf = (def: OrbitDef): RGB => palette[def.color];
+    const surfaceColor = (point: SurfacePoint): RGB => {
+      if (point.tone === 2) return palette.accent3;
+      if (point.tone === 1) return palette.accent2;
+      return palette.accent;
+    };
+
+    const drawNetwork = (front: boolean, cx: number, cy: number, radius: number, scale: number): void => {
+      ctx.lineWidth = Math.max(0.45, scale * 0.52);
+      for (const link of landLinks) {
+        spinPoint(landPoints[link.a], scratch);
+        const ax = cx + scratch.x * radius;
+        const ay = cy - scratch.y * radius;
+        const az = scratch.z;
+        spinPoint(landPoints[link.b], scratch);
+        const bx = cx + scratch.x * radius;
+        const by = cy - scratch.y * radius;
+        const bz = scratch.z;
+        const aFront = az >= 0;
+        const bFront = bz >= 0;
+        if (aFront !== bFront || aFront !== front) continue;
+        const depth = clamp((az + bz + 2) / 4, 0, 1);
+        const alpha = (front ? 0.15 : 0.05) * link.strength * (0.35 + depth * 0.65);
+        if (alpha < 0.008) continue;
+        ctx.strokeStyle = rgba(palette.accent, alpha);
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+      }
+    };
+
+    const drawGraticule = (front: boolean, cx: number, cy: number, radius: number, lineWidth: number): void => {
+      ctx.lineWidth = lineWidth;
+      for (const line of meridians) {
+        const paths = buildLinePaths(line, spinPoint, cx, cy, radius);
+        ctx.strokeStyle = rgba(palette.inkFaint, front ? 0.1 : 0.035);
+        ctx.stroke(front ? paths.front : paths.back);
+      }
+      for (const line of latitudeRings) {
+        const paths = buildLinePaths(line, spinPoint, cx, cy, radius);
+        ctx.strokeStyle = rgba(palette.inkFaint, front ? 0.08 : 0.03);
+        ctx.stroke(front ? paths.front : paths.back);
+      }
+    };
+
+    const drawOrbitPulse = (
+      def: OrbitDef,
+      front: boolean,
+      staticFrame: boolean,
+      cx: number,
+      cy: number,
+      radius: number,
+      scale: number,
+    ): void => {
+      if (staticFrame) return;
+      const cycle = (time * PULSE_CYCLE + def.pulseOffset) % 1;
+      if (cycle >= PULSE_VISIBLE) return;
+      const travel = cycle / PULSE_VISIBLE;
+      orbitPoint(def, def.phase + travel * TAU, scratch);
+      const sx = cx + scratch.x * radius;
+      const sy = cy - scratch.y * radius;
+      const isFront = scratch.z >= 0;
+      if (isFront !== front) return;
+      const withinDisc = (sx - cx) ** 2 + (sy - cy) ** 2 < radius * radius;
+      if (!isFront && withinDisc) return;
+      const alpha = Math.sin(travel * Math.PI) * (isFront ? 0.72 : 0.24);
+      const size = Math.max(1.1, 1.65 * scale);
+      const color = colorOf(def);
+      const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, size * 3.8);
+      glow.addColorStop(0, rgba(color, alpha));
+      glow.addColorStop(1, rgba(color, 0));
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(sx, sy, size * 3.8, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = rgba(color, alpha);
+      ctx.fillRect(sx - size / 2, sy - size / 2, size, size);
+    };
+
+    const drawSatellite = (
+      def: OrbitDef,
+      front: boolean,
+      staticFrame: boolean,
+      cx: number,
+      cy: number,
+      radius: number,
+      scale: number,
+    ): void => {
+      const angle = def.phase + (staticFrame ? 0 : time * def.speed);
+      orbitPoint(def, angle, scratch);
+      const sx = cx + scratch.x * radius;
+      const sy = cy - scratch.y * radius;
+      const isFront = scratch.z >= 0;
+      if (isFront !== front) return;
+      const withinDisc = (sx - cx) ** 2 + (sy - cy) ** 2 < radius * radius;
+      if (!isFront && withinDisc) return;
+
+      const color = colorOf(def);
+      const breath = staticFrame ? 1 : 0.92 + Math.sin(time * 0.72 + def.phase) * 0.08;
+      const alpha = (front ? 0.92 : 0.34) * breath;
+      const iconSize = Math.max(6, 9.2 * scale) * breath;
+      const glowRadius = iconSize * 2.1;
+      const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowRadius);
+      glow.addColorStop(0, rgba(color, 0.22 * alpha));
+      glow.addColorStop(1, rgba(color, 0));
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(sx, sy, glowRadius, 0, TAU);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(staticFrame ? 0 : Math.sin(time * 0.16 + def.phase) * 0.035);
+      ctx.strokeStyle = rgba(color, alpha);
+      ctx.lineWidth = Math.max(0.7, scale * 0.78);
+      drawSatelliteIcon(ctx, def.icon, iconSize);
+      ctx.restore();
+    };
 
     const draw = (): void => {
       if (width < 4 || height < 4) return;
@@ -383,26 +997,22 @@ const { class: className = '' } = Astro.props;
       const cy = height / 2;
       const radius = Math.min(width, height) * 0.3;
       const scale = Math.max(0.7, radius / 125);
-      const lineWidth = Math.max(0.75, Math.min(1.2, scale));
-
-      // --- 1. orbit halves behind the planet ---
+      const lineWidth = Math.max(0.55, Math.min(0.9, scale * 0.7));
       const orbitPaths: LinePaths[] = [];
+
+      // --- 1. orbit backs and sparse pulse traffic behind the globe ---
       for (const def of ORBIT_DEFS) {
-        const cosOX = Math.cos(def.tiltX);
-        const sinOX = Math.sin(def.tiltX);
-        const cosOZ = Math.cos(def.tiltZ);
-        const sinOZ = Math.sin(def.tiltZ);
         const paths = buildLinePaths(
           orbitRing,
-          (p, out) => {
+          (point, out) => {
             orbitTransform(
-              p.x * def.radius,
-              p.y * def.radius,
-              p.z * def.radius,
-              cosOX,
-              sinOX,
-              cosOZ,
-              sinOZ,
+              point.x * def.radius,
+              point.y * def.radius,
+              point.z * def.radius,
+              Math.cos(def.tiltX),
+              Math.sin(def.tiltX),
+              Math.cos(def.tiltZ),
+              Math.sin(def.tiltZ),
               out,
             );
           },
@@ -412,84 +1022,97 @@ const { class: className = '' } = Astro.props;
         );
         orbitPaths.push(paths);
         ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = rgba(colorOf(def), 0.09);
+        ctx.strokeStyle = rgba(colorOf(def), 0.065);
         ctx.stroke(paths.back);
+        drawOrbitPulse(def, false, staticFrame, cx, cy, radius, scale);
+        drawSatellite(def, false, staticFrame, cx, cy, radius, scale);
       }
 
-      // --- 2. sphere point cloud ---
-      for (const p of sphere) {
-        spinPoint(p, scratch);
-        const depth = (scratch.z + 1) / 2;
+      // --- 2. rear graticule and rear land network ---
+      drawGraticule(false, cx, cy, radius, lineWidth);
+      drawNetwork(false, cx, cy, radius, scale);
+
+      // --- 3. a solid, theme-aware globe occludes the rear hemisphere ---
+      const body = ctx.createRadialGradient(
+        cx - radius * 0.36,
+        cy - radius * 0.42,
+        radius * 0.04,
+        cx,
+        cy,
+        radius,
+      );
+      body.addColorStop(0, rgba(palette.surface, 0.98));
+      body.addColorStop(0.7, rgba(palette.surface, 0.92));
+      body.addColorStop(1, rgba(palette.surface, 0.7));
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, TAU);
+      ctx.fill();
+
+      const bodyLight = ctx.createRadialGradient(
+        cx - radius * 0.34,
+        cy - radius * 0.38,
+        0,
+        cx - radius * 0.2,
+        cy - radius * 0.2,
+        radius * 1.15,
+      );
+      bodyLight.addColorStop(0, rgba(palette.accent, 0.12));
+      bodyLight.addColorStop(0.48, rgba(palette.accent, 0.035));
+      bodyLight.addColorStop(1, rgba(palette.accent, 0));
+      ctx.fillStyle = bodyLight;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, TAU);
+      ctx.fill();
+
+      // --- 4. ocean field, land masses, and selected data nodes ---
+      for (const point of surface) {
+        spinPoint(point, scratch);
+        const sx = cx + scratch.x * radius;
+        const sy = cy - scratch.y * radius;
+        const depth = clamp((scratch.z + 1) / 2, 0, 1);
         const light = Math.max(
           0,
           scratch.x * LIGHT.x + scratch.y * LIGHT.y + scratch.z * LIGHT.z,
         );
-        const alpha = Math.min(0.72, 0.1 + 0.5 * depth * (0.4 + 0.6 * light));
-        const r = Math.max(0.65, (0.85 + 1.25 * depth) * scale);
-        ctx.fillStyle = rgba(palette.inkMuted, alpha);
-        ctx.beginPath();
-        ctx.arc(cx + scratch.x * radius, cy - scratch.y * radius, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // --- 3. sparse meridian structure + equator ---
-      ctx.lineWidth = lineWidth;
-      for (const line of meridians) {
-        const paths = buildLinePaths(line, spinPoint, cx, cy, radius);
-        ctx.strokeStyle = rgba(palette.inkFaint, 0.05);
-        ctx.stroke(paths.back);
-        ctx.strokeStyle = rgba(palette.inkFaint, 0.16);
-        ctx.stroke(paths.front);
-      }
-      const equatorPaths = buildLinePaths(equator, spinPoint, cx, cy, radius);
-      ctx.strokeStyle = rgba(palette.inkFaint, 0.07);
-      ctx.stroke(equatorPaths.back);
-      ctx.strokeStyle = rgba(palette.inkFaint, 0.22);
-      ctx.stroke(equatorPaths.front);
-
-      // --- 4. orbit fronts + signal nodes ---
-      ORBIT_DEFS.forEach((def, i) => {
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = rgba(colorOf(def), 0.26);
-        ctx.stroke(orbitPaths[i].front);
-
-        const cosOX = Math.cos(def.tiltX);
-        const sinOX = Math.sin(def.tiltX);
-        const cosOZ = Math.cos(def.tiltZ);
-        const sinOZ = Math.sin(def.tiltZ);
-        const ang = def.phase + (staticFrame ? 0 : time * def.speed);
-        orbitTransform(
-          Math.cos(ang) * def.radius,
-          0,
-          Math.sin(ang) * def.radius,
-          cosOX,
-          sinOX,
-          cosOZ,
-          sinOZ,
-          scratch,
-        );
-        const sx = cx + scratch.x * radius;
-        const sy = cy - scratch.y * radius;
-        const front = scratch.z >= 0;
-        const withinDisc = (sx - cx) * (sx - cx) + (sy - cy) * (sy - cy) < radius * radius;
-        if (!front && withinDisc) return; // occluded by the planet body
-
-        const alpha = front ? 1 : 0.4;
-        const core = Math.max(1.6, 2.4 * scale);
-        const halo = core * 2.8;
-        const color = colorOf(def);
-        const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, halo);
-        grad.addColorStop(0, rgba(color, 0.45 * alpha));
-        grad.addColorStop(1, rgba(color, 0));
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(sx, sy, halo, 0, Math.PI * 2);
-        ctx.fill();
+        const shimmer = staticFrame ? 1 : 0.88 + Math.sin(time * 0.58 + point.phase) * 0.12;
+        const lightFactor = 0.58 + light * 0.42;
+        const isLand = point.kind === 'land';
+        const color = isLand ? surfaceColor(point) : palette.inkMuted;
+        const alpha = isLand
+          ? (0.22 + depth * 0.64) * lightFactor * shimmer
+          : (0.07 + depth * 0.18) * lightFactor;
+        const size = point.size * (0.72 + depth * 0.42) * scale;
         ctx.fillStyle = rgba(color, alpha);
-        ctx.beginPath();
-        ctx.arc(sx, sy, core, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(sx - size / 2, sy - size / 2, size, size);
+
+        if (isLand && point.node && depth > 0.42) {
+          const nodeSize = Math.max(2.2, size * 2.6);
+          ctx.strokeStyle = rgba(color, alpha * 0.42);
+          ctx.lineWidth = Math.max(0.45, scale * 0.48);
+          ctx.strokeRect(sx - nodeSize / 2, sy - nodeSize / 2, nodeSize, nodeSize);
+        }
+      }
+
+      // --- 5. front graticule and front land network ---
+      drawGraticule(true, cx, cy, radius, lineWidth);
+      drawNetwork(true, cx, cy, radius, scale);
+
+      // --- 6. front orbit halves, breathing icons, and pulse traffic ---
+      ORBIT_DEFS.forEach((def, index) => {
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = rgba(colorOf(def), 0.19);
+        ctx.stroke(orbitPaths[index].front);
+        drawOrbitPulse(def, true, staticFrame, cx, cy, radius, scale);
+        drawSatellite(def, true, staticFrame, cx, cy, radius, scale);
       });
+
+      // A restrained limb highlight gives the silhouette a planetary edge.
+      ctx.lineWidth = Math.max(0.6, scale * 0.62);
+      ctx.strokeStyle = rgba(palette.accent, 0.14);
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI * 0.76, Math.PI * 1.64);
+      ctx.stroke();
     };
 
     const shouldRun = (): boolean =>
