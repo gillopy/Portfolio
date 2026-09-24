@@ -16,7 +16,7 @@
 	--color-hairline-soft: #1a1a1a;
 	--color-ink: #ffffff;
 	--color-ink-muted: #999999;
-	--color-ink-faint: #6b6b6b;
+	--color-ink-faint: #808080;
 	--color-accent: #0099ff;
 	--color-accent-hover: #3da9ff;
 	--color-accent-2: #7c5cff;
@@ -82,20 +82,24 @@ body::before {
 
 /* ---------- Skip link ---------- */
 .skip-link {
-	position: absolute;
+	position: fixed;
 	left: 1rem;
-	top: -100%;
+	top: 1rem;
 	z-index: 100;
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
 	padding: 0.75rem 1.25rem;
 	border-radius: var(--radius-md);
 	background: var(--color-accent);
-	color: var(--on-accent);
+	color: var(--color-canvas);
 	font-family: var(--font-mono);
 	font-size: 0.875rem;
-	transition: top 0.2s ease;
+	transform: translateY(calc(-100% - 2rem));
+	transition: transform 0.2s ease;
 }
 .skip-link:focus {
-	top: 1rem;
+	transform: translateY(0);
 }
 
 /* ---------- Scroll progress bar ---------- */
@@ -243,7 +247,7 @@ body::before {
 	border: 1px solid var(--color-hairline);
 	border-radius: var(--radius-sm);
 	padding: 0.65rem 1rem;
-	min-height: 40px;
+	min-height: 44px;
 	font-family: var(--font-mono);
 	font-size: 11px;
 	font-weight: 500;
@@ -286,6 +290,7 @@ body::before {
 .btn-ghost {
 	display: inline-flex;
 	align-items: center;
+	min-height: 44px;
 	gap: 0.45rem;
 	font-family: var(--font-mono);
 	font-size: 0.78rem;
@@ -433,6 +438,13 @@ body::before {
 	color: var(--color-ink);
 }
 .project-content h2:first-child { margin-top: 0; }
+.project-content h2.project-metadata-heading {
+	margin: 2rem 0 0.75rem;
+	font-size: 1.125rem;
+	line-height: 1.4;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
 .project-content h3 {
 	margin: 2rem 0 0.75rem;
 	font-family: var(--font-display);
@@ -528,10 +540,15 @@ body::before {
 	top: 0.75rem;
 	right: 0.75rem;
 	z-index: 1;
+	display: inline-flex;
+	width: 2.75rem;
+	height: 2.75rem;
+	align-items: center;
+	justify-content: center;
 	border-radius: var(--radius-sm);
 	background: var(--color-surface-2);
 	color: var(--color-ink-muted);
-	padding: 0.375rem;
+	padding: 0;
 	transition: background 0.2s ease, color 0.2s ease;
 }
 .copy-btn:hover { background: var(--color-accent); color: var(--on-accent); }

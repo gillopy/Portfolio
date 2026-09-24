@@ -91,12 +91,15 @@ const initGSAP = () => {
 	}
 
 		// -- generic batch reveals
-		ScrollTrigger.batch(".gsap-reveal", {
-			onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out", overwrite: true }),
-			start: "top 88%",
-			once: true
-		});
-		gsap.set(".gsap-reveal", { opacity: 0, y: 28 });
+		const revealElements = document.querySelectorAll<HTMLElement>('.gsap-reveal');
+		if (revealElements.length) {
+			ScrollTrigger.batch(revealElements, {
+				onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out", overwrite: true }),
+				start: "top 88%",
+				once: true
+			});
+			gsap.set(revealElements, { opacity: 0, y: 28 });
+		}
 
 		// -- hero
 		const heroChars = document.querySelectorAll('.hero-char');
