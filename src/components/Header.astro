@@ -27,15 +27,12 @@ import ThemeToggle from './ThemeToggle.astro';
           ))}
         </ul>
       </nav>
-      <div class="flex items-center gap-2">
+      <div class="flex shrink-0 items-center gap-2">
         <ThemeToggle />
-        <span class="hidden lg:flex items-center gap-2 rounded-pill bg-surface px-3 py-1.5 ring-1 ring-hairline">
-          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
-          <span class="font-mono text-[11px] tracking-widest uppercase text-ink-muted">Disponible</span>
+        <span class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-ink-muted" role="status">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true"></span>
+          <span class="text-xs font-medium leading-none">Disponible</span>
         </span>
-        <a href="#contacto" class="btn-primary hidden md:inline-flex">
-          Contáctame
-        </a>
         <button type="button" class="mobile-toggle flex h-9 w-9 flex-col items-center justify-center gap-1.5 rounded-lg p-2 hover:bg-surface md:hidden" id="mobile-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-nav">
           <span class="block w-full h-px bg-ink rounded-full transition-all duration-300"></span>
           <span class="block w-full h-px bg-ink rounded-full transition-all duration-300"></span>
@@ -54,11 +51,6 @@ import ThemeToggle from './ThemeToggle.astro';
           </a>
         </li>
       ))}
-      <li class="nav-item">
-        <a href="#contacto" class="nav-link block rounded-lg py-2.5 font-mono text-sm text-accent transition-colors duration-300 hover:bg-surface">
-          Contáctame
-        </a>
-      </li>
     </ul>
   </div>
 </header>
