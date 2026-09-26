@@ -72,7 +72,7 @@ const jsonLd = [
           /* Full archive: flat list, every article newest-first, h1 → h2. */
           <div class="articles-list flex flex-col">
             {articles.map((entry) => (
-              <ArticleRow entry={entry} headingLevel={2} showTags />
+              <ArticleRow entry={entry} headingLevel={2} showTags showCover />
             ))}
           </div>
         ) : (
