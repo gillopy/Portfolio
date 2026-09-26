@@ -1,0 +1,86 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ArticleRow from '../../components/ArticleRow.astro';
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import siteConfig from '../../data/siteConfig.json';
+
+const articles: CollectionEntry<'articles'>[] = (await getCollection('articles')).sort(
+  (a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
+);
+
+const pageTitle = `Artículos | ${siteConfig.author}`;
+const pageDescription =
+  'Todos los artículos publicados, del más reciente al más antiguo: análisis estadístico, economía aplicada y ciencia de datos con método y código.';
+
+// astro.config `site` already honours SITE_URL, so the origin is never hardcoded.
+const origin = Astro.site?.origin ?? Astro.url.origin;
+const articleCountLabel = `${articles.length} ${articles.length === 1 ? 'artículo' : 'artículos'}`;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: pageTitle,
+    url: `${origin}/articles`,
+    description: pageDescription,
+    inLanguage: siteConfig.locale ?? 'es_PY',
+    blogPost: articles.map((entry) => ({
+      '@type': 'BlogPosting',
+      headline: entry.data.title,
+      datePublished: entry.data.publishDate.toISOString(),
+      url: `${origin}/articles/${entry.id}`,
+    })),
+  },
+];
+---
+
+<Layout title={pageTitle} description={pageDescription} jsonLd={jsonLd} ogType="website">
+  <main id="main-content">
+    {/* No <Header />: its nav items are pure home anchors, so on this route every
+        link would be dead. Same secondary-page precedent as ArticleLayout. */}
+    <div class="article-header border-b border-hairline-soft bg-canvas py-5">
+      <div class="container mx-auto px-6">
+        <a href="/#articulos" data-back-link class="mb-2 inline-flex min-h-11 items-center gap-1 font-mono text-sm text-accent transition-colors hover:text-accent-hover">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+          </svg>
+          Volver atrás
+        </a>
+      </div>
+    </div>
+
+    <section class="articles-index relative bg-canvas py-16">
+      <div class="container mx-auto px-6">
+        {/* gsap-reveal on inner blocks only, never the page's sole wrapper: the
+            class is opacity:0 until GSAP runs. */}
+        <div class="gsap-reveal">
+          <h1 class="mb-4 font-display text-3xl font-bold tracking-[-0.02em] text-ink md:text-5xl">
+            <span class="section-title-underline">Artículos</span>
+          </h1>
+          <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-ink-muted">
+            {pageDescription}
+          </p>
+          <div class="mb-8 flex items-center gap-2 font-mono text-xs text-ink-faint">
+            <span class="h-px w-8 bg-hairline"></span>
+            {articleCountLabel}
+          </div>
+        </div>
+        <div class="section-rule mb-10"></div>
+
+        {articles.length > 0 ? (
+          /* Full archive: flat list, every article newest-first, h1 → h2. */
+          <div class="articles-list flex flex-col">
+            {articles.map((entry) => (
+              <ArticleRow entry={entry} headingLevel={2} showTags />
+            ))}
+          </div>
+        ) : (
+          <p class="text-sm leading-relaxed text-ink-muted">
+            Todavía no hay artículos publicados. Vuelve pronto.
+          </p>
+        )}
+      </div>
+    </section>
+  </main>
+</Layout>
