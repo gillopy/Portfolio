@@ -3,9 +3,17 @@ import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import ArticleRow from './ArticleRow.astro';
 
+// Home-page preview cap: the section stays short on purpose so the home page
+// keeps its pacing. The full archive lives at /articles.
+const PREVIEW_LIMIT = 4;
+
 const articles: CollectionEntry<'articles'>[] = (await getCollection('articles')).sort(
 	(a, b) => b.data.publishDate.getTime() - a.data.publishDate.getTime()
 );
+const previewArticles = articles.slice(0, PREVIEW_LIMIT);
+const hasMoreArticles = articles.length > PREVIEW_LIMIT;
+// Reports the true total, not the capped length.
+const articleCountLabel = `${articles.length} ${articles.length === 1 ? 'artículo' : 'artículos'}`;
 ---
 
 {articles.length > 0 && (
@@ -23,17 +31,29 @@ const articles: CollectionEntry<'articles'>[] = (await getCollection('articles')
         </div>
         <div class="hidden items-center gap-2 font-mono text-xs text-ink-faint sm:flex">
           <span class="h-px w-8 bg-hairline"></span>
-          {articles.length} artículos
+          {articleCountLabel}
         </div>
       </div>
       <div class="section-rule mb-10"></div>
 
       {/* Full-width flat list: one row per article, stacked vertically. */}
       <div class="articles-list flex flex-col">
-        {articles.map((entry) => (
+        {previewArticles.map((entry) => (
           <ArticleRow entry={entry} />
         ))}
       </div>
+
+      {/* Only when the cap actually hides something, so the button is never noise. */}
+      {hasMoreArticles && (
+        <div class="view-more-articles gsap-reveal mt-14 flex flex-col items-center gap-3 text-center">
+          <a href="/articles" class="btn-secondary group">
+            Ver todos los artículos
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </a>
+        </div>
+      )}
     </div>
   </section>
 )}

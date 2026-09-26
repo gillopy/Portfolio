@@ -1,0 +1,246 @@
+---
+title: "Qué nos enseñan las series de tiempo del IMAEP"
+shortDescription: "Una introducción práctica a la estacionariedad, los modelos ARIMA y los sistemas VAR usando el Indicador Mensual de Actividad Económica del Paraguay."
+publishDate: 2026-09-25
+tags:
+  - "Econometría"
+  - "Series de Tiempo"
+  - "Paraguay"
+  - "IMAEP"
+  - "Macroeconomía"
+cover: ./cover.jpg
+attribution:
+  text: "Datos del Anexo Estadístico del Informe Económico del Banco Central del Paraguay. Elaboración propia."
+  url: "https://www.bcp.gov.py"
+---
+import { Image } from 'astro:assets';
+import coverImg from "./cover.jpg";
+import output1Img from "./output1.png";
+import output2Img from "./output2.png";
+import output3Img from "./output3.png";
+import output4Img from "./output4.png";
+import output5Img from "./output5.png";
+import output6Img from "./output6.png";
+
+<Image src={coverImg} alt="Serie del IMAEP con tendencia creciente junto a su primera diferencia logarítmica, que oscila alrededor de una media constante" loading="lazy" />
+
+## Resumen
+
+Este artículo explica cómo se construyó y analizó un flujo introductorio de econometría de series de tiempo aplicado al Indicador Mensual de Actividad Económica del Paraguay (IMAEP). El objetivo no fue producir una estimación causal definitiva, sino entender qué transformaciones necesita una serie económica antes de modelar su dinámica.
+
+El resultado central es claro: el IMAEP no es estacionario en niveles, pero su primera diferencia logarítmica es compatible con estacionariedad. En términos económicos, resulta más apropiado estudiar las variaciones mensuales del índice que sus niveles directamente. Las simulaciones de procesos AR(2) y MA(2) también permitieron verificar que los modelos recuperan razonablemente los parámetros con los que fueron construidos.
+
+## La pregunta econométrica
+
+Una serie de tiempo no es solamente una lista de observaciones ordenadas. El orden temporal contiene información: la actividad económica de este mes puede depender de lo ocurrido en meses anteriores, y los shocks pueden persistir durante algún tiempo.
+
+La pregunta que guía el ejercicio es:
+
+> ¿Cómo pasamos de una serie económica observada a una especificación dinámica que sea estadísticamente razonable?
+
+La respuesta sigue una secuencia. Primero se prepara la base y se conserva su frecuencia temporal. Después se estudia la estacionariedad. Solo entonces se simulan y estiman modelos dinámicos sencillos, se comparan especificaciones mediante criterios de información y, finalmente, se estudia la interacción entre series.
+
+<Image src={output1Img} alt="Simulaciones de ruido blanco, caminata aleatoria y caminata aleatoria con deriva" loading="lazy" />
+
+La primera figura cumple una función metodológica. El ruido blanco oscila alrededor de una media estable, mientras que las caminatas aleatorias acumulan shocks y pueden alejarse persistentemente de su punto de partida. Antes de estudiar una economía real, conviene reconocer visualmente esta diferencia: una trayectoria suave o creciente no demuestra por sí sola que exista una relación económica estructural.
+
+## Los datos: un índice mensual de actividad
+
+La fuente utilizada fue la hoja `CUADRO 9` del Anexo Estadístico del Informe Económico. Esa hoja contiene el IMAEP y distintas versiones del indicador: serie original, serie desestacionalizada y tendencia-ciclo, además de versiones sin agricultura ni binacionales.
+
+La preparación produjo **374 observaciones mensuales**, desde enero de 1994. Se retiraron las filas auxiliares del final y se construyó una variable temporal mensual para que cada observación conservara su posición en el calendario.
+
+El IMAEP es un índice con base 2014 = 100. Esto tiene una consecuencia importante: sus valores no son guaraníes ni representan directamente el producto interno bruto. Un aumento de 110 a 115 indica un cambio en el índice de actividad, pero no debe leerse como un aumento de 5 guaraníes ni como cinco puntos porcentuales.
+
+Desde una perspectiva de investigación económica, el IMAEP es especialmente útil porque tiene frecuencia mensual, mientras que el PIB suele observarse trimestralmente. Esa frecuencia permite estudiar giros de corto plazo, pero también hace más visibles la estacionalidad, los efectos climáticos, los feriados y los shocks sectoriales. La serie original puede mezclar la señal del ciclo con patrones estacionales; por eso resulta informativo contrastarla con la versión desestacionalizada.
+
+Para estudiar crecimiento se transformó el índice mediante logaritmos. Si $$y_t$$ es el IMAEP, la tasa de crecimiento aproximada se obtiene como:
+
+$$
+\Delta \log(y_t) = \log(y_t) - \log(y_{t-1})
+$$
+
+Al multiplicarla por 100, la expresión se interpreta aproximadamente como una variación porcentual mensual:
+
+$$
+100 \times \Delta \log(y_t) \approx \text{crecimiento porcentual mensual}
+$$
+
+<Image src={output2Img} alt="Evolución mensual del IMAEP original desde 1994" loading="lazy" />
+
+La trayectoria de largo plazo muestra por qué no conviene interpretar directamente una regresión en niveles. El crecimiento tendencial del índice y los cambios en su variabilidad hacen que dos períodos alejados en el tiempo no sean necesariamente comparables en términos de media y dispersión. En este contexto, la transformación logarítmica y la diferenciación no son pasos cosméticos: intentan separar crecimiento acumulado de fluctuación mensual.
+
+## Antes de estimar: qué significa estacionariedad
+
+Una serie estacionaria mantiene propiedades estadísticas relativamente estables a lo largo del tiempo: su media, su varianza y la forma de su dependencia temporal no cambian de manera persistente. Esta propiedad importa porque muchos modelos econométricos suponen que los patrones estimados en el pasado pueden utilizarse para describir la dinámica futura.
+
+Una serie con tendencia o raíz unitaria puede generar regresiones aparentemente convincentes entre variables que solo se mueven juntas por el paso del tiempo. Ese problema se conoce como regresión espuria.
+
+Se utilizaron dos pruebas complementarias:
+
+- **ADF:** su hipótesis nula es que existe una raíz unitaria, es decir, que la serie no es estacionaria.
+- **KPSS:** su hipótesis nula es que la serie es estacionaria.
+
+La combinación de ambas pruebas resulta más informativa que mirar un solo p-valor.
+
+### Resultados de las pruebas
+
+| Serie | p-valor ADF | p-valor KPSS | Lectura principal |
+|---|---:|---:|---|
+| Ruido blanco | < 0.001 | 0.10 | Compatible con estacionariedad |
+| Caminata aleatoria | 0.775 | 0.01 | Evidencia de no estacionariedad |
+| IMAEP en niveles | 0.997 | 0.01 | No estacionario |
+| Logaritmo del IMAEP | 0.987 | 0.01 | No estacionario |
+| Primera diferencia logarítmica | < 0.001 | 0.10 | Compatible con estacionariedad |
+
+Los valores del IMAEP en niveles no permiten rechazar la hipótesis de raíz unitaria en ADF, mientras que KPSS rechaza la estacionariedad. El diagnóstico cambia después de diferenciar el logaritmo: ADF rechaza la raíz unitaria y KPSS deja de rechazar la estacionariedad.
+
+La conclusión práctica es que el nivel del índice no debe entrar automáticamente en un modelo dinámico como si fuera estacionario. Para este ejercicio introductorio, trabajar con el crecimiento mensual es una decisión razonable. Si el objetivo fuera modelar relaciones de largo plazo entre varias series, habría que estudiar además la cointegración.
+
+<Image src={output3Img} alt="IMAEP en logaritmos y primera diferencia logarítmica" loading="lazy" />
+
+La figura muestra la lógica de la transformación. El logaritmo conserva el orden de la serie, pero cambia la escala: las diferencias pasan a aproximar variaciones porcentuales. La primera diferencia elimina el componente persistente del nivel y deja una serie centrada en movimientos mensuales. Esto mejora la base estadística para modelos dinámicos, aunque no elimina automáticamente problemas como quiebres estructurales o cambios de varianza.
+
+## Una prueba controlada: simular antes de interpretar
+
+Antes de aplicar modelos a datos económicos, conviene probarlos en un entorno donde conocemos la respuesta correcta. Por eso se simularon dos procesos:
+
+### Un proceso AR(2)
+
+El proceso autorregresivo utilizado fue:
+
+$$
+ x_t = 0.4x_{t-1} + 0.2x_{t-2} + \varepsilon_t
+$$
+
+La idea es que el valor actual depende de sus dos propios rezagos. El modelo estimado recuperó coeficientes de aproximadamente **0.397** para el primer rezago y **0.229** para el segundo. Ambos fueron estadísticamente significativos y cercanos a los valores teóricos 0.4 y 0.2.
+
+La constante no fue significativa, lo que es coherente con la simulación: la serie se construyó alrededor de cero y no se introdujo una media distinta de cero.
+
+### Un proceso MA(2)
+
+El segundo proceso fue de medias móviles:
+
+$$
+ z_t = 0.5\varepsilon_{t-1} + 0.4\varepsilon_{t-2} + \varepsilon_t
+$$
+
+Aquí la dependencia no proviene de los valores pasados de la serie, sino de shocks pasados. Los coeficientes estimados fueron aproximadamente **0.513** y **0.407**, muy próximos a los valores utilizados para generar los datos.
+
+El test Ljung-Box produjo un p-valor de aproximadamente **0.86**. Por tanto, no hay evidencia de autocorrelación residual de primer orden. En términos sencillos, el modelo parece haber absorbido la dependencia serial que estaba presente en la simulación.
+
+Este resultado tiene una función pedagógica: muestra que el procedimiento de estimación puede recuperar una estructura conocida. No constituye evidencia sobre la economía paraguaya.
+
+<Image src={output4Img} alt="Procesos simulados AR(2) y MA(2) con sus funciones de autocorrelación" loading="lazy" />
+
+La autocorrelación ayuda a distinguir mecanismos de persistencia. En un proceso AR, la serie recuerda sus propios valores pasados; en un proceso MA, la dependencia se transmite por shocks pasados. En datos reales, la ACF y la PACF no deben usarse como un piloto automático: sirven para proponer especificaciones que luego se contrastan con estimación, criterios de información y diagnósticos de residuos.
+
+## Selección ARIMA y pronóstico
+
+Cuando no conocemos de antemano el número adecuado de rezagos, podemos comparar varios modelos mediante criterios de información. AIC y BIC equilibran dos objetivos: mejorar el ajuste y evitar una especificación innecesariamente compleja.
+
+En la serie AR(2) simulada, tanto AIC como BIC seleccionaron:
+
+$$
+\text{ARIMA}(2,0,0)
+$$
+
+La notación indica dos rezagos autorregresivos, ninguna diferenciación y ningún término de medias móviles. El resultado es coherente con el proceso generador: la serie ya era estacionaria y dependía de sus dos valores anteriores.
+
+El pronóstico no debe interpretarse como una predicción exacta del futuro. Es la continuación esperada de la dinámica estimada bajo el supuesto de que el patrón observado se mantiene. Por eso se presentan bandas de confianza: la incertidumbre aumenta a medida que el horizonte se aleja del último dato observado.
+
+<Image src={output5Img} alt="Pronóstico ARIMA de doce períodos con bandas de confianza" loading="lazy" />
+
+En una aplicación macroeconómica, un pronóstico debe evaluarse también fuera de muestra. Un modelo puede explicar bien la historia y aun así fallar cuando cambia el régimen económico. La figura, por tanto, debe leerse como una proyección condicional: describe qué ocurriría si la dinámica estimada y la distribución de los shocks siguieran siendo razonables durante el horizonte de pronóstico.
+
+## De una serie a un sistema: el VAR
+
+El último paso fue construir un modelo VAR con dos series locales del IMAEP: la serie original y la serie desestacionalizada. Ambas fueron transformadas mediante logaritmos, diferenciadas y centradas restándoles su media.
+
+Un VAR permite que cada variable dependa de sus propios rezagos y de los rezagos de la otra variable. En forma simplificada, para dos series puede escribirse como:
+
+$$
+\begin{aligned}
+y_{1,t} &= c_1 + \sum_{j=1}^{p} a_{1j}y_{1,t-j} + \sum_{j=1}^{p} b_{1j}y_{2,t-j} + u_{1,t} \\
+y_{2,t} &= c_2 + \sum_{j=1}^{p} a_{2j}y_{1,t-j} + \sum_{j=1}^{p} b_{2j}y_{2,t-j} + u_{2,t}
+\end{aligned}
+$$
+
+El criterio AIC seleccionó **ocho rezagos** dentro del máximo de ocho evaluado. Esto indica que, para este conjunto de datos y esta búsqueda, la información de los meses anteriores mejora el ajuste del sistema. No significa que cada uno de los ocho rezagos tenga una interpretación económica independiente ni que el modelo sea causal.
+
+En la ecuación de la serie original, varios rezagos propios fueron significativos y algunos rezagos de la serie desestacionalizada también. En la ecuación desestacionalizada, la persistencia provino principalmente de sus propios primeros rezagos. El patrón describe interacción temporal, pero no identifica por sí mismo qué variable causa a la otra.
+
+### Cómo leer una función de respuesta a impulsos
+
+La función de respuesta a impulsos (IRF) muestra cómo evoluciona una variable después de un shock en el sistema. Es una herramienta útil para visualizar persistencia: un shock puede tener un efecto inmediato, disiparse gradualmente o transmitirse a la otra serie.
+
+En este ejercicio la IRF usa una descomposición ortogonal recursiva. Eso obliga a fijar un orden de variables, y el orden importa. Cambiarlo puede cambiar las respuestas estimadas.
+
+<Image src={output6Img} alt="Funciones de respuesta a impulsos del VAR a 24 meses" loading="lazy" />
+
+La IRF resume la transmisión temporal de un shock, pero no le asigna por sí sola una interpretación económica única. Para llamar a una innovación "shock de oferta", "shock de demanda" o "shock tecnológico" se necesitan restricciones adicionales, derivadas de teoría económica, información institucional o diseños de identificación plausibles.
+
+## Lectura económica de los resultados
+
+Los resultados sugieren tres conclusiones para el análisis coyuntural paraguayo.
+
+### El nivel y el crecimiento responden preguntas distintas
+
+El nivel del IMAEP informa sobre la posición de la actividad respecto de su historia, mientras que la primera diferencia logarítmica informa sobre el ritmo de cambio reciente. Una economía puede tener un índice alto y crecer poco, o un índice bajo y registrar una recuperación rápida. Confundir ambas preguntas lleva a interpretar como aceleración lo que en realidad es solo un nivel elevado.
+
+### La persistencia es una hipótesis que debe medirse
+
+El AR(2) simulado muestra cómo un shock puede transmitirse durante varios períodos. En una economía real, esa persistencia puede reflejar inventarios, contratos, crédito, expectativas, decisiones de inversión o ajustes lentos del empleo. El coeficiente autorregresivo no identifica cuál de esos mecanismos opera; únicamente resume dependencia temporal condicional a la especificación.
+
+### La desestacionalización cambia la pregunta, no solo el gráfico
+
+Comparar la serie original con la desestacionalizada permite distinguir movimientos regulares del calendario de cambios que podrían asociarse al ciclo. Un aumento en la serie original durante un mes típico de alta actividad puede ser completamente normal; un movimiento similar en la serie desestacionalizada contiene una señal coyuntural distinta. Por eso ambas series pueden ser útiles, pero no deben tratarse como si midieran exactamente la misma señal económica.
+
+## Diseño empírico y límites de inferencia
+
+El ejercicio tiene una lógica de investigación reproducible, pero su alcance es deliberadamente acotado. La muestra es una única serie mensual y el modelo VAR se estima con dos transformaciones del mismo indicador. Esto sirve para aprender el procedimiento, pero limita la interpretación sustantiva: la relación entre la serie original y la desestacionalizada no equivale a una relación entre dos sectores independientes de la economía.
+
+También hay que considerar que seleccionar ocho rezagos con AIC consume muchos parámetros en un sistema de dos ecuaciones. La elección puede mejorar el ajuste dentro de muestra y, al mismo tiempo, aumentar la incertidumbre de los coeficientes. Una investigación aplicada debería comparar AIC con BIC y HQIC, evaluar la estabilidad del VAR, revisar autocorrelación residual y comprobar si los resultados sobreviven a una ventana temporal distinta.
+
+Si la pregunta fuera de largo plazo, diferenciar todas las variables podría eliminar información relevante. En ese caso habría que estudiar cointegración y utilizar un modelo de corrección de errores. Si la pregunta fuera causal, habría que justificar una identificación estructural, no simplemente interpretar una IRF ortogonal como si fuera un experimento natural.
+
+## Qué análisis continuaría
+
+Una extensión razonable del ejercicio tendría cuatro etapas:
+
+1. Incorporar variables macroeconómicas con contenido económico distinto, como empleo, crédito, inflación, comercio exterior o precios de commodities.
+2. Contrastar especificaciones con distintas longitudes de rezago y distintos períodos de estimación.
+3. Evaluar estabilidad, residuos, quiebres estructurales y capacidad predictiva fuera de muestra.
+4. Formular una identificación estructural explícita, de modo que cada shock y cada respuesta tengan una interpretación defendible.
+
+Este orden importa. Agregar variables y producir más gráficos no reemplaza una estrategia de identificación. La investigación económica comienza cuando la representación estadística se conecta con un mecanismo que puede ser discutido y contrastado.
+
+## Qué puede afirmarse y qué no
+
+Los resultados permiten afirmar que:
+
+1. El IMAEP presenta una dinámica no estacionaria en niveles.
+2. Sus variaciones mensuales, aproximadas por la primera diferencia logarítmica, son compatibles con estacionariedad.
+3. Los modelos AR y MA recuperan razonablemente bien las estructuras con las que fueron simulados.
+4. La dinámica de las series del IMAEP puede representarse mediante un sistema VAR con ocho rezagos según AIC.
+
+Pero los resultados no permiten afirmar automáticamente que:
+
+- un rezago significativo represente un efecto causal;
+- una IRF sea una respuesta estructural definitiva;
+- el VAR local reproduzca el análisis de productividad y horas trabajadas del script R;
+- la selección por AIC garantice que ocho rezagos sea el modelo económicamente correcto.
+
+El script original planteaba un SVAR con identificación de Blanchard y Quah utilizando las series de productividad y horas trabajadas de FRED. La adaptación local usa dos componentes del IMAEP porque son las series disponibles en el Excel. Por esa razón, la sección VAR debe entenderse como una demostración del procedimiento, no como una réplica exacta del análisis de Galí ni como una estimación estructural del ciclo paraguayo.
+
+## Conclusiones
+
+El aprendizaje principal del ejercicio ocurre antes de la estimación. Una buena práctica econométrica empieza por entender qué mide cada variable, conservar correctamente su frecuencia temporal y verificar si la serie puede modelarse en niveles.
+
+En el caso del IMAEP, la evidencia indica que los niveles no son estacionarios, mientras que el crecimiento mensual sí presenta propiedades compatibles con una serie estacionaria. Esa transformación reduce el riesgo de confundir tendencia con relación económica.
+
+Las simulaciones cumplen una segunda función: permiten comprobar que los modelos AR(2) y MA(2) recuperan los parámetros conocidos. Después, AIC y BIC identifican correctamente la estructura AR(2) en la serie simulada.
+
+El VAR amplía el análisis al estudiar dos series simultáneamente, pero también exige mayor cuidado. Para avanzar hacia una investigación aplicada habría que revisar estabilidad, residuos, sensibilidad al número de rezagos, posibles cambios estructurales y una estrategia de identificación económica defendible.
+
+La lección final es sencilla: un resultado estadístico es solo el comienzo de la interpretación económica. La credibilidad del modelo depende tanto de sus coeficientes como de la transformación de los datos, los supuestos y la pregunta que se quiere responder.
