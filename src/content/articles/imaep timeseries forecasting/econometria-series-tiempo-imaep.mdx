@@ -46,9 +46,9 @@ La primera figura cumple una función metodológica. El ruido blanco oscila alre
 
 ## Los datos: un índice mensual de actividad
 
-La fuente utilizada fue la hoja `CUADRO 9` del Anexo Estadístico del Informe Económico. Esa hoja contiene el IMAEP y distintas versiones del indicador: serie original, serie desestacionalizada y tendencia-ciclo, además de versiones sin agricultura ni binacionales.
+La fuente principal utilizada fue la hoja `CUADRO 9` del Anexo Estadístico del Informe Económico. La serie desestacionalizada se incorporó desde la hoja `CUADRO 9 a`, donde corresponde a la serie ajustada del IMAEP. El flujo también conserva una serie original sin agricultura ni binacionales para posibles extensiones.
 
-La preparación produjo **374 observaciones mensuales**, desde enero de 1994. Se retiraron las filas auxiliares del final y se construyó una variable temporal mensual para que cada observación conservara su posición en el calendario.
+La preparación produjo **391 observaciones mensuales**, desde enero de 1994 hasta julio de 2026. Se retiraron las filas auxiliares del final, se convirtieron las fechas y se construyó una variable temporal mensual para que cada observación conservara su posición en el calendario. La serie desestacionalizada comienza en enero de 2014, por lo que no está disponible para todo el período de la serie original.
 
 El IMAEP es un índice con base 2014 = 100. Esto tiene una consecuencia importante: sus valores no son guaraníes ni representan directamente el producto interno bruto. Un aumento de 110 a 115 indica un cambio en el índice de actividad, pero no debe leerse como un aumento de 5 guaraníes ni como cinco puntos porcentuales.
 
@@ -153,9 +153,13 @@ El pronóstico no debe interpretarse como una predicción exacta del futuro. Es 
 
 En una aplicación macroeconómica, un pronóstico debe evaluarse también fuera de muestra. Un modelo puede explicar bien la historia y aun así fallar cuando cambia el régimen económico. La figura, por tanto, debe leerse como una proyección condicional: describe qué ocurriría si la dinámica estimada y la distribución de los shocks siguieran siendo razonables durante el horizonte de pronóstico.
 
-## De una serie a un sistema: el VAR
+## De una serie a un sistema: los VAR
 
-El último paso fue construir un modelo VAR con dos series locales del IMAEP: la serie original y la serie desestacionalizada. Ambas fueron transformadas mediante logaritmos, diferenciadas y centradas restándoles su media.
+El notebook separa dos aplicaciones del modelo VAR. La primera utiliza dos series mensuales locales del IMAEP: la serie original y la serie desestacionalizada. La segunda utiliza series trimestrales de FRED: productividad por hora (`OPHNFB`) y horas trabajadas (`HOANBS`). No deben interpretarse como el mismo ejercicio, porque difieren en frecuencia, variables y contenido económico.
+
+### VAR mensual del IMAEP
+
+Las dos series del IMAEP fueron transformadas mediante logaritmos, diferenciadas y centradas restándoles su media. El modelo se estimó con la longitud de rezago seleccionada por AIC dentro de un máximo de ocho rezagos. Por eso, el número de rezagos es un resultado de la ejecución del notebook y no debe fijarse de antemano en esta descripción.
 
 Un VAR permite que cada variable dependa de sus propios rezagos y de los rezagos de la otra variable. En forma simplificada, para dos series puede escribirse como:
 
@@ -166,7 +170,7 @@ y_{2,t} &= c_2 + \sum_{j=1}^{p} a_{2j}y_{1,t-j} + \sum_{j=1}^{p} b_{2j}y_{2,t-j}
 \end{aligned}
 $$
 
-El criterio AIC seleccionó **ocho rezagos** dentro del máximo de ocho evaluado. Esto indica que, para este conjunto de datos y esta búsqueda, la información de los meses anteriores mejora el ajuste del sistema. No significa que cada uno de los ocho rezagos tenga una interpretación económica independiente ni que el modelo sea causal.
+La selección por AIC busca el equilibrio entre ajuste y complejidad dentro del conjunto evaluado. Un número de rezagos elegido por este criterio indica qué información pasada mejora el ajuste del sistema bajo esa búsqueda, pero no significa que cada rezago tenga una interpretación económica independiente ni que el modelo sea causal. También conviene contrastar la elección con BIC, HQIC, estabilidad y diagnósticos de residuos.
 
 En la ecuación de la serie original, varios rezagos propios fueron significativos y algunos rezagos de la serie desestacionalizada también. En la ecuación desestacionalizada, la persistencia provino principalmente de sus propios primeros rezagos. El patrón describe interacción temporal, pero no identifica por sí mismo qué variable causa a la otra.
 
@@ -179,6 +183,12 @@ En este ejercicio la IRF usa una descomposición ortogonal recursiva. Eso obliga
 <Image src={output6Img} alt="Funciones de respuesta a impulsos del VAR a 24 meses" loading="lazy" />
 
 La IRF resume la transmisión temporal de un shock, pero no le asigna por sí sola una interpretación económica única. Para llamar a una innovación "shock de oferta", "shock de demanda" o "shock tecnológico" se necesitan restricciones adicionales, derivadas de teoría económica, información institucional o diseños de identificación plausibles.
+
+### VAR trimestral con series de FRED
+
+El segundo bloque descarga mediante la API de FRED las series `OPHNFB`, productividad por hora, y `HOANBS`, horas trabajadas. Después de combinarlas por fecha, se transforman mediante logaritmos, primeras diferencias y centrado de las medias. El modelo se trabaja en frecuencia trimestral y selecciona sus rezagos por AIC, con un máximo de ocho.
+
+Este bloque aproxima el VAR reducido planteado en el script original, pero no implementa todavía la identificación estructural de Blanchard y Quah. Sus coeficientes y respuestas impulsivas describen asociaciones dinámicas bajo una descomposición ortogonal recursiva; no identifican automáticamente shocks estructurales de productividad u horas trabajadas. Para ejecutar esta parte se requiere una clave `FRED_API_KEY` almacenada en el archivo `.env`, que no se incluye en el notebook.
 
 ## Lectura económica de los resultados
 
@@ -200,7 +210,7 @@ Comparar la serie original con la desestacionalizada permite distinguir movimien
 
 El ejercicio tiene una lógica de investigación reproducible, pero su alcance es deliberadamente acotado. La muestra es una única serie mensual y el modelo VAR se estima con dos transformaciones del mismo indicador. Esto sirve para aprender el procedimiento, pero limita la interpretación sustantiva: la relación entre la serie original y la desestacionalizada no equivale a una relación entre dos sectores independientes de la economía.
 
-También hay que considerar que seleccionar ocho rezagos con AIC consume muchos parámetros en un sistema de dos ecuaciones. La elección puede mejorar el ajuste dentro de muestra y, al mismo tiempo, aumentar la incertidumbre de los coeficientes. Una investigación aplicada debería comparar AIC con BIC y HQIC, evaluar la estabilidad del VAR, revisar autocorrelación residual y comprobar si los resultados sobreviven a una ventana temporal distinta.
+También hay que considerar que seleccionar muchos rezagos con AIC consume parámetros en un sistema de dos ecuaciones. La elección puede mejorar el ajuste dentro de muestra y, al mismo tiempo, aumentar la incertidumbre de los coeficientes. Una investigación aplicada debería comparar AIC con BIC y HQIC, evaluar la estabilidad de cada VAR, revisar autocorrelación residual y comprobar si los resultados sobreviven a una ventana temporal distinta.
 
 Si la pregunta fuera de largo plazo, diferenciar todas las variables podría eliminar información relevante. En ese caso habría que estudiar cointegración y utilizar un modelo de corrección de errores. Si la pregunta fuera causal, habría que justificar una identificación estructural, no simplemente interpretar una IRF ortogonal como si fuera un experimento natural.
 
@@ -222,16 +232,17 @@ Los resultados permiten afirmar que:
 1. El IMAEP presenta una dinámica no estacionaria en niveles.
 2. Sus variaciones mensuales, aproximadas por la primera diferencia logarítmica, son compatibles con estacionariedad.
 3. Los modelos AR y MA recuperan razonablemente bien las estructuras con las que fueron simulados.
-4. La dinámica de las series del IMAEP puede representarse mediante un sistema VAR con ocho rezagos según AIC.
+4. La dinámica de las series del IMAEP y, por separado, la de las series trimestrales de FRED pueden representarse mediante VAR reducidos con rezagos seleccionados por AIC dentro de la búsqueda realizada.
 
 Pero los resultados no permiten afirmar automáticamente que:
 
 - un rezago significativo represente un efecto causal;
 - una IRF sea una respuesta estructural definitiva;
 - el VAR local reproduzca el análisis de productividad y horas trabajadas del script R;
-- la selección por AIC garantice que ocho rezagos sea el modelo económicamente correcto.
+- la selección por AIC garantice que el número elegido de rezagos sea el modelo económicamente correcto;
+- el VAR trimestral de FRED sea una estimación estructural de Blanchard y Quah.
 
-El script original planteaba un SVAR con identificación de Blanchard y Quah utilizando las series de productividad y horas trabajadas de FRED. La adaptación local usa dos componentes del IMAEP porque son las series disponibles en el Excel. Por esa razón, la sección VAR debe entenderse como una demostración del procedimiento, no como una réplica exacta del análisis de Galí ni como una estimación estructural del ciclo paraguayo.
+El script original planteaba un SVAR con identificación de Blanchard y Quah utilizando las series de productividad y horas trabajadas de FRED. El notebook refactorizado mantiene ese bloque como un VAR reducido aproximado y, además, incorpora un VAR mensual local con dos componentes del IMAEP. Por esa razón, los resultados deben entenderse como demostraciones reproducibles del procedimiento, no como una réplica exacta del análisis de Galí ni como una estimación estructural definitiva del ciclo paraguayo.
 
 ## Conclusiones
 
@@ -241,6 +252,6 @@ En el caso del IMAEP, la evidencia indica que los niveles no son estacionarios, 
 
 Las simulaciones cumplen una segunda función: permiten comprobar que los modelos AR(2) y MA(2) recuperan los parámetros conocidos. Después, AIC y BIC identifican correctamente la estructura AR(2) en la serie simulada.
 
-El VAR amplía el análisis al estudiar dos series simultáneamente, pero también exige mayor cuidado. Para avanzar hacia una investigación aplicada habría que revisar estabilidad, residuos, sensibilidad al número de rezagos, posibles cambios estructurales y una estrategia de identificación económica defendible.
+Los VAR amplían el análisis al estudiar dos series simultáneamente, pero también exigen mayor cuidado. Para avanzar hacia una investigación aplicada habría que revisar estabilidad, residuos, sensibilidad al número de rezagos, posibles cambios estructurales y, especialmente para el bloque FRED, implementar y justificar una estrategia de identificación económica defendible.
 
 La lección final es sencilla: un resultado estadístico es solo el comienzo de la interpretación económica. La credibilidad del modelo depende tanto de sus coeficientes como de la transformación de los datos, los supuestos y la pregunta que se quiere responder.
