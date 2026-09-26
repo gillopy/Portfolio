@@ -35,7 +35,11 @@ if (ogH > ogH0) {
 const ogImage = cover
 	? (await getImage({ src: cover, width: ogW, height: ogH, fit: 'cover', format: 'jpeg' })).src
 	: undefined;
-const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(publishDate);
+// `z.coerce.date()` reads a date-only frontmatter string as UTC midnight, but
+// Intl formats in the local zone. Behind UTC (Paraguay is UTC-4) that rendered
+// the label one day EARLIER than the declared publishDate. Pinning the
+// formatter to UTC round-trips the declared calendar date exactly.
+const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(publishDate);
 ---
 
 <ArticleLayout title={title} description={shortDescription} image={ogImage} ogType="article" ogImageWidth={ogW} ogImageHeight={ogH} ogImageAlt={title}>

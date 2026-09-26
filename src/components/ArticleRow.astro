@@ -15,7 +15,11 @@ interface Props {
 const { entry, headingLevel = 3, showTags = false, showCover = false } = Astro.props;
 const { title, shortDescription, publishDate, tags, cover } = entry.data;
 const href = `/articles/${entry.id}`;
-const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric' }).format(publishDate);
+// `z.coerce.date()` reads a date-only frontmatter string as UTC midnight, but
+// Intl formats in the local zone. Behind UTC (Paraguay is UTC-4) that rendered
+// every label one day EARLIER than the declared publishDate. Pinning the
+// formatter to UTC round-trips the declared calendar date exactly.
+const dateLabel = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(publishDate);
 // Capitalized so Astro treats it as a dynamic element name. The `headingLevel`
 // union above makes this provably an h2 or h3; the assertion narrows the
 // template literal so the language server resolves the tag's attributes.

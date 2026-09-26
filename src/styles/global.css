@@ -486,6 +486,40 @@ body::before {
 	border-radius: var(--radius-xl);
 }
 
+/* ---------- Data tables ---------- */
+/* GFM tables ship the author's `:---:` markers as inline `text-align` on the
+   cell, but nothing gave them padding, borders or full width — so numeric and
+   text columns collapsed into each other ("0.01Evidencia") and the UA's
+   `th { text-align: center }` fought the left-aligned body cells.
+   The inline align from the markdown still wins here: this only sets the
+   default for columns the author left unaligned. */
+.project-content table {
+	width: 100%;
+	margin: 1.75rem 0 2rem;
+	border-collapse: collapse;
+	font-size: 0.9375rem;
+	line-height: 1.5;
+}
+.project-content th,
+.project-content td {
+	padding: 0.7rem 1rem;
+	text-align: left;
+	vertical-align: top;
+	border-bottom: 1px solid var(--color-hairline-soft);
+	color: var(--color-ink-muted);
+}
+.project-content th {
+	font-family: var(--font-mono);
+	font-size: 0.6875rem;
+	font-weight: 500;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--color-ink-faint);
+	border-bottom: 1px solid var(--color-hairline);
+	white-space: nowrap;
+}
+.project-content tbody tr:last-child td { border-bottom: 0; }
+
 /* ---------- Display math (KaTeX) — articles only ---------- */
 /* rehype-katex renders display math as <span class="katex-display">; the
    previous `.math-display` selector matched nothing, so long formulas
