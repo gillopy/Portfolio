@@ -1,0 +1,301 @@
+---
+title: "GOES-19 · Banda 13 (10.3 µm): el planeta, cuadro a cuadro"
+shortDescription: "Pipeline satelital de punta a punta con GOES-R ABI: descarga la banda 13 desde el bucket público de NOAA, dibuja el póster del disco en globo con Paraguay resaltado y exporta la animación a video."
+tags:
+  - "Python 3.12"
+  - "Xarray"
+  - "Cartopy"
+  - "GOES-R ABI"
+  - "NOAA S3"
+  - "Matplotlib"
+  - "imageio-ffmpeg"
+  - "Pillow"
+links:
+  demo: "/project/climate-3d"
+  github: "https://github.com/gillopy/climate-3d"
+cover: ./cover.jpg
+---
+import { Image } from 'astro:assets';
+import goesGloboImg from "./goes-globo.jpg";
+import goesPyImg from "./goes-paraguay.jpg";
+
+## Descripción
+
+Un pipeline que va del **dato satelital crudo** a la **animación terminada**, sin abrir los
+archivos uno por uno. Todo gira alrededor de un mismo producto: la banda 13 del
+instrumento ABI a bordo de **GOES-East**.
+
+- **Descarga automática** de GOES-R ABI L2 CMIP desde el bucket público de NOAA.
+- **Lectura** del disco completo en su proyección geoestacionaria nativa.
+- **Póster** en formato publicable: globo sobre fondo oscuro, barra de color y rótulos
+  leídos del propio archivo.
+- **Animación** de cientos de cuadros sin agotar la memoria.
+- **Export** a video con el ffmpeg que trae `imageio-ffmpeg`.
+
+```text
+descargar (.nc)  →  leer el disco  →  póster / cuadros  →  exportar el video
+      1                 2                  3                    4
+```
+
+## 1. Por qué la banda 13
+
+**GOES-East** es un satélite geoestacionario: no orbita de polo a polo, queda fijo mirando
+siempre el mismo hemisferio desde **75.2° O**, a unos 35 786 km de altura. La versión
+actual de esa posición es **GOES-19** (`G19`), y su instrumento principal es el **ABI**
+(Advanced Baseline Imager), que barre el disco completo en **16 bandas**.
+
+La **banda 13** (10.3 µm) es el infrarrojo "limpio" o *clean longwave window*: mide
+**temperatura de brillo**, y como la radiación infrarroja atraviesa la oscuridad, **ve las
+nubes de día y de noche**. Es la banda de trabajo para seguir convección, topes nubosos
+fríos y sistemas frontales. La cadencia por defecto es el **modo 6**: el disco completo se
+escanea cada **10 minutos**, así que un día son 144 cuadros y tres días, 432.
+
+## 2. Descargar desde el bucket de NOAA
+
+NOAA publica cada archivo ABI en un bucket S3 **público**, así que se baja sin credenciales
+ni API key. El nombre del archivo lo dice todo:
+
+```text
+OR_ABI-L2-CMIPF-M6C13_G19_s20262750000205_e20262750009524_c20262750009590.nc
+              │  │   │   │         │                    │
+              │  │   │   │         │                    └─ c: cuándo se creó
+              │  │   │   │         └─ s: cuándo empezó el escaneo
+              │  │   │   └─ G19: satélite
+              │  │   └─ C13: banda 13
+              │  └─ M6: modo 6 (disco cada 10 min)
+              └─ CMIPF: Cloud and Moisture Imagery, disco completo
+```
+
+No hace falta escribir ese nombre a mano: se arma a partir del *slot* de 10 minutos.
+
+```powershell
+# GOES-East, banda 13, del 2 al 5 de octubre de 2026 (432 cuadros, ~10 GB)
+python scripts/descargar_goes.py --sat G19 --banda C13 --desde 2026-10-02 --hasta 2026-10-05
+```
+
+El downloader lista la carpeta de la hora en S3 y busca el archivo cuyo escaneo arranca en
+el slot pedido. Como es una descarga larga, **saltea lo que ya tenés** y es reanudable.
+
+```python
+import re
+import urllib.request
+from datetime import datetime
+
+PATRON = re.compile(r"OR_ABI-L2-CMIPF-M6(?P<banda>C\d+)_(?P<sat>G\d+)_s(?P<s>\d{14})_")
+
+
+def claves_de_la_hora(sat, t):
+    """Todas las claves S3 de la hora de `t` (una sola consulta por hora)."""
+    pref = f"ABI-L2-CMIPF/{t.year}/{int(t.strftime('%j')):03d}/{t.hour:02d}/"
+    url = f"https://noaa-goes{sat[1:]}.s3.amazonaws.com/?list-type=2&prefix={pref}"
+    xml = urllib.request.urlopen(url, timeout=120).read().decode()
+    return re.findall(r"<Key>([^<]+)</Key>", xml)
+
+
+def clave_de(sat, banda, t):
+    """Clave del archivo cuyo escaneo arranca en el slot de 10 minutos de `t`."""
+    for clave in claves_de_la_hora(sat, t):
+        m = PATRON.search(clave)
+        if not m or m["banda"] != banda or m["sat"] != sat:
+            continue
+        inicio = datetime.strptime(m["s"][:13], "%Y%j%H%M%S")
+        if (inicio.hour, inicio.minute) == (t.hour, t.minute):
+            return clave
+    raise LookupError(f"Sin archivo {sat} {banda} para {t:%Y-%m-%d %H:%M} UTC")
+```
+
+```python
+def descargar(datos_dir, sat, clave, minimo_bytes=1_000_000):
+    """Devuelve el .nc local si ya existe, o lo baja por streaming desde S3."""
+    destino = datos_dir / clave.rsplit("/", 1)[-1]
+    if destino.exists() and destino.stat().st_size > minimo_bytes:
+        return destino                                 # ya está: no se vuelve a bajar
+    url = f"https://noaa-goes{sat[1:]}.s3.amazonaws.com/{clave}"
+    with urllib.request.urlopen(url, timeout=300) as respuesta:
+        with open(destino, "wb") as salida:
+            while trozo := respuesta.read(1 << 20):    # 1 MB por vuelta, poca RAM
+                salida.write(trozo)
+    return destino
+```
+
+## 3. Leer el disco en su proyección nativa
+
+Un archivo ABI **no** trae una grilla lat/lon: trae el disco completo en su
+**proyección geoestacionaria**. Los ejes `x` e `y` son ángulos de escaneo en radianes;
+multiplicándolos por la altura del satélite se pasan al plano de la proyección. Dibujando
+con esa **misma** proyección, `pcolormesh` no reproyecta nada y se conserva la resolución
+original.
+
+```python
+import numpy as np
+import xarray as xr
+import cartopy.crs as ccrs
+
+with xr.open_dataset(nc) as ds:
+    cmi = ds["CMI"]                                   # Cloud and Moisture Imagery
+    gp = ds["goes_imager_projection"].attrs
+    h = float(gp["perspective_point_height"])         # altura del satélite (m)
+    x = ds["x"].values * h                            # radianes de escaneo -> metros
+    y = ds["y"].values * h
+    proj = ccrs.Geostationary(
+        central_longitude=float(gp["longitude_of_projection_origin"]),
+        satellite_height=h, sweep_axis=str(gp.get("sweep_angle_axis", "x")))
+```
+
+La variable se interpreta sola según sus unidades: si viene en Kelvin es temperatura de
+brillo (se muestra en °C), si viene en reflectancia se muestra en porcentaje.
+
+```python
+def to_display(raw, cmi):
+    units = str(cmi.attrs.get("units", "")).strip()
+    if units == "K":
+        return raw - 273.15, "°C", "Temperatura de brillo"   # banda 13
+    if units in ("1", ""):
+        return raw * 100.0, "%", "Reflectancia"
+    return raw, units, "Valor"
+```
+
+## 4. El póster (formato publicable)
+
+Antes de animar nada, el proyecto exporta un **póster fijo**: un cuadro único, en alta
+resolución, con el mismo vestuario en todos los casos (fondo casi negro, barra de color
+fina al pie, grilla tenue, crédito, fuente y datos). Hay dos entrypoints.
+
+**Póster de disco completo** — `lib/poster_goes.py`. Dibuja el disco entero y, con
+`--globo`, lo reproyecta a Orthographic para el aspecto "planeta". La ventana y los
+rótulos salen de la función compartida `draw_goes_poster`:
+
+```python
+fig, ax, mesh = draw_goes_poster(
+    campo, x=x, y=y, proj=proj,
+    title=titulo, subtitle=subtitulo, unit_label=unidad,
+    src_line=fuente, data_line=datos, credit=CREDITO,
+    cmap=PALETTES["ir_realce"], vmin=-65, vmax=25,
+    globe_center=(-73.0, -18.0),                       # Orthographic "planeta"
+    highlight_geojson="datos/paraguay_gadm.json")       # borde del Paraguay
+```
+
+```powershell
+python lib/poster_goes.py                                        # disco completo, gris
+python lib/poster_goes.py --nc <archivo.nc> --paleta ir_realce --globo --zona py
+```
+
+**Póster centrado en Paraguay** — `scripts/vista_paraguay.py`. Es el encuadre aprobado:
+Orthographic en `lon −73, lat −18`, paleta `ir_realce`, borde de Paraguay (GADM) y sin
+grilla. Sin `--nc`, usa el `.nc` más reciente bajado.
+
+```powershell
+python scripts/vista_paraguay.py
+python scripts/vista_paraguay.py --lon -70 --lat -20
+```
+
+El borde del país se dibuja por encima de los datos como una `LineCollection`, así que
+sirve cualquier GeoJSON con `Polygon`/`MultiPolygon` en lon/lat:
+
+```python
+import json
+import numpy as np
+from matplotlib.collections import LineCollection
+
+gj = json.load(open(highlight_geojson, encoding="utf-8"))
+segs = [np.asarray(ring, dtype=float)
+        for f in gj["features"]
+        for anillo in [f["geometry"]["coordinates"]]
+        for poly in anillo
+        for ring in poly]
+ax.add_collection(LineCollection(segs, transform=ccrs.PlateCarree(),
+                                 colors="#ffffff", linewidths=1.2, zorder=5))
+```
+
+Así se ve el globo del disco completo con el Paraguay marcado, y el zoom regional:
+
+<Image src={goesGloboImg} alt="Póster del globo GOES-19 banda 13 con Sudamérica y el borde del Paraguay resaltado" loading="lazy" />
+
+<Image src={goesPyImg} alt="Póster regional del Paraguay con datos GOES-19 banda 13" loading="lazy" />
+
+## 5. Animar cientos de cuadros sin morir de RAM
+
+El problema: 432 cuadros del disco, cada uno una figura de Matplotlib, dentro de un mismo
+proceso, **agotan la memoria** de una máquina chica. La solución de `scripts/render_anim.py`
+es renderizar por **lotes en procesos separados** (cada lote arranca con la memoria
+limpia) y fundir todo en un video al final.
+
+```python
+# render_anim.py — cada lote corre en su propio proceso
+for s in range(1, args.n + 1, args.lote):
+    e = min(s + args.lote - 1, args.n)
+    print(f"lote {s}-{e} ...", flush=True)
+    subprocess.run([sys.executable, __file__, *sys.argv[1:],
+                    "--rango", str(s), str(e), str(vmin), str(vmax)], check=True)
+```
+
+```powershell
+# Globo centrado en Paraguay, 432 cuadros a 720 px
+python scripts/render_anim.py --sat G19 --banda C13 --desde 2026-10-02 --n 432 `
+    --px 720 --globo --centro -73 -18 --geojson datos\paraguay_gadm.json --paleta ir_realce
+```
+
+Los cuadros quedan como PNG y **se reutilizan**: si sólo querés rearmar el video, volvés a
+correr el mismo comando y saltea el render.
+
+## 6. Exportar el video
+
+El video se arma con el ffmpeg que trae `imageio-ffmpeg` (no hace falta tenerlo en el
+PATH). `libx264` en `yuv420p` exige lados pares, así que un `pad` de 1 px ajusta el
+encuadre sin remuestrear.
+
+```python
+import subprocess
+import imageio_ffmpeg
+
+proc = subprocess.run([
+    imageio_ffmpeg.get_ffmpeg_exe(), "-y",
+    "-framerate", f"{args.fps:.6f}", "-start_number", "1",
+    "-i", str(cuadros / "cuadro_%03d.png"),
+    "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2",
+    "-c:v", "libx264", "-preset", "slow", "-pix_fmt", "yuv420p", "-crf", "16",
+    "-movflags", "+faststart", str(mp4)], capture_output=True, text=True)
+```
+
+A `crf 16` el MP4 pesa ~7× menos que el GIF y se ve mejor; el GIF (`PillowWriter`) queda
+como opción sólo para animaciones cortas.
+
+## Resultado
+
+El encuadre final es el disco completo reproyectado a globo, centrado en Sudamérica y con
+el contorno del Paraguay marcado en blanco sobre el campo de temperatura de brillo:
+
+{/* =======================================================================
+    VIDEO (YouTube) — espacio para tu animación.
+    Reemplazá VIDEO_ID por el de tu video y descomentá el bloque:
+
+<iframe
+  class="aspect-video w-full rounded-xl ring-1 ring-hairline"
+  src="https://www.youtube.com/embed/VIDEO_ID"
+  title="Animación GOES-19 · Banda 13"
+  loading="lazy"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+======================================================================== */}
+
+## Chuleta
+
+```powershell
+# 1) Descargar (GOES-East banda 13, 3 días)
+python scripts/descargar_goes.py --sat G19 --banda C13 --desde 2026-10-02 --hasta 2026-10-05
+
+# 2) Póster fijo centrado en Paraguay
+python scripts/vista_paraguay.py
+
+# 3) Animación (globo Paraguay, 432 cuadros, 720 px)
+python scripts/render_anim.py --sat G19 --banda C13 --desde 2026-10-02 --n 432 `
+    --px 720 --globo --centro -73 -18 --geojson datos\paraguay_gadm.json --paleta ir_realce
+```
+
+## Nota de datos
+
+Todas las imágenes y la animación salen de **GOES-R ABI L2 CMIP reales** (NOAA/NESDIS),
+banda 13. El disco se lee en su proyección geoestacionaria nativa y sólo se reproyecta para
+el encuadre en globo; los `.nc` crudos y las salidas quedan fuera del repositorio.
