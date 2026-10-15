@@ -79,6 +79,14 @@ const resolvedOgAlt = ogImageAlt ?? (isDefaultOg ? 'Portfolio de Guillermo Cabre
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 		<title>{title}</title>
+		<noscript>
+			<style>
+				/* .gsap-reveal rests at opacity:0 because GSAP owns the entrance.
+				   Without JS nothing lifts it and whole sections stay invisible, so
+				   the no-script path restores them here. */
+				.gsap-reveal { opacity: 1 !important; }
+			</style>
+		</noscript>
 		{jsonLd && (
 			<script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 		)}

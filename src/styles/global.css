@@ -22,6 +22,11 @@
 	--color-accent-2: #7c5cff;
 	--color-accent-3: #c6ff4a;
 
+	/* Estado "disponible". Un solo token semántico para el punto del header y
+	   la fila de respuesta del contacto: antes eran emerald-400 (utilidad cruda
+	   de Tailwind) y accent-3, dos verdes distintos para el mismo significado. */
+	--color-status-online: #34d399;
+
 	--color-grad-violet: #6a4cf5;
 	--color-grad-magenta: #d44df0;
 	--color-grad-orange: #ff7a3d;
@@ -122,41 +127,12 @@ body::before {
 	will-change: transform;
 }
 
-/* ---------- Animations & GSAP reveals ---------- */
-@keyframes fadeIn {
-	from { opacity: 0; transform: translateY(20px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideUp {
-	from { opacity: 0; transform: translateY(40px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in {
-	animation: fadeIn 0.6s ease-in-out forwards;
-}
-
-/* legacy fallback — kept for no-JS */
-.scroll-reveal {
-	opacity: 0;
-	transform: translateY(30px);
-	transition: opacity 0.7s ease-out, transform 0.7s ease-out;
-}
-.scroll-reveal.revealed {
-	opacity: 1;
-	transform: translateY(0);
-}
-
-/* GSAP-driven reveals */
+/* ---------- GSAP-driven reveals ---------- */
+/* Entrances are GSAP's, so there is no CSS keyframe here: this rule is only the
+   resting state GSAP animates away from. Layout.astro ships a <noscript>
+   override that lifts it, so content is never hidden when JS never runs. */
 .gsap-reveal {
 	opacity: 0;
-}
-.gsap-line {
-	overflow: hidden;
-	display: block;
-}
-.gsap-line-inner {
-	display: block;
-	will-change: transform;
 }
 .hero-char {
 	display: inline-block;
@@ -173,7 +149,7 @@ body::before {
 		animation-duration: 0.01ms !important;
 		transition-duration: 0.01ms !important;
 	}
-	.scroll-reveal, .gsap-reveal, .hero-char, .gsap-line-inner {
+	.gsap-reveal, .hero-char {
 		opacity: 1 !important;
 		transform: none !important;
 	}
@@ -212,6 +188,9 @@ body::before {
 }
 
 /* ---------- Section titles ---------- */
+/* Static accent rule only. The old hover grew the underline on <h2> elements
+   that are not interactive, which implied an affordance that does not exist
+   and repeated the same motion on all six sections. */
 .section-title-underline {
 	display: inline-block;
 	position: relative;
@@ -225,10 +204,6 @@ body::before {
 	width: 3rem;
 	height: 2px;
 	background: var(--color-accent);
-	transition: width 0.3s ease;
-}
-.section-title-underline:hover::after {
-	width: 5rem;
 }
 .section-rule {
 	height: 1px;
@@ -390,27 +365,43 @@ body::before {
 .ticker-group {
 	display: flex;
 	align-items: center;
-	gap: 3.5rem;
-	padding-right: 3.5rem;
+	gap: 3rem;
+	padding-right: 3rem;
 	flex-shrink: 0;
 }
-/* Item como fila flexible: hoy solo texto, mañana logo SVG + nombre sin reestructurar. */
+/* Item como fila flexible: hoy un marcador dibujado + el nombre, mañana un
+   logo SVG en el mismo hueco sin reestructurar la fila.
+   El color en reposo es --color-ink-faint, no un ink-muted con alpha: el 0.75
+   anterior caía cerca de 3.7:1 sobre el canvas oscuro, por debajo de AA. */
 .ticker-item {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: 0.55rem;
 	flex-shrink: 0;
 	white-space: nowrap;
 	font-family: var(--font-mono);
-	font-size: 1.05rem;
-	color: var(--color-ink-muted);
-	opacity: 0.75;
+	font-size: 1rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--color-ink-faint);
 	cursor: default;
-	transition: color 0.2s ease, opacity 0.2s ease;
+	transition: color 0.2s ease;
+}
+/* Marcador dibujado (no glifo unicode): el mismo cuadrado de 5px del kicker
+   mantiene el riel leyéndose como panel de instrumento y no como muro de texto. */
+.ticker-item::before {
+	content: "";
+	width: 5px;
+	height: 5px;
+	flex-shrink: 0;
+	border-radius: 1px;
+	background: color-mix(in srgb, var(--color-accent) 45%, transparent);
+	transition: background 0.2s ease;
 }
 .ticker-item:hover {
 	color: var(--color-ink);
-	opacity: 1;
+}
+.ticker-item:hover::before {
+	background: var(--color-accent);
 }
 @keyframes ticker-scroll {
 	to { transform: translateX(-50%); }
@@ -588,11 +579,26 @@ body::before {
 .copy-btn:hover { background: var(--color-accent); color: var(--on-accent); }
 .copy-btn.copy-success { background: var(--color-accent); color: var(--on-accent); }
 
-/* ---------- Subtle scrollbar ---------- */
+/* ---------- Browser surfaces: scrollbar + caret ---------- */
+/* Firefox ignores ::-webkit-scrollbar and would fall back to the platform
+   scrollbar, the one unthemed control left on the page. */
+html {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-hairline) var(--color-canvas);
+}
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-canvas); }
 ::-webkit-scrollbar-thumb { background: var(--color-hairline); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
+
+/* El caret también es superficie diseñada: el mismo acento que marca la
+   selección marca el punto de inserción. */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+	caret-color: var(--color-accent);
+}
 
 /* ---------- Theme effect variables (add-only runtime tokens) ----------
    Plain :root block (NOT @theme) so these vars are always emitted regardless
@@ -648,6 +654,9 @@ html[data-theme="light"] {
 	--color-accent-hover: #0062c4;
 	--color-accent-2: #6a4cf5;
 	--color-accent-3: #4f7d00;
+	/* #34d399 baja a ~1.7:1 sobre #fbfbfb, por debajo del 3:1 exigido a un
+	   indicador no textual. Este verde oscuro da 4.18:1 y conserva el tono. */
+	--color-status-online: #128a4a;
 	--color-grad-violet: #5a3de0;
 	--color-grad-magenta: #b63ad1;
 	--color-grad-orange: #d8551f;

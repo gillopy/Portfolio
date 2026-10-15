@@ -16,12 +16,10 @@ const initGSAP = () => {
 
 	if (prefersReduced()) {
 		// fallback: show everything
-		document.querySelectorAll<HTMLElement>('.gsap-reveal, .hero-char, .gsap-line-inner').forEach(el => {
+		document.querySelectorAll<HTMLElement>('.gsap-reveal, .hero-char').forEach(el => {
 			el.style.opacity = '1';
 			el.style.transform = 'none';
 		});
-		// keep legacy scroll-reveal visible
-		document.querySelectorAll('.scroll-reveal').forEach(el => el.classList.add('revealed'));
 		return;
 	}
 
@@ -110,8 +108,8 @@ const initGSAP = () => {
 		if (heroKicker) gsap.from(heroKicker, { opacity: 0, y: 10, duration: 0.6, ease: "power2.out", delay: 0.05 });
 		const heroSummary = document.querySelector('.hero-summary');
 		if (heroSummary) gsap.from(heroSummary, { opacity: 0, y: 18, duration: 0.7, delay: 0.45, ease: "power2.out" });
-		const heroStats = document.querySelectorAll('.hero-stat');
-		if (heroStats.length) gsap.from(heroStats, { opacity: 0, y: 16, duration: 0.6, stagger: 0.08, delay: 0.6, ease: "power2.out" });
+		const heroSteps = document.querySelectorAll('.hero-step');
+		if (heroSteps.length) gsap.from(heroSteps, { opacity: 0, y: 16, duration: 0.6, stagger: 0.08, delay: 0.6, ease: "power2.out" });
 		const heroBtns = document.querySelector('.hero-btns');
 		if (heroBtns) gsap.from(heroBtns, { opacity: 0, y: 12, duration: 0.6, delay: 0.75, ease: "power2.out" });
 		const heroVisual = document.querySelector('.hero-visual');
@@ -168,17 +166,6 @@ const initGSAP = () => {
 					ease: "none",
 					scrollTrigger: { trigger: card, start: "top bottom", end: "bottom top", scrub: 1.1 }
 				});
-			});
-		}
-
-		// -- skills
-		const tools = document.querySelectorAll('.tool-item');
-		if (tools.length) {
-			gsap.set(tools, { opacity: 0, y: 14, scale: 0.97 });
-			ScrollTrigger.batch(tools, {
-				onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, scale: 1, duration: 0.5, stagger: 0.03, ease: "power3.out" }),
-				start: "top 90%",
-				once: true
 			});
 		}
 

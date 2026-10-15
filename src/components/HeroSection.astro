@@ -6,6 +6,28 @@ const firstName = profile.name.split(' ').slice(0, -1).join(' ');
 const lastName = profile.name.split(' ').slice(-1)[0];
 const firstChars = firstName.split('');
 const lastChars = lastName.split('');
+
+// Station readout, resolved at build time so it is correct before JS runs and
+// then refreshed client-side. Paraguay is UTC-3 on DST and UTC-4 off it, so the
+// offset is formatted rather than hardcoded. A constrained ICU build would make
+// the formatter throw, hence the guarded fallback.
+const STATION_TIME_ZONE = 'America/Asuncion';
+const readStationTime = (): { time: string; zone: string } => {
+  try {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: STATION_TIME_ZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZoneName: 'shortOffset',
+    }).formatToParts(new Date());
+    const pick = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+    return { time: `${pick('hour')}:${pick('minute')}`, zone: pick('timeZoneName') };
+  } catch {
+    return { time: '--:--', zone: '' };
+  }
+};
+const station = readStationTime();
 ---
 
 <section id="inicio" class="hero relative flex min-h-[96vh] items-center overflow-hidden bg-canvas pb-20 pt-28">
@@ -51,22 +73,37 @@ const lastChars = lastName.split('');
           <span class="mt-3 block font-mono text-xs tracking-wide text-ink-faint">Econometría · Forecasting · MLOps · Series temporales</span>
         </p>
 
-        <div class="hero-stats mb-10 flex flex-wrap gap-6 sm:flex sm:gap-0">
-          <div class="hero-stat group sm:pr-8">
-            <span class="block font-display text-xl font-bold tracking-tight text-ink sm:text-3xl lg:text-[2.1rem]">ANÁLISIS</span>
-            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-muted/70">De datos a evidencia.</span>
-            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
-          </div>
-          <div class="hero-stat group sm:border-l sm:border-hairline sm:pl-8 sm:pr-8">
-            <span class="block font-display text-xl font-bold tracking-tight text-ink sm:text-3xl lg:text-[2.1rem]">MODELADO</span>
-            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-muted/70">De evidencia a predicción.</span>
-            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
-          </div>
-          <div class="hero-stat group sm:border-l sm:border-hairline sm:pl-8">
-            <span class="block font-display text-xl font-bold tracking-tight text-ink sm:text-3xl lg:text-[2.1rem]">DECISIÓN</span>
-            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-muted/70">De predicción a estrategia.</span>
-            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
-          </div>
+        <!-- Cadena de valor: los mismos tres pasos y subtítulos, restated as a
+             technical strip. At display-bold 2.1rem they read as a second H1
+             directly under the name, which is what this fixes. -->
+        <div class="hero-pipeline">
+          <ol class="hero-pipeline-list">
+            <li class="hero-step">
+              <span class="hero-step-index" aria-hidden="true">01</span>
+              <span class="hero-step-text">
+                <span class="hero-step-label">Análisis</span>
+                <span class="hero-step-caption">De datos a evidencia.</span>
+              </span>
+            </li>
+            <li class="hero-step">
+              <span class="hero-step-index" aria-hidden="true">02</span>
+              <span class="hero-step-text">
+                <span class="hero-step-label">Modelado</span>
+                <span class="hero-step-caption">De evidencia a predicción.</span>
+              </span>
+            </li>
+            <li class="hero-step">
+              <span class="hero-step-index" aria-hidden="true">03</span>
+              <span class="hero-step-text">
+                <span class="hero-step-label">Decisión</span>
+                <span class="hero-step-caption">De predicción a estrategia.</span>
+              </span>
+            </li>
+            <li class="hero-readout">
+              <span class="hero-readout-label">Local</span>
+              <span class="hero-readout-value" id="hero-clock" aria-live="off">{station.time} {station.zone}</span>
+            </li>
+          </ol>
         </div>
 
         <div class="hero-btns flex flex-wrap items-center gap-3">
@@ -95,7 +132,136 @@ const lastChars = lastName.split('');
   </div>
 
   <div class="scroll-indicator absolute bottom-6 left-1/2 -translate-x-1/2 hidden flex-col items-center gap-2 md:flex">
-    <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted/50">Scroll</span>
-    <div class="h-8 w-px bg-gradient-to-b from-ink-muted/40 to-transparent"></div>
+    <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">Scroll</span>
+    <div class="h-8 w-px bg-gradient-to-b from-ink-faint/50 to-transparent"></div>
   </div>
 </section>
+
+<style>
+  /* Border-top/bottom give the strip its instrument-panel framing; the steps
+     are then separated by a single rule that flips from horizontal (stacked) to
+     vertical (three across) at the same breakpoint the desktop nav appears. */
+  .hero-pipeline {
+    margin-bottom: 2.5rem;
+    border-top: 1px solid var(--color-hairline);
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .hero-pipeline-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .hero-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.8rem 0;
+  }
+  .hero-step + .hero-step {
+    border-top: 1px solid var(--color-hairline-soft);
+  }
+  .hero-step-index {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+    line-height: 1.6;
+    color: var(--color-accent);
+  }
+  .hero-step-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .hero-step-label {
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+  }
+  .hero-step-caption {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-faint);
+  }
+  /* Station readout: a fourth cell on wide screens, dropped below lg where the
+     three steps already fill the strip. */
+  .hero-readout {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.95rem 0 0.95rem 1.25rem;
+    border-left: 1px solid var(--color-hairline-soft);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .hero-readout-label {
+    color: var(--color-ink-faint);
+  }
+  .hero-readout-value {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+  @media (min-width: 1024px) {
+    .hero-pipeline-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    }
+    .hero-step {
+      padding: 0.95rem 1.25rem;
+    }
+    .hero-step:first-child {
+      padding-left: 0;
+    }
+    .hero-step + .hero-step {
+      border-top: 0;
+      border-left: 1px solid var(--color-hairline-soft);
+    }
+    .hero-readout {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  // Build-time value is correct without JS; this only keeps the minute honest
+  // on a long-lived page. 20s cadence is enough for HH:MM and costs nothing.
+  const STATION_TIME_ZONE = 'America/Asuncion';
+  let stationTimer: number | undefined;
+
+  const startStationClock = () => {
+    window.clearInterval(stationTimer);
+    const el = document.getElementById('hero-clock');
+    if (!el) return;
+    const format = () =>
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: STATION_TIME_ZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+        timeZoneName: 'shortOffset',
+      }).format(new Date());
+    const tick = () => {
+      el.textContent = format();
+    };
+    tick();
+    stationTimer = window.setInterval(tick, 20_000);
+  };
+
+  startStationClock();
+  document.addEventListener('astro:page-load', startStationClock);
+  document.addEventListener('astro:before-preparation', () => {
+    window.clearInterval(stationTimer);
+  });
+</script>
