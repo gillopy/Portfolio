@@ -24,7 +24,7 @@ const socialLinks = profile.social.filter(
     <div class="section-rule mb-10"></div>
 
     <div class="contact-container grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2 lg:gap-8">
-      <div class="contact-info flex min-w-0 flex-col rounded-2xl border border-hairline bg-surface p-6 sm:p-7">
+      <div class="contact-info flex min-w-0 flex-col rounded-2xl border border-hairline bg-canvas-2 p-6 sm:p-7">
         <h3 class="font-display text-2xl font-bold tracking-[-0.02em] text-ink">¿Deseas hablar?</h3>
         <p class="mt-4 max-w-[46ch] text-sm leading-7 text-ink-muted sm:text-base">
           La forma más directa de empezar es el formulario. Cuéntame qué quieres construir y qué resultado buscas.
@@ -38,7 +38,7 @@ const socialLinks = profile.social.filter(
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`${social.platform}: ${social.handle}`}
-                class="group flex min-h-14 items-center gap-4 px-3 py-2.5 transition-colors duration-200 hover:bg-surface-2 focus-visible:bg-surface-2"
+                class="group flex min-h-14 items-center gap-4 px-3 py-2.5 transition-colors duration-200 hover:bg-canvas focus-visible:bg-canvas"
               >
                 <span class="flex h-6 w-6 shrink-0 items-center justify-center text-accent" aria-hidden="true">
                   {social.platform === 'LinkedIn' && (
@@ -105,7 +105,7 @@ const socialLinks = profile.social.filter(
                 required
                 autocomplete="name"
                 placeholder="Guillermo Cabrera"
-                class="contact-field min-h-11 w-full rounded-xl border border-hairline bg-canvas-2 px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-ink-muted focus-visible:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/10"
+                class="contact-field min-h-11 w-full rounded-xl border border-hairline bg-canvas px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-ink-muted focus-visible:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/10"
               />
             </div>
 
@@ -118,7 +118,7 @@ const socialLinks = profile.social.filter(
                 required
                 autocomplete="email"
                 placeholder="nombre@ejemplo.com"
-                class="contact-field min-h-11 w-full rounded-xl border border-hairline bg-canvas-2 px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-ink-muted focus-visible:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/10"
+                class="contact-field min-h-11 w-full rounded-xl border border-hairline bg-canvas px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-ink-muted focus-visible:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/10"
               />
             </div>
 
@@ -130,7 +130,7 @@ const socialLinks = profile.social.filter(
                 rows="3"
                 required
                 placeholder="Cuéntame sobre tu proyecto, datos y objetivo..."
-                class="contact-field min-h-28 w-full resize-y rounded-xl border border-hairline bg-canvas-2 px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-ink-muted focus-visible:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/10"
+                class="contact-field min-h-28 w-full resize-y rounded-xl border border-hairline bg-canvas px-4 py-2.5 text-sm leading-6 text-ink transition-colors placeholder:text-ink-muted focus-visible:border-accent/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/10"
               ></textarea>
             </div>
           </div>
@@ -139,7 +139,7 @@ const socialLinks = profile.social.filter(
 
           <button
             type="submit"
-            class="group inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-hairline bg-surface-2 px-4 py-2.5 font-sans text-sm font-semibold normal-case tracking-normal text-ink transition-colors duration-200 hover:border-accent hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 sm:w-auto"
+            class="group inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-accent/60 bg-surface-2 px-4 py-2.5 font-sans text-sm font-semibold normal-case tracking-normal text-ink transition-colors duration-200 hover:border-accent hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 sm:w-auto"
           >
             Enviar mensaje
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

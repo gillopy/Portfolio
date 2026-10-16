@@ -6,28 +6,6 @@ const firstName = profile.name.split(' ').slice(0, -1).join(' ');
 const lastName = profile.name.split(' ').slice(-1)[0];
 const firstChars = firstName.split('');
 const lastChars = lastName.split('');
-
-// Station readout, resolved at build time so it is correct before JS runs and
-// then refreshed client-side. Paraguay is UTC-3 on DST and UTC-4 off it, so the
-// offset is formatted rather than hardcoded. A constrained ICU build would make
-// the formatter throw, hence the guarded fallback.
-const STATION_TIME_ZONE = 'America/Asuncion';
-const readStationTime = (): { time: string; zone: string } => {
-  try {
-    const parts = new Intl.DateTimeFormat('en-GB', {
-      timeZone: STATION_TIME_ZONE,
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-      timeZoneName: 'shortOffset',
-    }).formatToParts(new Date());
-    const pick = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
-    return { time: `${pick('hour')}:${pick('minute')}`, zone: pick('timeZoneName') };
-  } catch {
-    return { time: '--:--', zone: '' };
-  }
-};
-const station = readStationTime();
 ---
 
 <section id="inicio" class="hero relative flex min-h-[96vh] items-center overflow-hidden bg-canvas pb-20 pt-28">
@@ -40,70 +18,52 @@ const station = readStationTime();
   <div class="container mx-auto px-6">
     <div class="hero-content flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16">
       <div class="hero-text w-full lg:w-[58%]">
-        <!-- kicker -->
-        <div class="hero-kicker mb-6 flex flex-wrap items-center gap-3">
-          <span class="kicker"><span class="kicker-dot"></span> Observatorio de datos — Asunción, PY</span>
-          <span class="hidden sm:inline-flex items-center gap-2 rounded-pill bg-surface px-3 py-1 ring-1 ring-hairline font-mono text-[11px] tracking-widest uppercase text-ink-muted">
-            <span class="h-1 w-1 rounded-full bg-accent"></span>
-            {profile.title}
-          </span>
+        <!-- Name and role share one block: the professional title reads as part
+             of the name instead of floating above it as a separate pill. -->
+        <div class="hero-lead">
+          <h1 class="hero-name font-display text-[2.95rem] font-bold leading-[0.9] tracking-[-0.04em] text-ink md:text-[4.5rem] lg:text-[5.2rem]">
+            <span class="hero-word overflow-hidden inline-block">
+              <span class="hero-line inline-flex">
+                {firstChars.map((ch) => (
+                  <span class="hero-char">{ch === ' ' ? '\u00A0' : ch}</span>
+                ))}
+              </span>
+            </span>
+            <br />
+            <span class="hero-word overflow-hidden inline-block">
+              <span class="hero-line inline-flex text-accent">
+                {lastChars.map((ch) => (
+                  <span class="hero-char">{ch}</span>
+                ))}
+              </span>
+              <span class="ml-2 inline-block h-[0.18em] w-[0.18em] translate-y-[-0.35em] rounded-full bg-accent"></span>
+            </span>
+          </h1>
+
+          <p class="hero-role">{profile.title}</p>
         </div>
 
-        <h1 class="mb-5 font-display text-[2.95rem] font-bold leading-[0.9] tracking-[-0.04em] text-ink md:text-[4.5rem] lg:text-[5.2rem]">
-          <span class="hero-word overflow-hidden inline-block">
-            <span class="hero-line inline-flex">
-              {firstChars.map((ch) => (
-                <span class="hero-char">{ch === ' ' ? '\u00A0' : ch}</span>
-              ))}
-            </span>
-          </span>
-          <br />
-          <span class="hero-word overflow-hidden inline-block">
-            <span class="hero-line inline-flex text-accent">
-              {lastChars.map((ch) => (
-                <span class="hero-char">{ch}</span>
-              ))}
-            </span>
-            <span class="ml-2 inline-block h-[0.18em] w-[0.18em] translate-y-[-0.35em] rounded-full bg-accent"></span>
-          </span>
-        </h1>
-
-        <p class="hero-summary mb-8 max-w-[58ch] text-[1.06rem] leading-relaxed text-ink-muted md:text-[1.15rem]">
+        <p class="hero-summary mt-7 mb-8 max-w-[58ch] text-[1.06rem] leading-relaxed text-ink-muted md:text-[1.15rem]">
           {profile.summary}
           <span class="mt-3 block font-mono text-xs tracking-wide text-ink-faint">Econometría · Forecasting · MLOps · Series temporales</span>
         </p>
 
-        <!-- Cadena de valor: los mismos tres pasos y subtítulos, restated as a
-             technical strip. At display-bold 2.1rem they read as a second H1
-             directly under the name, which is what this fixes. -->
-        <div class="hero-pipeline">
-          <ol class="hero-pipeline-list">
-            <li class="hero-step">
-              <span class="hero-step-index" aria-hidden="true">01</span>
-              <span class="hero-step-text">
-                <span class="hero-step-label">Análisis</span>
-                <span class="hero-step-caption">De datos a evidencia.</span>
-              </span>
-            </li>
-            <li class="hero-step">
-              <span class="hero-step-index" aria-hidden="true">02</span>
-              <span class="hero-step-text">
-                <span class="hero-step-label">Modelado</span>
-                <span class="hero-step-caption">De evidencia a predicción.</span>
-              </span>
-            </li>
-            <li class="hero-step">
-              <span class="hero-step-index" aria-hidden="true">03</span>
-              <span class="hero-step-text">
-                <span class="hero-step-label">Decisión</span>
-                <span class="hero-step-caption">De predicción a estrategia.</span>
-              </span>
-            </li>
-            <li class="hero-readout">
-              <span class="hero-readout-label">Local</span>
-              <span class="hero-readout-value" id="hero-clock" aria-live="off">{station.time} {station.zone}</span>
-            </li>
-          </ol>
+        <div class="hero-stats mb-10 flex flex-wrap gap-6 sm:flex sm:gap-0">
+          <div class="hero-stat group sm:pr-7">
+            <span class="block font-display text-2xl font-bold tracking-tight text-ink sm:text-[2rem] lg:text-[2.3rem]">ANÁLISIS</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-faint">De datos a evidencia.</span>
+            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
+          </div>
+          <div class="hero-stat group sm:border-l sm:border-hairline sm:pl-7 sm:pr-7">
+            <span class="block font-display text-2xl font-bold tracking-tight text-ink sm:text-[2rem] lg:text-[2.3rem]">MODELADO</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-faint">De evidencia a predicción.</span>
+            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
+          </div>
+          <div class="hero-stat group sm:border-l sm:border-hairline sm:pl-7">
+            <span class="block font-display text-2xl font-bold tracking-tight text-ink sm:text-[2rem] lg:text-[2.3rem]">DECISIÓN</span>
+            <span class="font-mono text-[11px] uppercase tracking-wider text-ink-faint">De predicción a estrategia.</span>
+            <span class="mt-2 h-px w-8 bg-accent/60 block"></span>
+          </div>
         </div>
 
         <div class="hero-btns flex flex-wrap items-center gap-3">
@@ -122,7 +82,6 @@ const station = readStationTime();
           </span>
         </div>
 
-
       </div>
 
       <div class="hero-visual w-full lg:w-[42%] flex justify-center">
@@ -138,130 +97,36 @@ const station = readStationTime();
 </section>
 
 <style>
-  /* Border-top/bottom give the strip its instrument-panel framing; the steps
-     are then separated by a single rule that flips from horizontal (stacked) to
-     vertical (three across) at the same breakpoint the desktop nav appears. */
-  .hero-pipeline {
-    margin-bottom: 2.5rem;
-    border-top: 1px solid var(--color-hairline);
-    border-bottom: 1px solid var(--color-hairline);
-  }
-  .hero-pipeline-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .hero-step {
+  /* Below lg the role stacks under the name. From lg it moves into its own
+     column, bottom-aligned with the name block, so it sits beside "Cabrera."
+     instead of pushing the summary down. */
+  .hero-role {
     display: flex;
-    align-items: flex-start;
-    gap: 0.7rem;
-    padding: 0.8rem 0;
-  }
-  .hero-step + .hero-step {
-    border-top: 1px solid var(--color-hairline-soft);
-  }
-  .hero-step-index {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.08em;
-    line-height: 1.6;
-    color: var(--color-accent);
-  }
-  .hero-step-text {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-  .hero-step-label {
-    font-family: var(--font-display);
-    font-size: 0.9375rem;
-    font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    color: var(--color-ink);
-  }
-  .hero-step-caption {
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    line-height: 1.5;
-    letter-spacing: 0.04em;
-    color: var(--color-ink-faint);
-  }
-  /* Station readout: a fourth cell on wide screens, dropped below lg where the
-     three steps already fill the strip. */
-  .hero-readout {
-    display: none;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.95rem 0 0.95rem 1.25rem;
-    border-left: 1px solid var(--color-hairline-soft);
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
+    gap: 0.7rem;
+    margin-top: 1.1rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--color-ink-muted);
   }
-  .hero-readout-label {
-    color: var(--color-ink-faint);
-  }
-  .hero-readout-value {
-    font-variant-numeric: tabular-nums;
-    color: var(--color-ink);
+  .hero-role::before {
+    content: "";
+    flex: none;
+    width: 1.5rem;
+    height: 1px;
+    background: var(--color-accent);
   }
   @media (min-width: 1024px) {
-    .hero-pipeline-list {
-      grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    .hero-lead {
+      display: grid;
+      grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+      align-items: end;
+      column-gap: 1.75rem;
     }
-    .hero-step {
-      padding: 0.95rem 1.25rem;
-    }
-    .hero-step:first-child {
-      padding-left: 0;
-    }
-    .hero-step + .hero-step {
-      border-top: 0;
-      border-left: 1px solid var(--color-hairline-soft);
-    }
-    .hero-readout {
-      display: flex;
+    .hero-role {
+      margin-top: 0;
+      padding-bottom: 0.7rem;
     }
   }
 </style>
-
-<script>
-  // Build-time value is correct without JS; this only keeps the minute honest
-  // on a long-lived page. 20s cadence is enough for HH:MM and costs nothing.
-  const STATION_TIME_ZONE = 'America/Asuncion';
-  let stationTimer: number | undefined;
-
-  const startStationClock = () => {
-    window.clearInterval(stationTimer);
-    const el = document.getElementById('hero-clock');
-    if (!el) return;
-    const format = () =>
-      new Intl.DateTimeFormat('en-GB', {
-        timeZone: STATION_TIME_ZONE,
-        hour: '2-digit',
-        minute: '2-digit',
-        hourCycle: 'h23',
-        timeZoneName: 'shortOffset',
-      }).format(new Date());
-    const tick = () => {
-      el.textContent = format();
-    };
-    tick();
-    stationTimer = window.setInterval(tick, 20_000);
-  };
-
-  startStationClock();
-  document.addEventListener('astro:page-load', startStationClock);
-  document.addEventListener('astro:before-preparation', () => {
-    window.clearInterval(stationTimer);
-  });
-</script>

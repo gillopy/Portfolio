@@ -104,12 +104,12 @@ const initGSAP = () => {
 		if (heroChars.length) {
 			gsap.fromTo(heroChars, { yPercent: 110, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.9, stagger: 0.025, ease: "power4.out", delay: 0.15 });
 		}
-		const heroKicker = document.querySelector('.hero-kicker');
-		if (heroKicker) gsap.from(heroKicker, { opacity: 0, y: 10, duration: 0.6, ease: "power2.out", delay: 0.05 });
+		const heroRole = document.querySelector('.hero-role');
+		if (heroRole) gsap.from(heroRole, { opacity: 0, y: 10, duration: 0.6, ease: "power2.out", delay: 0.25 });
 		const heroSummary = document.querySelector('.hero-summary');
 		if (heroSummary) gsap.from(heroSummary, { opacity: 0, y: 18, duration: 0.7, delay: 0.45, ease: "power2.out" });
-		const heroSteps = document.querySelectorAll('.hero-step');
-		if (heroSteps.length) gsap.from(heroSteps, { opacity: 0, y: 16, duration: 0.6, stagger: 0.08, delay: 0.6, ease: "power2.out" });
+		const heroStats = document.querySelectorAll('.hero-stat');
+		if (heroStats.length) gsap.from(heroStats, { opacity: 0, y: 16, duration: 0.6, stagger: 0.08, delay: 0.6, ease: "power2.out" });
 		const heroBtns = document.querySelector('.hero-btns');
 		if (heroBtns) gsap.from(heroBtns, { opacity: 0, y: 12, duration: 0.6, delay: 0.75, ease: "power2.out" });
 		const heroVisual = document.querySelector('.hero-visual');

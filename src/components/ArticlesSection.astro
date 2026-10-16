@@ -12,8 +12,6 @@ const articles: CollectionEntry<'articles'>[] = (await getCollection('articles')
 );
 const previewArticles = articles.slice(0, PREVIEW_LIMIT);
 const hasMoreArticles = articles.length > PREVIEW_LIMIT;
-// Reports the true total, not the capped length.
-const articleCountLabel = `${articles.length} ${articles.length === 1 ? 'artículo' : 'artículos'}`;
 ---
 
 {articles.length > 0 && (
@@ -28,10 +26,6 @@ const articleCountLabel = `${articles.length} ${articles.length === 1 ? 'artícu
           <p class="mt-3 max-w-xl text-sm leading-relaxed text-ink-muted">
             Lecturas largas de estadística, economía y ciencia de datos: réplicas comentadas y notas metodológicas.
           </p>
-        </div>
-        <div class="hidden items-center gap-2 font-mono text-xs text-ink-faint sm:flex">
-          <span class="h-px w-8 bg-hairline"></span>
-          {articleCountLabel}
         </div>
       </div>
       <div class="section-rule mb-10"></div>

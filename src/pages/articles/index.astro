@@ -15,7 +15,6 @@ const pageDescription =
 
 // astro.config `site` already honours SITE_URL, so the origin is never hardcoded.
 const origin = Astro.site?.origin ?? Astro.url.origin;
-const articleCountLabel = `${articles.length} ${articles.length === 1 ? 'artículo' : 'artículos'}`;
 
 const jsonLd = [
   {
@@ -61,10 +60,6 @@ const jsonLd = [
           <p class="mb-8 whitespace-pre-line text-lg leading-relaxed text-ink-muted">
             {pageDescription}
           </p>
-          <div class="mb-8 flex items-center gap-2 font-mono text-xs text-ink-faint">
-            <span class="h-px w-8 bg-hairline"></span>
-            {articleCountLabel}
-          </div>
         </div>
         <div class="section-rule mb-10"></div>
 
