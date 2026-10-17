@@ -18,7 +18,6 @@ cover: ./cover.jpg
 ---
 import { Image } from 'astro:assets';
 import globoImg from "./goes-globo.jpg";
-import paraguayImg from "./goes-paraguay.jpg";
 import geocolorDiaImg from "./geocolor-dia.jpg";
 import geocolorNocheImg from "./geocolor-noche.jpg";
 import anomaliaImg from "./planeta-anomalia.jpg";
@@ -151,16 +150,11 @@ def to_display(raw, cmi):
 .venv\Scripts\python.exe prototipos\vista_paraguay.py                  # globo Paraguay
 ```
 
-Así se ve el disco completo con la rampa de infrarrojo y el globo centrado en Paraguay:
+Así se ve el disco completo con la rampa de infrarrojo:
 
 <figure class="my-6">
   <Image src={globoImg} alt="Póster del disco completo GOES-19 banda 13 con la rampa de infrarrojo realzada" class="w-full h-auto rounded-xl ring-1 ring-hairline" loading="lazy" />
   <figcaption class="mt-2 text-center font-mono text-xs text-ink-muted">Disco completo · GOES-19 banda 13 · 04 oct 2026, 19:05 UTC</figcaption>
-</figure>
-
-<figure class="my-6">
-  <Image src={paraguayImg} alt="Póster del globo centrado en Paraguay con datos GOES-19 banda 13 y el borde del país resaltado" class="w-full h-auto rounded-xl ring-1 ring-hairline" loading="lazy" />
-  <figcaption class="mt-2 text-center font-mono text-xs text-ink-muted">Globo centrado en Paraguay · GOES-19 banda 13</figcaption>
 </figure>
 
 ## 3. Renderizar los cuadros (`cuadros/`)
@@ -223,8 +217,8 @@ contorno del Paraguay marcado sobre el campo de temperatura de brillo:
 <div class="mx-auto max-w-[380px] overflow-hidden rounded-xl ring-1 ring-hairline">
   <iframe
     class="aspect-[9/16] w-full"
-    src="https://www.youtube.com/embed/XYWfX0Qed7g"
-    title="Animación GOES-19 · Banda 13"
+    src="https://www.youtube.com/embed/_U4B7yUkDBA"
+    title="Animación GOES-19 · Paraguay · 02/10 a 05/10"
     loading="lazy"
     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
     referrerpolicy="strict-origin-when-cross-origin"
@@ -249,6 +243,20 @@ altas de hielo (gris y blanco), y por encima van las **luces de ciudad**.
     <Image src={geocolorNocheImg} alt="Globo GeoColor de noche: infrarrojo con las luces de ciudad encendidas" class="w-full h-auto rounded-xl ring-1 ring-hairline" loading="lazy" />
     <figcaption class="mt-2 text-center font-mono text-xs text-ink-muted">Noche · 04 oct 2026, 04:00 UTC</figcaption>
   </figure>
+</div>
+
+Y la animación completa, tres días de GeoColor cuadro a cuadro:
+
+<div class="mx-auto max-w-[380px] overflow-hidden rounded-xl ring-1 ring-hairline">
+  <iframe
+    class="aspect-[9/16] w-full"
+    src="https://www.youtube.com/embed/kdBTRRYGlI4"
+    title="Animación GeoColor · Paraguay · 3 días"
+    loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  ></iframe>
 </div>
 
 ## Anomalía de temperatura (ERA5)
