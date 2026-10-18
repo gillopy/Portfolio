@@ -1,6 +1,6 @@
 ---
 title: "Climate 3D: el planeta, cuadro a cuadro"
-shortDescription: "Pipeline en cuatro etapas —descargar, prototipar, renderizar y animar— que convierte datos reales de GOES-R ABI y ERA5 en pósteres y videos con matplotlib + cartopy."
+shortDescription: "Pipeline en cuatro etapas —descargar, prototipar, renderizar y animar— que convierte datos satelitales reales (GOES-R ABI, ERA5 y NASA GIBS) en pósteres y videos con matplotlib + cartopy."
 tags:
   - "Python 3.12"
   - "Xarray"
@@ -22,6 +22,8 @@ import geocolorDiaImg from "./geocolor-dia.jpg";
 import geocolorNocheImg from "./geocolor-noche.jpg";
 import anomaliaImg from "./planeta-anomalia.jpg";
 import cirrusImg from "./cirrus-c04.jpg";
+import murSstImg from "./mur-sst.jpg";
+import truecolorImg from "./truecolor-noaa20.jpg";
 
 ## Descripción
 
@@ -36,9 +38,9 @@ baja el dato       imagen fija            render cuadro a cuadro       MP4 / GIF
 ```
 
 Las fuentes son **GOES-R ABI** (satélite geoestacionario, bucket público de NOAA), **ERA5**
-(reanálisis de Copernicus) y **GeoColor** de NASA GIBS. Todo se renderiza local con
-matplotlib + cartopy en un estilo de afiche: fondo casi negro, barra de color fina al pie y
-rótulos discretos.
+(reanálisis de Copernicus) y productos de **NASA GIBS** (GeoColor, anomalía de SST **MUR** y
+**True Color** MODIS/VIIRS). Todo se renderiza local con matplotlib + cartopy en un estilo de
+afiche: fondo casi negro, barra de color fina al pie y rótulos discretos.
 
 - **Sólo `descargar/` necesita internet.** Las otras tres etapas trabajan sobre lo ya bajado.
 - Los `.nc` (varios GB) y las salidas viven **fuera del repositorio**: la raíz de datos la
@@ -97,12 +99,15 @@ def clave_de(sat, banda, t):
 La descarga es larga y **reanudable**: saltea los `.nc` que ya tenés, así que si la cortás,
 volvés a correrla y sigue donde quedó.
 
-Aparte de GOES, hay dos fuentes más:
+Aparte de GOES, hay otras fuentes. Tres se bajan **rasterizadas** (un JPEG por cuadro) desde
+la API de NASA GIBS, sin `.nc` que leer:
 
-- `descargar/geocolor.py` — baja **GeoColor** (GOES-East) ya rasterizado desde la API de NASA
-  GIBS. No es una banda cruda sino un producto RGB mezclado, así que no hay `.nc` que leer.
-- `descargar/descargar_era5.py` — baja **ERA5 2m temperature** (2024-2026) desde Copernicus
-  CDS. Requiere el paquete `cdsapi` y la API key en `~/.cdsapirc`.
+- `descargar/geocolor.py` — **GeoColor** (GOES-East): color real de día, IR y luces de noche.
+- `descargar/mur_sst.py` — **anomalía de SST** (GHRSST MUR L4), global y diaria.
+- `descargar/truecolor.py` — **True Color** (Corrected Reflectance) de MODIS/VIIRS, el color
+  real con el que se ve el humo de los incendios.
+- `descargar/descargar_era5.py` — **ERA5 2m temperature** (2024-2026) desde Copernicus CDS.
+  Requiere `cdsapi` y la API key en `~/.cdsapirc`.
 
 ## 2. Pósteres fijos (`prototipos/`)
 
@@ -216,7 +221,7 @@ contorno del Paraguay marcado sobre el campo de temperatura de brillo:
 
 <div class="mx-auto max-w-[380px] overflow-hidden rounded-xl ring-1 ring-hairline">
   <iframe
-    class="aspect-[9/16] w-full"
+    class="aspect-square w-full"
     src="https://www.youtube.com/embed/_U4B7yUkDBA"
     title="Animación GOES-19 · Paraguay · 02/10 a 05/10"
     loading="lazy"
@@ -249,7 +254,7 @@ Y la animación completa, tres días de GeoColor cuadro a cuadro:
 
 <div class="mx-auto max-w-[380px] overflow-hidden rounded-xl ring-1 ring-hairline">
   <iframe
-    class="aspect-[9/16] w-full"
+    class="aspect-square w-full"
     src="https://www.youtube.com/embed/kdBTRRYGlI4"
     title="Animación GeoColor · Paraguay · 3 días"
     loading="lazy"
@@ -293,6 +298,74 @@ maquinaria del póster, sólo que con la banda `C04` y la paleta de reflectancia
   <figcaption class="mt-2 text-center font-mono text-xs text-ink-muted">Cirrus C04 · GOES-West · 03 oct 2026, 22:20 UTC</figcaption>
 </figure>
 
+## Anomalía del mar: El Niño en el Pacífico (MUR)
+
+El producto **MUR** (GHRSST L4 v4.1) es la **anomalía de temperatura superficial del mar**,
+global y diaria. Como la animación abarca dos años, la muestrea **una vez por semana** (~94
+cuadros en lugar de cientos). En el Pacífico ecuatorial se lee de un vistazo la **lengua cálida
+de El Niño**: el rojo que avanza sobre la costa de Sudamérica.
+
+```powershell
+# Descarga (una muestra por semana) y, después, el render
+.venv\Scripts\python.exe descargar\mur_sst.py --desde 2025-01-01 --hasta 2026-10-17 --paso 7 --px 2048
+.venv\Scripts\python.exe cuadros\cuadros_mur.py --desde 2025-01-01 --hasta 2026-10-17 --paso 7 --px 2048
+```
+
+La serie de fechas y el nombre de la carpeta de cuadros salen de un solo módulo,
+`comun/series.py`, así que la descarga y el render **nunca se desincronizan**: si el paso o la
+etiqueta cambiaran en un lado, el render saldría a buscar una carpeta que no existe.
+
+<figure class="my-6">
+  <Image src={murSstImg} alt="Póster de anomalía de temperatura superficial del mar (GHRSST MUR) centrado en el Pacífico" class="w-full h-auto rounded-xl ring-1 ring-hairline" loading="lazy" />
+  <figcaption class="mt-2 text-center font-mono text-xs text-ink-muted">Anomalía de SST (MUR) · enero 2026 · El Niño</figcaption>
+</figure>
+
+<div class="mx-auto max-w-[380px] overflow-hidden rounded-xl ring-1 ring-hairline">
+  <iframe
+    class="aspect-square w-full"
+    src="https://www.youtube.com/embed/F4QeRMYPuHE"
+    title="Timelapse de anomalías de temperatura del mar · El Niño"
+    loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  ></iframe>
+</div>
+
+## Humo y fuego en color real (True Color, NOAA-20)
+
+Para ver el **humo de los incendios de 2024** hace falta color real, y GeoColor **no tiene
+archivo 2024** (su capa devuelve un placeholder). La salida es **True Color** (Corrected
+Reflectance) de **VIIRS NOAA-20** vía NASA GIBS: global, diaria y de 250 m. Son 112 días —uno
+por día— entre julio y octubre de 2024.
+
+La capa por defecto es **NOAA-20** y no MODIS a propósito: las composiciones diarias de Terra y
+Aqua dejan **cuñas de barrido** cerca del ecuador —el barrido de MODIS es más angosto que la
+separación de órbitas— que en el globo se ven como franjas negras diagonales.
+
+```powershell
+# Descarga (un cuadro por día) y, después, el render
+.venv\Scripts\python.exe descargar\truecolor.py --desde 2024-07-11 --hasta 2024-10-30 --paso 1 --px 2711
+.venv\Scripts\python.exe cuadros\cuadros_truecolor.py --desde 2024-07-11 --hasta 2024-10-30 --paso 1 --px 2711
+```
+
+<figure class="my-6">
+  <Image src={truecolorImg} alt="Póster de True Color (VIIRS NOAA-20) con el humo de los incendios de 2024 sobre Sudamérica" class="w-full h-auto rounded-xl ring-1 ring-hairline" loading="lazy" />
+  <figcaption class="mt-2 text-center font-mono text-xs text-ink-muted">True Color (VIIRS NOAA-20) · 20 ago 2024 · Sudamérica</figcaption>
+</figure>
+
+<div class="mx-auto max-w-[380px] overflow-hidden rounded-xl ring-1 ring-hairline">
+  <iframe
+    class="aspect-square w-full"
+    src="https://www.youtube.com/embed/qxo8eGBiNro"
+    title="Incendios forestales de 2024 en Sudamérica · VIIRS NOAA-20"
+    loading="lazy"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+  ></iframe>
+</div>
+
 ## Dónde viven los datos
 
 Los `.nc` pesan varios GB y las salidas también, así que **no van al repo**. La raíz de datos
@@ -309,8 +382,9 @@ $env:CLIMATE3D_DATOS = "D:\mi\carpeta\datos"
 
 ## Nota de datos
 
-Todas las imágenes y la animación salen de **GOES-R ABI L2 CMIP** reales (NOAA/NESDIS), de
-**GeoColor** (NASA GIBS) y de **ERA5** (Copernicus). El disco se lee en su proyección
-geoestacionaria nativa y sólo se reproyecta para el encuadre en globo; los `.nc` crudos y las
-salidas quedan fuera del repositorio. La excepción es el **primer** render que dibuja costas:
-cartopy baja los shapefiles de Natural Earth una vez y después quedan cacheados.
+Todas las imágenes y animaciones salen de **GOES-R ABI L2 CMIP** reales (NOAA/NESDIS), de
+**ERA5** (Copernicus) y de productos de **NASA GIBS** (**GeoColor**, anomalía de SST **MUR** de
+GHRSST y **True Color** de MODIS/VIIRS). El disco GOES se lee en su proyección geoestacionaria
+nativa y sólo se reproyecta para el encuadre en globo; los `.nc` crudos y las salidas quedan
+fuera del repositorio. La excepción es el **primer** render que dibuja costas: cartopy baja los
+shapefiles de Natural Earth una vez y después quedan cacheados.
